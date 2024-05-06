@@ -1,0 +1,248 @@
+#pragma once
+
+#define ENGINE_MAX_PENDING_MESSAGES 64
+#define ENGINE_MESSAGE_DATA_SIZE 64
+
+#include <stdlib.h>
+#include <stdio.h>
+#include <stdint.h>
+
+#include <raylib.h>
+#include "rlgl.h"
+#include <raymath.h>
+
+#include "logger.h"
+#include "ecs.h"
+#include "dsa.h"
+
+
+typedef uint32_t EngineRenderModelID;
+typedef uint32_t EngineShaderID;
+typedef uint32_t EngineEntType;
+
+
+typedef struct Engine Engine;
+
+// Messaging system
+typedef enum EngineMsgTypeEnum {
+    ENGINE_MSG_TYPE_INTERACT
+} EngineMsgType;
+
+typedef struct EngineMsg {
+    ECSEntityID srcId;
+    ECSEntityID dstId;
+    EngineEntType dstMask;
+    EngineMsgType msgType;
+    uint8_t msgData[ENGINE_MESSAGE_DATA_SIZE];
+} EngineMsg;
+
+
+// Components system
+typedef struct EngineCompInfo {
+    EngineEntType typeMask;
+} EngineCompInfo;
+
+typedef struct EngineCompTransform {
+    ECSEntityID anchor;
+    
+    Vector3 pos;
+    Vector3 scale;
+    Quaternion rot;
+
+    uint8_t localUpdate;
+    uint8_t _globalUpdate;
+    Matrix localMatrix;
+    Matrix globalMatrix;
+} EngineCompTransform;
+
+typedef struct EngineCompCamera {
+    Camera cam;
+} EngineCompCamera;
+
+typedef struct EngineCompMeshRenderer {
+    EngineCompTransform *transform; // Must not be null
+    uint8_t visible;
+    uint8_t castShadow;
+    float alpha;
+    Vector3 color;
+    BoundingBox boundingBox;
+    BoundingBox _boundingBoxTrans;
+    EngineRenderModelID modelId;
+    EngineShaderID shaderId;
+} EngineCompMeshRenderer;
+
+typedef enum EngineLightSrcTypeEnum {
+    ENGINE_LIGHTSRC_POINT,
+    ENGINE_LIGHTSRC_DIRECTIONAL,
+    ENGINE_LIGHTSRC_AMBIENT
+} EngineLightSrcType;
+
+typedef struct EngineCompLightSrc {
+    // Point light position anchor, can be null
+    EngineCompTransform *transform;
+    uint8_t visible;
+    Vector3 color;
+    EngineLightSrcType type;
+    union {
+        Vector3 pos;
+        Vector3 dir;
+    };
+    float range;
+} EngineCompLightSrc;
+
+typedef struct EngineCallbackData {
+    Engine *engine;
+    union {
+        struct {
+            float deltaTime;
+        } update;
+        struct {
+            EngineMsg *msg;
+        } msgRecv;
+    };
+} EngineCallbackData;
+
+
+// Entity Component system interface
+typedef enum EngineECSCompTypeEnum {
+    ENGINE_ECS_COMP_TYPE_INFO,
+    ENGINE_ECS_COMP_TYPE_TRANSFORM,
+    ENGINE_ECS_COMP_TYPE_CAMERA,
+    ENGINE_ECS_COMP_TYPE_MESH_RENDERER,
+    ENGINE_ECS_COMP_TYPE_LIGHTSOURCE,
+    ENGINE_ECS_COMP_TYPE_USER
+} EngineECSCompType;
+
+typedef enum EngineECSCallbackTypeEnum {
+    ENGINE_ECS_CB_TYPE_ON_CREATE,
+    ENGINE_ECS_CB_TYPE_ON_UPDATE,
+    ENGINE_ECS_CB_TYPE_ON_MSG_RECV,
+    ENGINE_ECS_CB_TYPE_ON_DESTROY
+} EngineECSCallbackType;
+
+typedef union EngineECSCompData {
+    EngineCompInfo info;
+    EngineCompTransform trans;
+    EngineCompCamera cam;
+    EngineCompMeshRenderer meshR;
+    EngineCompLightSrc light;
+} EngineECSCompData;
+
+
+typedef struct Engine {
+    float timescale;
+    size_t nPendingMsg;
+    EngineMsg pendingMsg[ENGINE_MAX_PENDING_MESSAGES];
+    ECS ecs;
+    struct {
+        Hashmap models; // Model* values
+        Hashmap shaders; // Shader* values
+
+        Array meshRend; // ComponentID (for Mesh Renderer) values
+        Array meshRendVisible; // Visible Mesh Renderer component IDs
+        Array meshRendVisibleDist; // distance to each Mesh Renderer
+        
+        Array lightSrc; // ComponentID (for light sources) values
+        ECSComponentID camera; // Camera component
+    } render;
+} Engine;
+
+typedef enum EngineStatusEnum {
+    ENGINE_STATUS_OK,
+    ENGINE_STATUS_NO_TRANSFORM_ANCHOR,
+    ENGINE_STATUS_MODEL_NOT_FOUND,
+    ENGINE_STATUS_REGISTER_FAILED,
+    ENGINE_STATUS_RENDER_DUPLICATE_ITEM,
+    ENGINE_STATUS_RENDER_ITEM_NOT_FOUND,
+    ENGINE_STATUS_MSG_PENDING_FULL,
+    ENGINE_STATUS_MSG_DATA_SIZE_EXCEEDED,
+    ENGINE_STATUS_MSG_SRC_NOT_FOUND,
+    ENGINE_STATUS_MSG_DST_NOT_FOUND,
+} EngineStatus;
+
+
+// Initialize engine
+void engine_init(Engine *const engine);
+
+/* General entity management */
+// Run component callbacks right after fully registering a entity to the ECS
+void engine_entityPostCreate(Engine *engine, ECSEntityID id);
+// Run destroy callback on the components and unregister their parent entity
+void engine_entityDestroy(Engine *engine, ECSEntityID id);
+// Update scene
+void engine_stepUpdate(Engine *engine, float deltaTime);
+
+/* Graphics */
+// Assign Raylib Model it to a EngineRenderModelID
+EngineStatus engine_render_addModel(Engine *engine, EngineRenderModelID id,
+                                    const Model *model);
+// Assign Raylib Model it to a EngineRenderModelID
+EngineStatus engine_render_addShader(Engine *engine, EngineShaderID id,
+                                    const Shader *shader);
+// Get shader for input id. If id is invalid, it returns the default shader.
+Shader engine_render_getShader(Engine *engine, EngineShaderID id);
+// Register a Mesh Renderer component to the renderer
+EngineStatus engine_render_registerMeshRenderer(
+    Engine *engine, ECSComponentID id
+);
+// Unregister a Mesh Renderer component from the renderer
+EngineStatus engine_render_unregisterMeshRenderer(
+    Engine *engine, ECSComponentID id
+);
+// Register a Light Source component to the renderer
+EngineStatus engine_render_registerLightSrc(Engine *engine, ECSComponentID id);
+// Unregister a Light Source component from the renderer
+EngineStatus engine_render_unregisterLightSrc(Engine *engine, ECSComponentID id);
+// Set Camera component which will be used for rendering the scene
+void engine_render_setCamera(Engine *engine, ECSComponentID id);
+// Render scene
+void engine_stepRender(Engine *engine);
+
+
+// Send a message from an entity to another
+EngineStatus engine_entitySendMsg(
+    Engine *engine, ECSEntityID src, ECSEntityID dst,
+    EngineMsgType msgtype, const void *msgData, size_t msgSize
+);
+// Send a message from an entity across all entities
+EngineStatus engine_entityBroadcastMsg(
+    Engine *engine, ECSEntityID src, EngineEntType filter,
+    EngineMsgType msgtype, const void *msgData, size_t msgSize
+);
+
+
+EngineStatus engine_createInfo(
+    Engine *engine, ECSEntityID ent, EngineEntType entTypeMask
+);
+EngineStatus engine_createTransform(
+    Engine *engine, ECSEntityID ent, ECSEntityID transformAnchor
+);
+EngineStatus engine_createCamera(
+    Engine *engine, ECSEntityID ent, float fov, int projection
+);
+EngineStatus engine_createMeshRenderer(
+    Engine *engine, ECSEntityID ent, EngineCompTransform *transformAnchor,
+    EngineRenderModelID modelId
+);
+EngineStatus engine_createAmbientLight(
+    Engine *engine, ECSEntityID ent, Vector3 color
+);
+EngineStatus engine_createDirLight(
+    Engine *engine, ECSEntityID ent, Vector3 color, Vector3 dir
+);
+EngineStatus engine_createPointLight(
+    Engine *engine, ECSEntityID ent, EngineCompTransform *transformAnchor,
+    Vector3 color, Vector3 pos, float range
+);
+
+EngineCompInfo *engine_getInfo(Engine *engine, ECSEntityID ent);
+EngineCompTransform *engine_getTransform(Engine *engine, ECSEntityID ent);
+EngineCompCamera *engine_getCamera(Engine *engine, ECSEntityID ent);
+EngineCompMeshRenderer *engine_getMeshRenderer(Engine *engine, ECSEntityID id);
+EngineCompLightSrc *engine_getLightSrc(Engine *engine, ECSEntityID id);
+
+
+
+// Returns the center of the bounding box of a Mesh Renderer, also considering
+// its transform
+Vector3 engine_meshRendererCenter(const EngineCompMeshRenderer *mr);

@@ -1,0 +1,23 @@
+{
+    "files.associations": {
+        "assert.h": "c",
+        "main.h": "c",
+        "sys_assert.h": "c",
+        "str.h": "c",
+        "string.h": "c",
+        "utils.h": "c",
+        "compare": "c",
+        "type_traits": "c",
+        "ecs.h": "c",
+        "engine.h": "c",
+        "dsa.h": "c",
+        "debug.h": "c",
+        "stdio.h": "c",
+        "stdlib.h": "c",
+        "logger.h": "c",
+        "stdint.h": "c",
+        "fifo.h": "c",
+        "render.h": "c",
+        "gamecomp.h": "c"
+    }
+}
