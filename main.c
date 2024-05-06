@@ -69,7 +69,7 @@ int main(void) {
     // Game setup
     player = createPlayer(&engine);
     prop = createProp(&engine, 2);
-    light = createLightbulb(&engine, (Vector3){1, 0.2, 0.1}, 20);
+    light = createLightbulb(&engine, (Vector3){1.3, 0.2, 0.1}, 50);
     createWeather(&engine, (Vector3){0.1, 0.12, 0.15});
     createEnvironment(&engine, (Vector3){0.3, 0.3, 0.3}, (Vector3){0.3, -1, 0.7});
 
@@ -95,7 +95,7 @@ int main(void) {
     logMsg(LOG_LVL_INFO, "Running game loop");
     while(!WindowShouldClose()) {
         light.transform->pos = (Vector3){
-            cos(GetTime() * 8) * 2, 0, sin(GetTime() * 8) * 2
+            cos(GetTime() * 2) * 20, 0, sin(GetTime() * 2) * 20
         };
         light.transform->localUpdate = 1;
 
