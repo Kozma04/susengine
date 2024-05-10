@@ -1,9 +1,9 @@
 #pragma once
 
 #define ECS_COMPONENT_TYPES          10
-#define ECS_MAX_ENTITIES             256
-#define ECS_MAX_COMPONENTS           2048
-#define ECS_COMPONENT_DATA_SIZE      196
+#define ECS_MAX_ENTITIES             128
+#define ECS_MAX_COMPONENTS           1024
+#define ECS_COMPONENT_DATA_SIZE      256
 #define ECS_COMPONENT_CALLBACK_TYPES 8
 
 #define ECS_INVALID_ID 0xffffffff

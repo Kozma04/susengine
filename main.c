@@ -45,6 +45,7 @@ void cleanup(Engine *engine) {
 
 int main(void) {
     Engine engine;
+    Renderer rend;
     ECSComponentID cameraId;
     Player player;
     Prop prop;
@@ -53,16 +54,23 @@ int main(void) {
     SetConfigFlags(FLAG_VSYNC_HINT);
     InitWindow(2000, 1250, "Engine");
     DisableCursor();
+    log_setHeaderThreshold("ecs.c", LOG_LVL_WARN);
     //SetTargetFPS(60);
 
     engine_init(&engine);
+    rend = render_init(16, 4);
+    render_setupDirShadow(&rend, 20, 3, 512);
 
     // Asset loading
     registerModel(&engine, 1, "assets/cube.obj");
     registerModelHeightmap(&engine, 2, (Vector3){16, 8, 16}, "assets/pei_heightmap.png");
     registerShader(
-        &engine, GAME_SHADER_FORWARD_BASIC_ID,
+        &engine, SHADER_FORWARD_BASIC_ID,
         "shaders/fwd_basic_vert.glsl", "shaders/fwd_basic_frag.glsl"
+    );
+    registerShader(
+        &engine, SHADER_SHADOWMAP_ID,
+        "shaders/shadow_vert.glsl", "shaders/shadow_frag.glsl"
     );
 
 
@@ -71,7 +79,7 @@ int main(void) {
     prop = createProp(&engine, 2);
     light = createLightbulb(&engine, (Vector3){1.3, 0.2, 0.1}, 50);
     createWeather(&engine, (Vector3){0.1, 0.12, 0.15});
-    createEnvironment(&engine, (Vector3){0.3, 0.3, 0.3}, (Vector3){0.3, -1, 0.7});
+    createEnvironment(&engine, (Vector3){0.3, 0.3, 0.3}, (Vector3){0.6, -0.6, 0.3});
 
     light.transform->anchor = player.id;
 
@@ -90,6 +98,7 @@ int main(void) {
         }
     }
 
+    AutomationEvent ev;
 
     // Game loop
     logMsg(LOG_LVL_INFO, "Running game loop");
@@ -101,19 +110,24 @@ int main(void) {
 
         // Update
         engine_stepUpdate(&engine, GetFrameTime());
+        render_updateState(&engine, &rend);
 
         // Render
         BeginDrawing();
 
         ClearBackground(DARKGRAY);
-        render_drawScene(&engine);
+        render_drawScene(&engine, &rend);
 
         DrawText(
             TextFormat("%u FPS / %.2f ms", GetFPS(), GetFrameTime() * 1000),
             0, 0, 20, LIME
         );
         DrawText(
-            TextFormat("Visible Mesh Renderers: %u/%u", array_size(&engine.render.meshRendVisible), array_size(&engine.render.meshRend)),
+            TextFormat(
+                "Visible Mesh Renderers: %u/%u",
+                array_size(&rend.state.meshRendVisible),
+                array_size(&engine.render.meshRend)
+            ),
             0, 20, 20, LIME
         );
         DrawText(

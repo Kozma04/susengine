@@ -1,10 +1,77 @@
 #include "render.h"
 
 
-static void render_sortMeshRenderers(Engine *const engine, Camera camera) {
+Renderer render_init(size_t maxSrcPoint, size_t maxSrcDir) {
+    Renderer r;
+    r.light.maxSrcPoint = maxSrcPoint;
+    r.light.maxSrcDir = maxSrcDir;
+    r.shadowDir.shadowMap = 0;
+    r.shadowDir.nCascades = 0;
+    r.shadowDir.resolution = 0;
+    r.shadowDir.size = 0;
+    r.state.shadowDirCam = NULL;
+    r.state.meshRendVisible = array_init();
+    r.state.meshRendVisibleDist = array_init();
+    r.state.mainCam.position = (Vector3){0, 0, 0};
+    r.state.mainCam.target = (Vector3){0, 0, 1};
+    r.state.mainCam.up = (Vector3){0, 1, 0};
+    r.state.mainCam.fovy = 60;
+    r.state.mainCam.projection = CAMERA_PERSPECTIVE;
+    return r;
+}
+
+void render_setupDirShadow(Renderer *rend, float size, size_t nCascades,
+                           uint32_t res) {
+    float mapSize;
+    uint8_t ok = 1;
+    rend->shadowDir.size = size;
+    rend->shadowDir.nCascades = nCascades;
+    rend->shadowDir.resolution = res;
+
+    rend->state.shadowDirCam = calloc(nCascades, sizeof(Camera));
+    rend->shadowDir.shadowMap = calloc(nCascades, sizeof(RenderTexture));
+    for(int i = 0; i < nCascades && ok; i++) {
+        RenderTexture *rt = rend->shadowDir.shadowMap + i;
+        rt->id = rlLoadFramebuffer(res, res);
+        rlEnableFramebuffer(rt->id);
+        rt->depth.id = rlLoadTextureDepth(res, res, 0);
+        rt->depth.width = res;
+        rt->depth.height = res;
+        rt->depth.mipmaps = 1;
+        rt->depth.format = 19;
+        
+        rt->texture.width = res;
+        rt->texture.height = res;
+        rt->texture.format = PIXELFORMAT_UNCOMPRESSED_R8G8B8A8;
+
+        rlFramebufferAttach(
+            rt->id,
+            rt->depth.id,
+            RL_ATTACHMENT_DEPTH,
+            RL_ATTACHMENT_TEXTURE2D,
+            0
+        );
+        // unbind framebuffer and also check if it is complete
+        if(!rlFramebufferComplete(rt->id)) {
+            ok = 0;
+            logMsg(LOG_FATAL, "could not create framebuffer %u", i);
+        }
+        rlDisableFramebuffer();
+    }
+    if(ok) {
+        logMsg(
+            LOG_LVL_INFO, "created shadow map (%u cascades, %ux%u, %.3f base size)",
+            nCascades, res, res, size
+        );
+    }
+}
+
+
+static void render_sortMeshRenderers(Engine *const engine, Renderer *const rend,
+                                     Camera camera) {
     Array *const meshRend = &engine->render.meshRend;
-    Array *const meshRendVis = &engine->render.meshRendVisible;
-    Array *const meshRendVisDist = &engine->render.meshRendVisibleDist;
+    Array *const meshRendVis = &rend->state.meshRendVisible;
+    Array *const meshRendVisDist = &rend->state.meshRendVisibleDist;
     Vector3 meshBBCenter;
     EngineCompMeshRenderer *meshRendComp;
     EngineECSCompData *ecsCompData;
@@ -45,12 +112,14 @@ static void render_sortMeshRenderers(Engine *const engine, Camera camera) {
 
 
 static void render_createMeshRendererDrawList(
-    Engine *const engine, Camera cam
+    Engine *const engine, Renderer *const rend, Camera cam
 ) {
     BoundingBox transBox;
     Array *const meshRend = &engine->render.meshRend;
-    Array *const meshRendVis = &engine->render.meshRendVisible;
-    const Frustum frustum = GetCameraFrustum(cam);
+    Array *const meshRendVis = &rend->state.meshRendVisible;
+    const Frustum frustum = GetCameraFrustum(
+        cam, (float)GetScreenWidth() / GetScreenHeight()
+    );
     Vector3 meshBBCenter;
     EngineCompMeshRenderer *meshRendComp;
     EngineECSCompData *ecsCompData;
@@ -93,9 +162,8 @@ static void render_createMeshRendererDrawList(
 
 
 void render_setShaderLightSrcUniforms(
-    Engine *const engine, const Shader shader
+    Engine *const engine, Renderer *const rend, const Shader shader
 ) {
-    const static uint32_t maxSrcPoint = 16, maxSrcDir = 4;
 
     uint32_t i, compId;
     uint32_t nSrcPoint = 0, nSrcDir = 0;
@@ -115,7 +183,7 @@ void render_setShaderLightSrcUniforms(
 
         switch(lightSrc->type) {
             case ENGINE_LIGHTSRC_DIRECTIONAL:
-                if(nSrcDir >= maxSrcDir)
+                if(nSrcDir >= rend->light.maxSrcDir)
                     break;
                 lightVec = GetShaderLocation(
                     shader, TextFormat("lightDir[%u].dir", nSrcDir)
@@ -129,7 +197,7 @@ void render_setShaderLightSrcUniforms(
                 nSrcDir++;
                 break;
             case ENGINE_LIGHTSRC_POINT:
-                if(nSrcPoint >= maxSrcPoint)
+                if(nSrcPoint >= rend->light.maxSrcPoint)
                     break;
                 lightVec = GetShaderLocation(
                     shader, TextFormat("lightPoint[%u].pos", nSrcPoint)
@@ -166,23 +234,51 @@ void render_setShaderLightSrcUniforms(
     );
 }
 
-void render_setMeshRendererUniforms(Engine *const engine, const Shader shader,
-                                    const EngineCompMeshRenderer *const mr) {
+void render_setMeshRendererUniforms(
+    Engine *const engine, Renderer *const rend, const Shader shader,
+    const EngineCompMeshRenderer *const mr
+) {
     const Vector4 meshColor = (Vector4){
         mr->color.x, mr->color.y, mr->color.z, mr->alpha
     };
+    uint32_t shadowTexSlot = 16;
+    uint32_t i;
+
+    // Assign shadow map uniforms
+    for(i = 0; i < rend->shadowDir.nCascades; i++, shadowTexSlot++) {
+        glActiveTexture(GL_TEXTURE0 + shadowTexSlot);
+        glBindTexture(GL_TEXTURE_2D, rend->shadowDir.shadowMap[i].depth.id);
+        SetShaderValue(
+            shader,
+            GetShaderLocation(shader, TextFormat("shadowMap[%u]", i)),
+            &shadowTexSlot, SHADER_UNIFORM_INT
+        );
+        SetShaderValueMatrix(
+            shader, GetShaderLocation(shader, TextFormat("shadowProj[%u]", i)),
+            MatrixMultiply(
+                GetViewMatrix(rend->state.shadowDirCam[i]),
+                GetProjectionMatrix(rend->state.shadowDirCam[i], 1.f, 0)
+            )
+        );
+    }
+    SetShaderValue(
+        shader, GetShaderLocation(shader, "nShadowMaps"),
+        &rend->shadowDir.nCascades, SHADER_UNIFORM_INT
+    );
+
     SetShaderValue(
         shader, GetShaderLocation(shader, "meshCol"), &meshColor,
         SHADER_UNIFORM_VEC4
     );
 }
 
-static void render_drawVisibleMeshes(Engine *const engine) {
+static void render_drawVisibleMeshes(Engine *const engine, Renderer *const rend,
+                                     Shader *forceShader, uint8_t inShadowPass) {
     static Shader defaultShader;
 
     Array *const meshRend = &engine->render.meshRend;
-    Array *const meshRendVis = &engine->render.meshRendVisible;
-    Array *const meshRendVisDist = &engine->render.meshRendVisibleDist;
+    Array *const meshRendVis = &rend->state.meshRendVisible;
+    Array *const meshRendVisDist = &rend->state.meshRendVisibleDist;
     const ECSComponentID camId = engine->render.camera;
     EngineCompMeshRenderer *meshRendComp;
     ECSComponentID compId;
@@ -207,64 +303,171 @@ static void render_drawVisibleMeshes(Engine *const engine) {
         }
 
         model->transform = meshRendComp->transform->globalMatrix;
-        if(meshRendComp->shaderId != ECS_INVALID_ID) {
-            res = hashmap_getP(
-                &engine->render.shaders, meshRendComp->shaderId, (void**)&shader
-            );
-            if(!res) {
-                logMsg(
-                    LOG_LVL_ERR, "shader id %u for mesh id %u not found",
-                    meshRendComp->shaderId, compId
+        if(forceShader == NULL) {
+            if(meshRendComp->shaderId != ECS_INVALID_ID) {
+                res = hashmap_getP(
+                    &engine->render.shaders, meshRendComp->shaderId, (void**)&shader
                 );
-                shader = &defaultShader;
+                if(!res) {
+                    logMsg(
+                        LOG_LVL_ERR, "shader id %u for mesh id %u not found",
+                        meshRendComp->shaderId, compId
+                    );
+                    shader = &defaultShader;
+                }
             }
-            else {
-                render_setShaderLightSrcUniforms(engine, *shader);
-            }
+            else shader = &defaultShader;
         }
-        else shader = &defaultShader;
-        render_setMeshRendererUniforms(engine, *shader, meshRendComp);
+        else {
+            shader = forceShader;
+        }
+        
+        if(!inShadowPass) {
+            render_setShaderLightSrcUniforms(engine, rend, *shader);
+            render_setMeshRendererUniforms(engine, rend, *shader, meshRendComp);
+        }
 
-        for(uint32_t j = 0; j < model->materialCount; j++) {
+        for(uint32_t j = 0; j < model->materialCount; j++)
             model->materials[j].shader = *shader;
-        }
         DrawModel(*model, (Vector3){0, 0, 0}, 1.f, RAYWHITE);
         //DrawBoundingBox(meshRendComp->_boundingBoxTrans, GREEN);
     }
 }
 
 
-void render_drawScene(Engine *const engine) {
-    // TODO check if defaultShader should really remain static
-    static Shader defaultShader;
+static inline Camera renderGetLightSrcShadowCam(
+    Renderer *const rend, const uint32_t cascade, const Camera cam,
+    const EngineCompLightSrc *const lightDir
+) {
+    Camera shadowCam = cam;
+    shadowCam.projection = CAMERA_ORTHOGRAPHIC;
+    shadowCam.fovy = rend->shadowDir.size * (cascade * 2 + 1);
+    shadowCam.target = cam.position;
+    shadowCam.position = Vector3Add(
+        cam.position,
+        Vector3Scale(lightDir->dir, -500)
+    );
+    return shadowCam;
+}
 
+
+static void render_updateShadowMaps(
+    Engine *const engine, Renderer *const rend, const Camera cam,
+    const EngineCompLightSrc *const lightSrc
+) {
+    if(lightSrc->type != ENGINE_LIGHTSRC_DIRECTIONAL)
+        return;
+
+    static uint32_t framecnt = 0;
+    framecnt++;
+    //if(framecnt > 1) return;
+        
+    for(uint32_t i = 0; i < rend->shadowDir.nCascades; i++) {
+        rend->state.shadowDirCam[i] = renderGetLightSrcShadowCam(
+            rend, i, cam, lightSrc
+        );
+    }
+}
+
+
+static void render_drawShadowMaps(
+    Engine *const engine, Renderer *const rend
+) {
+    Camera *cam = rend->state.shadowDirCam;
+    Shader *shader;
+    if(!hashmap_getP(&engine->render.shaders, SHADER_SHADOWMAP_ID, (void**)&shader)) {
+        logMsg(LOG_LVL_ERR, "cannot find shadowmap shader");
+        return;
+    }
+    for(uint32_t i = 0; i < rend->shadowDir.nCascades; i++, cam++) {
+        render_createMeshRendererDrawList(engine, rend, *cam);
+        render_sortMeshRenderers(engine, rend, *cam);
+
+        BeginTextureMode(rend->shadowDir.shadowMap[i]);
+        rlClearScreenBuffers();
+        rlEnableDepthTest();
+        BeginMode3D(*cam);
+        render_drawVisibleMeshes(engine, rend, shader, 1);
+        EndMode3D();
+        EndTextureMode();
+    }
+}
+
+
+void render_updateState(Engine *const engine, Renderer *const rend) {
     Array *const meshRend = &engine->render.meshRend;
-    Array *const meshRendVis = &engine->render.meshRendVisible;
-    Array *const meshRendVisDist = &engine->render.meshRendVisibleDist;
-    const ECSComponentID camId = engine->render.camera;
-    EngineCompMeshRenderer *meshRendComp;
+    Array *const meshRendVis = &rend->state.meshRendVisible;
+    Array *const meshRendVisDist = &rend->state.meshRendVisibleDist;
+    Array *const lightSrcIdArr = &engine->render.lightSrc;
+
     ECSComponentID compId;
+    EngineECSCompData *ecsCompData;
+    EngineCompMeshRenderer *meshRendComp;
+    EngineCompLightSrc *lightSrc;
+    Camera mainCam;
+
+    uint32_t i;
+
+    compId = engine->render.camera;
+    if(compId == ECS_INVALID_ID) {
+        logMsg(LOG_LVL_ERR, "invalid main camera id");
+        mainCam = rend->state.mainCam;
+    }
+    else {
+        ecsCompData = (EngineECSCompData*)engine->ecs.comp[compId].data;
+        mainCam = ecsCompData->cam.cam;
+        rend->state.mainCam = mainCam;
+    }
+    
+    
+    for(i = 0; i < array_size(lightSrcIdArr); i++) {
+        compId = array_get(lightSrcIdArr, i).u32;
+        ecsCompData = (EngineECSCompData*)engine->ecs.comp[compId].data;
+        lightSrc = &ecsCompData->light;
+
+        if(!lightSrc->visible)
+            continue;
+
+        if(lightSrc->type == ENGINE_LIGHTSRC_DIRECTIONAL &&
+            lightSrc->castShadow) {
+            render_updateShadowMaps(engine, rend, mainCam, lightSrc);
+            break;
+        }
+    }
+}
+
+
+void render_drawScene(Engine *const engine, Renderer *const rend) {
+    Array *const meshRend = &engine->render.meshRend;
+    Array *const meshRendVis = &rend->state.meshRendVisible;
+    Array *const meshRendVisDist = &rend->state.meshRendVisibleDist;
+    Array *const lightSrcIdArr = &engine->render.lightSrc;
+    ECSComponentID compId;
+    EngineECSCompData *ecsCompData;
+    EngineCompMeshRenderer *meshRendComp;
+    EngineCompLightSrc *lightSrc;
     Model *model;
     Shader *shader;
     uint8_t res;
-
-    if(camId == ECS_INVALID_ID) {
-        logMsg(LOG_LVL_ERR, "invalid camera id");
-        return;
-    }
-
-    const Camera cam = ((EngineECSCompData*)engine->ecs.comp[camId].data)->cam.cam;
+    uint32_t i;
 
     if(array_capacity(meshRendVis) < array_capacity(meshRend)) {
         array_resize(meshRendVis, array_capacity(meshRend));
         array_resize(meshRendVisDist, array_capacity(meshRend));
     }
 
-    render_createMeshRendererDrawList(engine, cam);
-    render_sortMeshRenderers(engine, cam);
+    // Draw shadows
+    if(rend->shadowDir.shadowMap != NULL) {
+        render_drawShadowMaps(engine, rend);
+    }
 
-    BeginMode3D(cam);
-    render_drawVisibleMeshes(engine);
-    DrawGrid(10, 10);
+    render_createMeshRendererDrawList(engine, rend, rend->state.mainCam);
+    render_sortMeshRenderers(engine, rend, rend->state.mainCam);
+
+    rlViewport(0, 0, GetRenderWidth(), GetRenderHeight());
+    BeginMode3D(rend->state.mainCam);
+
+    render_drawVisibleMeshes(engine, rend, NULL, 0);
+
     EndMode3D();
 }

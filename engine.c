@@ -7,8 +7,8 @@ void engine_init(Engine *const engine) {
     engine->render.models = hashmap_init();
     engine->render.shaders = hashmap_init();
     engine->render.meshRend = array_init();
-    engine->render.meshRendVisible = array_init();
-    engine->render.meshRendVisibleDist = array_init();
+    //engine->render.meshRendVisible = array_init();
+    //engine->render.meshRendVisibleDist = array_init();
     engine->render.lightSrc = array_init();
     engine->render.camera = ECS_INVALID_ID;
     ecs_init(&engine->ecs);
@@ -467,7 +467,7 @@ EngineStatus engine_createMeshRenderer(
     Model *const mdl = (Model*)modelHVal.ptr;
 
     comp->boundingBox = GetModelBoundingBox(*mdl);
-    comp->castShadow = 0;
+    comp->castShadow = 1;
     comp->color = (Vector3){1, 1, 1};
     comp->alpha = 1;
     comp->modelId = modelId;
@@ -515,6 +515,7 @@ EngineStatus engine_createAmbientLight(
     uint8_t res;
     comp->type = ENGINE_LIGHTSRC_AMBIENT;
     comp->visible = 1;
+    comp->castShadow = 0;
     comp->color = color;
     
     if(ecs_registerComp(&engine->ecs, ent, type, compRaw) == ECS_RES_OK) {
@@ -545,6 +546,7 @@ EngineStatus engine_createDirLight(
     uint8_t res;
     comp->type = ENGINE_LIGHTSRC_DIRECTIONAL;
     comp->visible = 1;
+    comp->castShadow = 1;
     comp->dir = dir;
     comp->color = color;
     
@@ -577,6 +579,7 @@ EngineStatus engine_createPointLight(
     uint8_t res;
     comp->type = ENGINE_LIGHTSRC_POINT;
     comp->visible = 1;
+    comp->castShadow = 0;
     comp->color = color;
     comp->pos = pos;
     comp->range = range;

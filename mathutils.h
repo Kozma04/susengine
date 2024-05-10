@@ -5,8 +5,9 @@
 
 #include "raylib.h"
 #include <stdint.h>
+#include <stdio.h>
 #include <raymath.h>
-#include <stdint.h>
+#include "logger.h"
 
 
 typedef struct Plane {
@@ -26,7 +27,7 @@ void ExtractFrustumPlanes(
     bool normalize
 );
 
-Frustum GetCameraFrustum(Camera cam);
+Frustum GetCameraFrustum(Camera cam, float aspect);
 
 // Assumes that the normals of the planes point inwards.
 int FrustumBoxIntersect(Frustum frustum, BoundingBox box);
@@ -35,5 +36,5 @@ int FrustumPointIntersect(Frustum frustum, Vector3 point);
 
 BoundingBox BoxTransform(BoundingBox box, Matrix trans);
 
-Matrix GetProjectionMatrix(Camera cam, uint8_t zInvert);
+Matrix GetProjectionMatrix(Camera cam, float aspect, uint8_t zInvert);
 Matrix GetViewMatrix(Camera cam);

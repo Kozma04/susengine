@@ -1,33 +1,37 @@
 #version 330
 
-// Input vertex attributes
+
+#define SHADOW_CASCADES 8
+
+
 in vec3 vertexPosition;
 in vec2 vertexTexCoord;
 in vec3 vertexNormal;
 in vec4 vertexColor;
 
-// Input uniform values
 uniform mat4 mvp;
 uniform mat4 matModel;
 uniform mat4 matNormal;
 uniform vec4 meshCol;
 
-// Output vertex attributes (to fragment shader)
+uniform mat4 shadowProj[SHADOW_CASCADES];
+uniform int nShadowMaps;
+
 out vec3 fragPosition;
+out vec4 fragPositionShadow[SHADOW_CASCADES];
 out vec2 fragTexCoord;
 out vec4 fragColor;
 out vec3 fragNormal;
 
-// NOTE: Add here your custom variables
 
-void main()
-{
-    // Send vertex attributes to fragment shader
-    fragPosition = vec3(matModel*vec4(vertexPosition, 1.0));
+void main() {
+    fragPosition = vec3(matModel * vec4(vertexPosition, 1.0));
     fragTexCoord = vertexTexCoord;
     fragColor = vertexColor * meshCol;
-    fragNormal = normalize(vec3(matNormal*vec4(vertexNormal, 1.0)));
+    fragNormal = normalize(vec3(matNormal * vec4(vertexNormal, 1.0)));
+    
+    for(int i = 0; i < nShadowMaps; i++)
+        fragPositionShadow[i] = shadowProj[i] * matModel * vec4(vertexPosition, 1.0);
 
-    // Calculate final vertex position
-    gl_Position = mvp*vec4(vertexPosition, 1.0);
+    gl_Position = mvp * vec4(vertexPosition, 1.0);
 }

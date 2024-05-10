@@ -88,6 +88,7 @@ typedef struct EngineCompLightSrc {
         Vector3 dir;
     };
     float range;
+    uint8_t castShadow;
 } EngineCompLightSrc;
 
 typedef struct EngineCallbackData {
@@ -139,8 +140,8 @@ typedef struct Engine {
         Hashmap shaders; // Shader* values
 
         Array meshRend; // ComponentID (for Mesh Renderer) values
-        Array meshRendVisible; // Visible Mesh Renderer component IDs
-        Array meshRendVisibleDist; // distance to each Mesh Renderer
+        //Array meshRendVisible; // Visible Mesh Renderer component IDs
+        //Array meshRendVisibleDist; // distance to each Mesh Renderer
         
         Array lightSrc; // ComponentID (for light sources) values
         ECSComponentID camera; // Camera component

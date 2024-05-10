@@ -6,7 +6,7 @@ static void game_cbPlayerControllerOnUpdate(
     uint32_t compType, struct ECSComponent *comp, void *cbUserData
 ) {
     static const float sensitivity = 0.004;
-    static const float speed = 10;
+    static const float speed = 20;
     static Vector3 forward = {0, 0, 1};
 
     Vector3 deltaPos = (Vector3){0, 0, 0};
@@ -85,7 +85,7 @@ Prop createProp(Engine *engine, EngineRenderModelID modelId) {
     prop.info = engine_getInfo(engine, prop.id);
     prop.transform = engine_getTransform(engine, prop.id);
     prop.meshRenderer = engine_getMeshRenderer(engine, prop.id);
-    prop.meshRenderer->shaderId = GAME_SHADER_FORWARD_BASIC_ID;
+    prop.meshRenderer->shaderId = SHADER_FORWARD_BASIC_ID;
     engine_entityPostCreate(engine, prop.id);
     return prop;
 }
@@ -132,7 +132,7 @@ Lightbulb createLightbulb(Engine *engine, Vector3 lightColor, float range) {
     ent.pointLight = engine_getLightSrc(engine, ent.id);
     ent.transform = engine_getTransform(engine, ent.id);
     ent.meshRenderer = engine_getMeshRenderer(engine, ent.id);
-    ent.meshRenderer->shaderId = GAME_SHADER_FORWARD_BASIC_ID;
+    ent.meshRenderer->shaderId = SHADER_FORWARD_BASIC_ID;
     ent.meshRenderer->color = lightColor;
     engine_entityPostCreate(engine, ent.id);
     return ent;

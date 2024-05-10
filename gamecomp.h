@@ -8,6 +8,7 @@
 #include "dsa.h"
 #include "ecs.h"
 #include "engine.h"
+#include "render.h"
 #include "logger.h"
 
 
@@ -23,10 +24,6 @@ typedef enum GameEntTypeEnum {
     GAME_ENT_TYPE_ITEM = 1 << 8,
     GAME_ENT_TYPE_PROP = 1 << 9
 } GameEntType;
-
-enum {
-    GAME_SHADER_FORWARD_BASIC_ID
-};
 
 
 typedef struct Player {

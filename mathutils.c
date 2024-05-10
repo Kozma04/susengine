@@ -71,16 +71,17 @@ static Plane PlaneFromPoints(Vector3 v0, Vector3 v1, Vector3 v2) {
     };
 }
 
-Frustum GetCameraFrustum(Camera cam) {
+// https://cgvr.cs.uni-bremen.de/teaching/cg_literatur/lighthouse3d_view_frustum_culling/index.html
+Frustum GetCameraFrustum(Camera cam, float ratio) {
     const static float nearD = .01f, farD = 1000.f;
-    const float ratio = (float)GetScreenWidth() / GetScreenHeight();
+    //const float ratio = (float)GetScreenWidth() / GetScreenHeight();
 
     Frustum fr;
 
     float tang = (float)tan(DEG2RAD * cam.fovy * 0.5);
-	float nh = nearD * tang;
+	float nh = cam.projection == CAMERA_PERSPECTIVE ? nearD * tang : cam.fovy / 2;
 	float nw = nh * ratio; 
-	float fh = farD * tang;
+	float fh = cam.projection == CAMERA_PERSPECTIVE ? farD * tang : cam.fovy / 2;
 	float fw = fh * ratio;
 
     Vector3 dir, nc, fc, X, Y, Z;
@@ -101,12 +102,6 @@ Frustum GetCameraFrustum(Camera cam) {
 	fc = Vector3Subtract(cam.position, Vector3Scale(Z, farD));
 
 	// compute the 4 corners of the frustum on the near plane
-	/*
-    ntl = nc + Y * nh - X * nw;
-	ntr = nc + Y * nh + X * nw;
-	nbl = nc - Y * nh - X * nw;
-	nbr = nc - Y * nh + X * nw;
-    */
     Vector3 ntl = (Vector3){
         nc.x + Y.x * nh - X.x * nw,
         nc.y + Y.y * nh - X.y * nw,
@@ -129,12 +124,6 @@ Frustum GetCameraFrustum(Camera cam) {
     };
 
 	// compute the 4 corners of the frustum on the far plane
-	/*
-    ftl = fc + Y * fh - X * fw;
-	ftr = fc + Y * fh + X * fw;
-	fbl = fc - Y * fh - X * fw;
-	fbr = fc - Y * fh + X * fw;
-    */
     Vector3 ftl = (Vector3){
         fc.x + Y.x * fh - X.x * fw,
         fc.y + Y.y * fh - X.y * fw,
@@ -240,21 +229,29 @@ BoundingBox BoxTransform(BoundingBox box, Matrix trans) {
 }
 
 
-Matrix GetProjectionMatrix(Camera cam, uint8_t zInvert) {
-    Matrix proj = MatrixPerspective(
-        cam.fovy / 2 * DEG2RAD,
-        ((float)GetScreenWidth() / GetScreenHeight()),
-        0.01f, 1000.f
-    );
-    if(zInvert) {
-        proj.m10 *= -1;
-        proj.m11 *= -1;
+Matrix GetProjectionMatrix(Camera cam, float aspect, uint8_t zInvert) {
+    Matrix proj = MatrixIdentity();
+    
+    if(cam.projection == CAMERA_PERSPECTIVE) {
+        proj = MatrixPerspective(cam.fovy / 2 * DEG2RAD, aspect, .01f, 1000.f);
+        if(zInvert) {
+            proj.m10 *= -1;
+            proj.m11 *= -1;
+        }
+    }
+    else if(cam.projection == CAMERA_ORTHOGRAPHIC) {
+        float top = cam.fovy / 2.0;
+        float right = top * aspect;
+        proj = MatrixOrtho(-right, right, -top, top, .01f, 1000.f);
+    }
+    else {
+        logMsg(LOG_LVL_FATAL, "invalid camera projection: %d\n", cam.projection);
     }
     return proj;
 }
 
 
 Matrix GetViewMatrix(Camera cam) {
-    Matrix mat = MatrixLookAt(cam.position, cam.target, Vector3Scale(cam.up, 1));
+    Matrix mat = MatrixLookAt(cam.position, cam.target, cam.up);
     return mat;
 }
