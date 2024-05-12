@@ -57,7 +57,7 @@ uint8_t hashmap_resize(Hashmap *const hmap, const size_t size) {
 
 uint8_t hashmap_set(Hashmap *const hmap, const uint32_t key,
                     const HashmapVal value) {
-    uint32_t pos;
+    uint32_t pos = 0;
     uint8_t retVal;
     if(hmap->entries == NULL || !binsearch_hashmapInc(hmap->entries, hmap->nEntries, key, &pos)) {
         if(hmap->nEntries + 1 > hmap->allocSize) {

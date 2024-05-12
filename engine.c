@@ -11,6 +11,7 @@ void engine_init(Engine *const engine) {
     //engine->render.meshRendVisibleDist = array_init();
     engine->render.lightSrc = array_init();
     engine->render.camera = ECS_INVALID_ID;
+    engine->phys = physics_initSystem();
     ecs_init(&engine->ecs);
 }
 
@@ -119,8 +120,8 @@ static void engine_updateTransform(Engine *const engine,
         trans->globalMatrix = trans->localMatrix;
     else {
         trans->globalMatrix = MatrixMultiply(
-            parentTrans->trans.globalMatrix,
-            trans->localMatrix
+            trans->localMatrix,
+            parentTrans->trans.globalMatrix
         );
     }
     //trans->globalMatrix = MatrixIdentity();
@@ -157,6 +158,7 @@ static void engine_updateTransforms(Engine *const engine) {
 
 void engine_stepUpdate(Engine *const engine, const float deltaTime) {
     engine_dispatchMessages(engine);
+    physics_updateSystem(&engine->phys, deltaTime * engine->timescale);
     engine_updateTransforms(engine);
     engine_execUpdateCallbacks(engine, deltaTime);
 }
@@ -173,6 +175,13 @@ EngineStatus engine_render_addModel(
     hashmap_set(&engine->render.models, id, (HashmapVal)(void*)model);
     logMsg(LOG_LVL_INFO, "added model id %u", id);
     return ENGINE_STATUS_OK;
+}
+
+Model *engine_render_getModel(Engine *engine, EngineRenderModelID id) {
+    Model *res;
+    if(!hashmap_getP(&engine->render.models, id, (void**)&res))
+        return NULL;
+    return res;
 }
 
 EngineStatus engine_render_addShader(
@@ -338,6 +347,37 @@ static void engine_cbMeshRendererOnDestroy(
 ) {
     const EngineCallbackData *cbData = cbUserData;
     engine_render_unregisterMeshRenderer(cbData->engine, compId);
+}
+
+static void engine_cbRigidBodyOnCreate(
+    uint32_t cbType, ECSEntityID entId, ECSComponentID compId,
+    uint32_t compType, struct ECSComponent *comp, void *cbUserData
+) {
+    const EngineCallbackData *cbData = cbUserData;
+    EngineCompTransform *trans = engine_getTransform(cbData->engine, entId);
+    Collider *coll = engine_getCollider(cbData->engine, entId);
+    PhysicsRigidBody *rb = (PhysicsRigidBody*)comp->data;
+    Matrix *mat;
+
+    if(trans == NULL) {
+        logMsg(LOG_LVL_FATAL, "no transform found for rigidbody in ent. %u", entId);
+        return;
+    }
+    if(coll == NULL) {
+        logMsg(LOG_LVL_FATAL, "no collider found for rigidbody in ent. %u", entId);
+        return;
+    }
+
+    mat = &trans->globalMatrix;
+    physics_addRigidBody(&cbData->engine->phys, entId, rb, coll, mat);
+}
+
+static void engine_cbRigidBodyOnDestroy(
+    uint32_t cbType, ECSEntityID entId, ECSComponentID compId,
+    uint32_t compType, struct ECSComponent *comp, void *cbUserData
+) {
+    const EngineCallbackData *cbData = cbUserData;
+    physics_removeRigidBody(&cbData->engine->phys, entId);
 }
 
 static void engine_cbLightSourceOnCreate(
@@ -584,7 +624,7 @@ EngineStatus engine_createPointLight(
     comp->pos = pos;
     comp->range = range;
 
-    if(!transformAnchor) {
+    if(transformAnchor == NULL) {
         res = ecs_getCompData(
             &engine->ecs, ent, ENGINE_ECS_COMP_TYPE_TRANSFORM,
             (void**)&transformAnchor
@@ -616,6 +656,77 @@ EngineStatus engine_createPointLight(
     }
     return ENGINE_STATUS_REGISTER_FAILED;
 }
+
+EngineStatus engine_createRigidBody(
+    Engine *const engine, const ECSEntityID ent, const float mass
+) {
+    const EngineECSCompType type = ENGINE_ECS_COMP_TYPE_RIGIDBODY;
+    ECSComponent compRaw;
+    PhysicsRigidBody *const comp = &(((EngineECSCompData*)&compRaw.data)->rigidBody);
+    *comp = physics_initRigidBody(mass);
+    
+    if(ecs_registerComp(&engine->ecs, ent, type, compRaw) == ECS_RES_OK) {
+        ecs_setCallback(
+            &engine->ecs, ent, type,
+            ENGINE_ECS_CB_TYPE_ON_CREATE, engine_cbRigidBodyOnCreate
+        );
+        ecs_setCallback(
+            &engine->ecs, ent, type,
+            ENGINE_ECS_CB_TYPE_ON_DESTROY, engine_cbRigidBodyOnDestroy
+        );
+        return ENGINE_STATUS_OK;
+    }
+    return ENGINE_STATUS_REGISTER_FAILED;
+}
+
+EngineStatus engine_createSphereCollider(
+    Engine *engine, ECSEntityID ent, float radius
+) {
+    const EngineECSCompType type = ENGINE_ECS_COMP_TYPE_COLLIDER;
+    ECSComponent compRaw;
+    Collider *const comp = &(((EngineECSCompData*)&compRaw.data)->coll);
+    comp->collMask = 0xffffffff;
+    comp->collTargetMask = 0;
+    comp->nContacts = 0;
+    comp->type = COLLIDER_TYPE_SPHERE;
+    comp->sphere.radius = radius;
+    
+    if(ecs_registerComp(&engine->ecs, ent, type, compRaw) == ECS_RES_OK)
+        return ENGINE_STATUS_OK;
+    return ENGINE_STATUS_REGISTER_FAILED;
+}
+
+EngineStatus engine_createConvexHullCollider(
+    Engine *engine, ECSEntityID ent, float *vert, size_t nVert
+) {
+    const EngineECSCompType type = ENGINE_ECS_COMP_TYPE_COLLIDER;
+    ECSComponent compRaw;
+    Collider *const comp = &(((EngineECSCompData*)&compRaw.data)->coll);
+    comp->collMask = 0xffffffff;
+    comp->collTargetMask = 0;
+    comp->nContacts = 0;
+    comp->type = COLLIDER_TYPE_CONVEX_HULL;
+    comp->convexHull.vertices = vert;
+    comp->convexHull.nVertices = nVert;
+    
+    if(ecs_registerComp(&engine->ecs, ent, type, compRaw) == ECS_RES_OK)
+        return ENGINE_STATUS_OK;
+    return ENGINE_STATUS_REGISTER_FAILED;
+}
+
+EngineStatus engine_createConvexHullColliderModel(
+    Engine *engine, ECSEntityID ent, EngineRenderModelID id
+) {
+    Model *mdl = engine_render_getModel(engine, id);
+    if(mdl == NULL) {
+        logMsg(LOG_LVL_ERR, "model id %u not found", id);
+        return ENGINE_STATUS_MODEL_NOT_FOUND;
+    }
+    return engine_createConvexHullCollider(
+        engine, ent, mdl->meshes[0].vertices, mdl->meshes[0].vertexCount
+    );
+}
+
 
 EngineCompInfo *engine_getInfo(Engine *const engine, const ECSEntityID ent) {
     EngineECSCompData *data;
@@ -673,6 +784,26 @@ EngineCompLightSrc *engine_getLightSrc(
     if(res != ECS_RES_OK)
         return NULL;
     return &data->light;
+}
+
+PhysicsRigidBody *engine_getRigidBody(Engine *engine, ECSEntityID ent) {
+    EngineECSCompData *data;
+    const ECSStatus res = ecs_getCompData(
+        &engine->ecs, ent, ENGINE_ECS_COMP_TYPE_RIGIDBODY, (void**)&data
+    );
+    if(res != ECS_RES_OK)
+        return NULL;
+    return &data->rigidBody;
+}
+
+Collider *engine_getCollider(Engine *engine, ECSEntityID ent) {
+    EngineECSCompData *data;
+    const ECSStatus res = ecs_getCompData(
+        &engine->ecs, ent, ENGINE_ECS_COMP_TYPE_COLLIDER, (void**)&data
+    );
+    if(res != ECS_RES_OK)
+        return NULL;
+    return &data->coll;
 }
 
 

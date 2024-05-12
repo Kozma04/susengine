@@ -2,7 +2,7 @@
 
 #define ECS_COMPONENT_TYPES          10
 #define ECS_MAX_ENTITIES             128
-#define ECS_MAX_COMPONENTS           1024
+#define ECS_MAX_COMPONENTS           512
 #define ECS_COMPONENT_DATA_SIZE      256
 #define ECS_COMPONENT_CALLBACK_TYPES 8
 

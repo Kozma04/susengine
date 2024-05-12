@@ -32,9 +32,10 @@ void render_setupDirShadow(Renderer *rend, float size, size_t nCascades,
     rend->shadowDir.shadowMap = calloc(nCascades, sizeof(RenderTexture));
     for(int i = 0; i < nCascades && ok; i++) {
         RenderTexture *rt = rend->shadowDir.shadowMap + i;
-        rt->id = rlLoadFramebuffer(res, res);
+        uint32_t rtRes = res;// / (i + 1);
+        rt->id = rlLoadFramebuffer(rtRes, rtRes);
         rlEnableFramebuffer(rt->id);
-        rt->depth.id = rlLoadTextureDepth(res, res, 0);
+        rt->depth.id = rlLoadTextureDepth(rtRes, rtRes, 0);
         rt->depth.width = res;
         rt->depth.height = res;
         rt->depth.mipmaps = 1;
@@ -246,8 +247,10 @@ void render_setMeshRendererUniforms(
 
     // Assign shadow map uniforms
     for(i = 0; i < rend->shadowDir.nCascades; i++, shadowTexSlot++) {
-        glActiveTexture(GL_TEXTURE0 + shadowTexSlot);
-        glBindTexture(GL_TEXTURE_2D, rend->shadowDir.shadowMap[i].depth.id);
+        //glActiveTexture(GL_TEXTURE0 + shadowTexSlot);
+        //glBindTexture(GL_TEXTURE_2D, rend->shadowDir.shadowMap[i].depth.id);
+        rlActiveTextureSlot(shadowTexSlot);
+        rlEnableTexture(rend->shadowDir.shadowMap[i].depth.id);
         SetShaderValue(
             shader,
             GetShaderLocation(shader, TextFormat("shadowMap[%u]", i)),

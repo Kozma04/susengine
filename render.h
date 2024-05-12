@@ -3,7 +3,6 @@
 
 #include <stdint.h>
 #include <stdlib.h>
-#include "external/glad.h"
 
 #include "raylib.h"
 #include "rlgl.h"

@@ -14,6 +14,7 @@
 #include "logger.h"
 #include "ecs.h"
 #include "dsa.h"
+#include "physics.h"
 
 
 typedef uint32_t EngineRenderModelID;
@@ -111,6 +112,8 @@ typedef enum EngineECSCompTypeEnum {
     ENGINE_ECS_COMP_TYPE_CAMERA,
     ENGINE_ECS_COMP_TYPE_MESH_RENDERER,
     ENGINE_ECS_COMP_TYPE_LIGHTSOURCE,
+    ENGINE_ECS_COMP_TYPE_RIGIDBODY,
+    ENGINE_ECS_COMP_TYPE_COLLIDER,
     ENGINE_ECS_COMP_TYPE_USER
 } EngineECSCompType;
 
@@ -127,6 +130,8 @@ typedef union EngineECSCompData {
     EngineCompCamera cam;
     EngineCompMeshRenderer meshR;
     EngineCompLightSrc light;
+    PhysicsRigidBody rigidBody;
+    Collider coll;
 } EngineECSCompData;
 
 
@@ -135,6 +140,7 @@ typedef struct Engine {
     size_t nPendingMsg;
     EngineMsg pendingMsg[ENGINE_MAX_PENDING_MESSAGES];
     ECS ecs;
+    PhysicsSystem phys;
     struct {
         Hashmap models; // Model* values
         Hashmap shaders; // Shader* values
@@ -177,6 +183,8 @@ void engine_stepUpdate(Engine *engine, float deltaTime);
 // Assign Raylib Model it to a EngineRenderModelID
 EngineStatus engine_render_addModel(Engine *engine, EngineRenderModelID id,
                                     const Model *model);
+// Get Raylib Model from the registered models list
+Model *engine_render_getModel(Engine *engine, EngineRenderModelID id);
 // Assign Raylib Model it to a EngineRenderModelID
 EngineStatus engine_render_addShader(Engine *engine, EngineShaderID id,
                                     const Shader *shader);
@@ -212,35 +220,69 @@ EngineStatus engine_entityBroadcastMsg(
 );
 
 
+// Create and initialize Info component
 EngineStatus engine_createInfo(
     Engine *engine, ECSEntityID ent, EngineEntType entTypeMask
 );
+// Create and initialize Transform component
 EngineStatus engine_createTransform(
     Engine *engine, ECSEntityID ent, ECSEntityID transformAnchor
 );
+// Create and initialize Camera component
 EngineStatus engine_createCamera(
     Engine *engine, ECSEntityID ent, float fov, int projection
 );
+// Create and initialize Mesh Renderer component
 EngineStatus engine_createMeshRenderer(
     Engine *engine, ECSEntityID ent, EngineCompTransform *transformAnchor,
     EngineRenderModelID modelId
 );
+// Create and initialize Light Source component of Ambient type
 EngineStatus engine_createAmbientLight(
     Engine *engine, ECSEntityID ent, Vector3 color
 );
+// Create and initialize Light Source component of Directional type
 EngineStatus engine_createDirLight(
     Engine *engine, ECSEntityID ent, Vector3 color, Vector3 dir
 );
+// Create and initialize Light Source component of Point type
 EngineStatus engine_createPointLight(
     Engine *engine, ECSEntityID ent, EngineCompTransform *transformAnchor,
     Vector3 color, Vector3 pos, float range
 );
 
+// Create and initialize Rigid Body component for physics simulation
+EngineStatus engine_createRigidBody(
+    Engine *engine, ECSEntityID ent, float mass
+);
+// Create and initialize Collider component of Sphere type 
+EngineStatus engine_createSphereCollider(
+    Engine *engine, ECSEntityID ent, float radius
+);
+// Create and initialize Collider component of Convex Hull type 
+EngineStatus engine_createConvexHullCollider(
+    Engine *engine, ECSEntityID ent, float *vert, size_t nVert
+);
+// Create and initialize Collider component of Convex Hull type from model ID
+EngineStatus engine_createConvexHullColliderModel(
+    Engine *engine, ECSEntityID ent, EngineRenderModelID id
+);
+
+// Get Info component
 EngineCompInfo *engine_getInfo(Engine *engine, ECSEntityID ent);
+// Get Transform component
 EngineCompTransform *engine_getTransform(Engine *engine, ECSEntityID ent);
+// Get Camera component
 EngineCompCamera *engine_getCamera(Engine *engine, ECSEntityID ent);
+// Get Mesh Renderer component
 EngineCompMeshRenderer *engine_getMeshRenderer(Engine *engine, ECSEntityID id);
+// Get Light Source component
 EngineCompLightSrc *engine_getLightSrc(Engine *engine, ECSEntityID id);
+
+// Get Rigid Body component
+PhysicsRigidBody *engine_getRigidBody(Engine *engine, ECSEntityID id);
+// Get Collider component
+Collider *engine_getCollider(Engine *engine, ECSEntityID id);
 
 
 

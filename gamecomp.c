@@ -27,6 +27,11 @@ static void game_cbPlayerControllerOnUpdate(
     forward = Vector3RotateByAxisAngle(forward, (Vector3){0, -1, 0}, md.x);
     forward = Vector3RotateByAxisAngle(forward, right, -md.y);
 
+    //printf("rotation = %.3f deg\n", atan2(forward.x, forward.z) * RAD2DEG);
+    float yaw = atan2(forward.x, forward.z);
+    float pitch = -asin(forward.y);
+    trans->rot = QuaternionFromEuler(pitch, yaw, 0);
+
     cam->cam.target = Vector3Add(cam->cam.position, forward);
 
     if(IsKeyDown(KEY_W))
@@ -47,6 +52,38 @@ static void game_cbPlayerControllerOnUpdate(
 
     trans->pos = Vector3Add(trans->pos, deltaPos);
     trans->localUpdate = 1;
+}
+
+
+static void engine_cbCollisionDbgViewOnUpdate(
+    uint32_t cbType, ECSEntityID entId, ECSComponentID compId,
+    uint32_t compType, struct ECSComponent *comp, void *cbUserData
+) {
+    const EngineCallbackData *cbData = cbUserData;
+    Collider *coll = engine_getCollider(cbData->engine, entId);
+    EngineCompMeshRenderer *mr = engine_getMeshRenderer(cbData->engine, entId);
+
+    if(coll->nContacts > 0) {
+        mr->color = (Vector3){1, 0, 0};
+    }
+    else {
+        mr->color = (Vector3){0, 1, 0};
+    }
+}
+
+static void engine_createCollisionDbgView(
+    Engine *const engine, const ECSEntityID ent
+) {
+    const EngineECSCompType type = ENGINE_ECS_COMP_TYPE_USER + 1;
+    ECSComponent compRaw;
+    if(ecs_registerComp(&engine->ecs, ent, type, compRaw) != ECS_RES_OK) {
+        logMsg(LOG_LVL_ERR, "couldn't register collision debug view component");
+        return;
+    }
+    ecs_setCallback(
+        &engine->ecs, ent, type, ENGINE_ECS_CB_TYPE_ON_UPDATE,
+        engine_cbCollisionDbgViewOnUpdate
+    );
 }
 
 
@@ -73,6 +110,19 @@ Player createPlayer(Engine *engine) {
     return player;
 }
 
+
+static float cubeCollVert[] = {
+    -0.5, -0.5, -0.5,
+    0,5, -0.5, -0.5,
+    -0.5, 0.5, -0.5,
+    0.5, 0.5, -0.5,
+    -0.5, -0.5, 0.5,
+    0,5, -0.5, 0.5,
+    -0.5, 0.5, 0.5,
+    0.5, 0.5, 0.5,
+};
+
+
 Prop createProp(Engine *engine, EngineRenderModelID modelId) {
     const static char *const name = "prop";
     Prop prop;
@@ -82,6 +132,9 @@ Prop createProp(Engine *engine, EngineRenderModelID modelId) {
     engine_createMeshRenderer(
         engine, prop.id, engine_getTransform(engine, prop.id), modelId
     );
+    engine_createConvexHullCollider(engine, prop.id, cubeCollVert, 8);
+    engine_createRigidBody(engine, prop.id, 1.f);
+    engine_createCollisionDbgView(engine, prop.id);
     prop.info = engine_getInfo(engine, prop.id);
     prop.transform = engine_getTransform(engine, prop.id);
     prop.meshRenderer = engine_getMeshRenderer(engine, prop.id);

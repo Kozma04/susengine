@@ -1,6 +1,6 @@
 // https://learnopengl.com/code_viewer_gh.php?code=src/5.advanced_lighting/3.1.3.shadow_mapping/3.1.3.shadow_mapping.fs
 
-#version 330
+#version 460
 
 
 #define SHADOW_CASCADES 8
@@ -21,7 +21,7 @@ struct DirectionalLight {
 in vec3 fragPosition;
 in vec4 fragPositionShadow[SHADOW_CASCADES];
 in vec2 fragTexCoord;
-in vec3 fragNormal;
+flat in vec3 fragNormal;
 in vec4 fragColor;
 
 //uniform sampler2D texture0;
@@ -46,7 +46,7 @@ float ShadowCalculation() {
         mapDepth = texture(shadowMap[i], projCoords.xy).r;
         if(projCoords.x < 0 || projCoords.x > 1 || projCoords.y < 0 || projCoords.y > 1)
             continue;
-        shadow = projCoords.z - 0.005 < mapDepth ? 1.0 : 0.0;
+        shadow = projCoords.z - 0.0004 < mapDepth ? 1.0 : 0.0;
         break;
     }
     

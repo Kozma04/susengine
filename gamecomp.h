@@ -10,6 +10,7 @@
 #include "engine.h"
 #include "render.h"
 #include "logger.h"
+#include "physics.h"
 
 
 typedef enum GameEntTypeEnum {

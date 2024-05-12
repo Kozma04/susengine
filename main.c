@@ -28,6 +28,13 @@ void registerModelHeightmap(Engine *engine, EngineRenderModelID id, Vector3 size
     engine_render_addModel(engine, id, mdl);
 }
 
+void registerModelCylinder(Engine *engine, EngineRenderModelID id, float radius, float height) {
+    Mesh mesh = GenMeshCylinder(radius, height, 8);
+    Model *mdl = malloc(sizeof(*mdl));
+    *mdl = LoadModelFromMesh(mesh);
+    engine_render_addModel(engine, id, mdl);
+}
+
 void registerShader(Engine *engine, EngineShaderID id, char *fnameVert, char *fnameFrag) {
     Shader *shader = malloc(sizeof(*shader));
     *shader = LoadShader(fnameVert, fnameFrag);
@@ -52,10 +59,10 @@ int main(void) {
     Lightbulb light;
 
     SetConfigFlags(FLAG_VSYNC_HINT);
-    InitWindow(2000, 1250, "Engine");
+    InitWindow(2000 / 2, 1250 / 2, "Engine");
     DisableCursor();
     log_setHeaderThreshold("ecs.c", LOG_LVL_WARN);
-    //SetTargetFPS(60);
+    SetTargetFPS(20);
 
     engine_init(&engine);
     rend = render_init(16, 4);
@@ -64,6 +71,8 @@ int main(void) {
     // Asset loading
     registerModel(&engine, 1, "assets/cube.obj");
     registerModelHeightmap(&engine, 2, (Vector3){16, 8, 16}, "assets/pei_heightmap.png");
+    registerModelCylinder(&engine, 3, 1.f, 2.5f);
+
     registerShader(
         &engine, SHADER_FORWARD_BASIC_ID,
         "shaders/fwd_basic_vert.glsl", "shaders/fwd_basic_frag.glsl"
@@ -76,37 +85,42 @@ int main(void) {
 
     // Game setup
     player = createPlayer(&engine);
-    prop = createProp(&engine, 2);
-    light = createLightbulb(&engine, (Vector3){1.3, 0.2, 0.1}, 50);
+    //prop = createProp(&engine, 2);
+    //prop.transform->pos = (Vector3){0, -5, 0};
+    //prop.transform->scale = (Vector3){10, 2, 10};
+
+    //light = createLightbulb(&engine, (Vector3){1.3, 0.2, 0.1}, 50);
     createWeather(&engine, (Vector3){0.1, 0.12, 0.15});
     createEnvironment(&engine, (Vector3){0.3, 0.3, 0.3}, (Vector3){0.6, -0.6, 0.3});
 
-    light.transform->anchor = player.id;
 
-    player.transform->pos = (Vector3){0, 4, 0};
-    prop.transform->pos = (Vector3){0, -5, 0};
-    prop.transform->scale = (Vector3){10, 2, 10};
+    Prop playerBarrel = createProp(&engine, 1);
+    playerBarrel.transform->anchor = player.id;
+    playerBarrel.transform->pos = (Vector3){0, -3, 7};
+
+
+    //light.transform->anchor = player.id;
+
+    player.transform->pos = (Vector3){0, 8, 0};
 
     ecs_getCompID(&engine.ecs, player.id, ENGINE_ECS_COMP_TYPE_CAMERA, &cameraId);
     engine_render_setCamera(&engine, cameraId);
 
-    for(int x = -4; x < 4; x++) {
-        for(int y = -4; y < 4; y++) {
+    for(int x = 0; x < 1; x++) {
+        for(int y = 0; y < 1; y++) {
             Prop prop = createProp(&engine, 1);
-            prop.transform->pos = (Vector3){x * 3, 0, y * 3};
+            prop.transform->pos = (Vector3){x * 5, 0, y * 5};
             prop.meshRenderer->color = (Vector3){0.7, 1, 0.7};
         }
     }
 
-    AutomationEvent ev;
-
     // Game loop
     logMsg(LOG_LVL_INFO, "Running game loop");
     while(!WindowShouldClose()) {
-        light.transform->pos = (Vector3){
+        /*light.transform->pos = (Vector3){
             cos(GetTime() * 2) * 20, 0, sin(GetTime() * 2) * 20
         };
-        light.transform->localUpdate = 1;
+        light.transform->localUpdate = 1;*/
 
         // Update
         engine_stepUpdate(&engine, GetFrameTime());
