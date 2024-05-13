@@ -9,6 +9,7 @@
 
 #include "dsa.h"
 #include "logger.h"
+#include "gjk.h"
 
 
 typedef struct ColliderMesh {
@@ -54,6 +55,7 @@ typedef struct PhysicsSystemEntity {
     PhysicsRigidBody *body;
     Collider *collider;
     Matrix *transform;
+    Matrix transformInverse;
 } PhysicsSystemEntity;
 
 typedef struct PhysicsSystem {
@@ -70,6 +72,6 @@ void physics_addRigidBody(
 );
 void physics_removeRigidBody(PhysicsSystem *sys, uint32_t id);
 
-void physics_updateSystem(PhysicsSystem *sys, float dt);
+void physics_setPosition(PhysicsRigidBody *rb, Vector3 pos);
 
-uint8_t computeGJK(ColliderMesh meshA, ColliderMesh meshB, Matrix transformA, Matrix transformB);
+void physics_updateSystem(PhysicsSystem *sys, float dt);

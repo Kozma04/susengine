@@ -39,6 +39,7 @@ typedef struct Prop {
     EngineCompInfo *info;
     EngineCompTransform *transform;
     EngineCompMeshRenderer *meshRenderer;
+    PhysicsRigidBody *rb;
 } Prop;
 
 typedef struct Weather {

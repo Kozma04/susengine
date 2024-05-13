@@ -360,10 +360,6 @@ static void render_updateShadowMaps(
 ) {
     if(lightSrc->type != ENGINE_LIGHTSRC_DIRECTIONAL)
         return;
-
-    static uint32_t framecnt = 0;
-    framecnt++;
-    //if(framecnt > 1) return;
         
     for(uint32_t i = 0; i < rend->shadowDir.nCascades; i++) {
         rend->state.shadowDirCam[i] = renderGetLightSrcShadowCam(

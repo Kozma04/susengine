@@ -157,8 +157,12 @@ static void engine_updateTransforms(Engine *const engine) {
 
 
 void engine_stepUpdate(Engine *const engine, const float deltaTime) {
+    const static int physSubsteps = 20;
+
     engine_dispatchMessages(engine);
-    physics_updateSystem(&engine->phys, deltaTime * engine->timescale);
+    for(int i = 0; i < physSubsteps; i++) {
+        physics_updateSystem(&engine->phys, 1.f / 60.f / physSubsteps);
+    }
     engine_updateTransforms(engine);
     engine_execUpdateCallbacks(engine, deltaTime);
 }
@@ -232,7 +236,7 @@ EngineStatus engine_render_unregisterMeshRenderer(
         logMsg(LOG_LVL_ERR, "mesh renderer id %u not found", id);
         return ENGINE_STATUS_RENDER_ITEM_NOT_FOUND;
     }
-    logMsg(LOG_LVL_DEBUG, "registered mesh renderer id %u", id);
+    logMsg(LOG_LVL_DEBUG, "unregistered mesh renderer id %u", id);
     return ENGINE_STATUS_OK;
 }
 
@@ -356,7 +360,7 @@ static void engine_cbRigidBodyOnCreate(
     const EngineCallbackData *cbData = cbUserData;
     EngineCompTransform *trans = engine_getTransform(cbData->engine, entId);
     Collider *coll = engine_getCollider(cbData->engine, entId);
-    PhysicsRigidBody *rb = (PhysicsRigidBody*)comp->data;
+    PhysicsRigidBody *rb = &((EngineECSCompData*)comp->data)->rigidBody;
     Matrix *mat;
 
     if(trans == NULL) {
@@ -369,7 +373,21 @@ static void engine_cbRigidBodyOnCreate(
     }
 
     mat = &trans->globalMatrix;
+    trans->pos = rb->pos;
+    trans->localUpdate = 1;
     physics_addRigidBody(&cbData->engine->phys, entId, rb, coll, mat);
+}
+
+static void engine_cbRigidBodyOnUpdate(
+    uint32_t cbType, ECSEntityID entId, ECSComponentID compId,
+    uint32_t compType, struct ECSComponent *comp, void *cbUserData
+) {
+    const EngineCallbackData *cbData = cbUserData;
+    EngineCompTransform *trans = engine_getTransform(cbData->engine, entId);
+    PhysicsRigidBody *rb = &((EngineECSCompData*)comp->data)->rigidBody;
+
+    trans->pos = rb->pos;
+    trans->localUpdate = 1;
 }
 
 static void engine_cbRigidBodyOnDestroy(
@@ -434,6 +452,19 @@ static void engine_cbCameraOnUpdate(
     cam->cam.position = (Vector3){mat->m12, mat->m13, mat->m14};
 }
 
+static void engine_cbTransformOnCreate(
+    uint32_t cbType, ECSEntityID entId, ECSComponentID compId,
+    uint32_t compType, struct ECSComponent *comp, void *cbUserData
+) {
+    EngineCallbackData *cbData = cbUserData;
+    EngineCompTransform *trans = engine_getTransform(cbData->engine, entId);
+    if(trans == NULL) {
+        logMsg(LOG_LVL_FATAL, "cannot find transform in component %u", compId);
+        return;
+    }
+    engine_updateTransform(cbData->engine, (EngineECSCompData*)comp->data);
+}
+
 
 EngineStatus engine_createInfo(
     Engine *const engine, const ECSEntityID ent,
@@ -461,8 +492,13 @@ EngineStatus engine_createTransform(
     comp->rot = QuaternionFromEuler(0, 0, 0);
     comp->_globalUpdate = 0;
     comp->localUpdate = 1;
-    if(ecs_registerComp(&engine->ecs, ent, type, compRaw) == ECS_RES_OK)
+    if(ecs_registerComp(&engine->ecs, ent, type, compRaw) == ECS_RES_OK) {
+        ecs_setCallback(
+            &engine->ecs, ent, type, ENGINE_ECS_CB_TYPE_ON_CREATE,
+            engine_cbTransformOnCreate
+        );
         return ENGINE_STATUS_OK;
+    }
     return ENGINE_STATUS_REGISTER_FAILED;
 }
 
@@ -480,8 +516,7 @@ EngineStatus engine_createCamera(
     comp->cam.up = (Vector3){0, 1, 0};
     if(ecs_registerComp(&engine->ecs, ent, type, compRaw) == ECS_RES_OK) {
         ecs_setCallback(
-            &engine
-            ->ecs, ent, type, ENGINE_ECS_CB_TYPE_ON_UPDATE,
+            &engine->ecs, ent, type, ENGINE_ECS_CB_TYPE_ON_UPDATE,
             engine_cbCameraOnUpdate
         );
         return ENGINE_STATUS_OK;
@@ -669,6 +704,10 @@ EngineStatus engine_createRigidBody(
         ecs_setCallback(
             &engine->ecs, ent, type,
             ENGINE_ECS_CB_TYPE_ON_CREATE, engine_cbRigidBodyOnCreate
+        );
+        ecs_setCallback(
+            &engine->ecs, ent, type,
+            ENGINE_ECS_CB_TYPE_ON_UPDATE, engine_cbRigidBodyOnUpdate
         );
         ecs_setCallback(
             &engine->ecs, ent, type,

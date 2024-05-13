@@ -7,7 +7,10 @@ static void game_cbPlayerControllerOnUpdate(
 ) {
     static const float sensitivity = 0.004;
     static const float speed = 20;
-    static Vector3 forward = {0, 0, 1};
+    static Vector3 forward = (Vector3){0, -0.8, 0.1};
+    static int framecnt = 0;
+
+    framecnt++;
 
     Vector3 deltaPos = (Vector3){0, 0, 0};
     EngineCallbackData *cbData = cbUserData;
@@ -24,8 +27,11 @@ static void game_cbPlayerControllerOnUpdate(
 
     Vector2 md = Vector2Scale(GetMouseDelta(), sensitivity);
     Vector3 right = Vector3CrossProduct(forward, (Vector3){0, 1, 0});
-    forward = Vector3RotateByAxisAngle(forward, (Vector3){0, -1, 0}, md.x);
-    forward = Vector3RotateByAxisAngle(forward, right, -md.y);
+    if(framecnt >= 5) {
+        forward = Vector3Normalize(forward);
+        forward = Vector3RotateByAxisAngle(forward, (Vector3){0, -1, 0}, md.x);
+        forward = Vector3RotateByAxisAngle(forward, right, -md.y);
+    }
 
     //printf("rotation = %.3f deg\n", atan2(forward.x, forward.z) * RAD2DEG);
     float yaw = atan2(forward.x, forward.z);
@@ -113,13 +119,13 @@ Player createPlayer(Engine *engine) {
 
 static float cubeCollVert[] = {
     -0.5, -0.5, -0.5,
-    0,5, -0.5, -0.5,
-    -0.5, 0.5, -0.5,
-    0.5, 0.5, -0.5,
-    -0.5, -0.5, 0.5,
-    0,5, -0.5, 0.5,
-    -0.5, 0.5, 0.5,
-    0.5, 0.5, 0.5,
+     0.5, -0.5, -0.5,
+    -0.5,  0.5, -0.5,
+     0.5,  0.5, -0.5,
+    -0.5, -0.5,  0.5,
+     0.5, -0.5,  0.5,
+    -0.5,  0.5,  0.5,
+     0.5,  0.5,  0.5
 };
 
 
@@ -133,13 +139,14 @@ Prop createProp(Engine *engine, EngineRenderModelID modelId) {
         engine, prop.id, engine_getTransform(engine, prop.id), modelId
     );
     engine_createConvexHullCollider(engine, prop.id, cubeCollVert, 8);
+    //engine_createConvexHullColliderModel(engine, prop.id, modelId);
     engine_createRigidBody(engine, prop.id, 1.f);
     engine_createCollisionDbgView(engine, prop.id);
     prop.info = engine_getInfo(engine, prop.id);
     prop.transform = engine_getTransform(engine, prop.id);
+    prop.rb = engine_getRigidBody(engine, prop.id);
     prop.meshRenderer = engine_getMeshRenderer(engine, prop.id);
     prop.meshRenderer->shaderId = SHADER_FORWARD_BASIC_ID;
-    engine_entityPostCreate(engine, prop.id);
     return prop;
 }
 

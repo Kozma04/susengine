@@ -30,38 +30,53 @@ typedef struct GJKColliderMesh {
     float *vertices; // set of (X, Y, Z) coordinates
     size_t nVertices; // number of coordinates (vertices size = nVertices * 3)
     Vector3 pos;
+    Matrix transform;
+    Matrix transformInverse;
 } GJKColliderMesh;
 
 
 //Returns true if two colliders are intersecting. Has optional Minimum Translation Vector output param;
 //If supplied the EPA will be used to find the vector to separate coll1 from coll2
-bool gjk(GJKColliderMesh *coll1, GJKColliderMesh *coll2, Vector3 *mtv);
+static uint8_t gjk(GJKColliderMesh *coll1, GJKColliderMesh *coll2, Vector3 *mtv);
 //Internal functions used in the GJK algorithm
-void update_simplex3(Vector3 *a, Vector3 *b, Vector3 *c, Vector3 *d, int *simp_dim, Vector3 *search_dir);
-bool update_simplex4(Vector3 *a, Vector3 *b, Vector3 *c, Vector3 *d, int *simp_dim, Vector3 *search_dir);
+static void update_simplex3(Vector3 *a, Vector3 *b, Vector3 *c, Vector3 *d, int *simp_dim, Vector3 *search_dir);
+static uint8_t update_simplex4(Vector3 *a, Vector3 *b, Vector3 *c, Vector3 *d, int *simp_dim, Vector3 *search_dir);
 //Expanding Polytope Algorithm. Used to find the mtv of two intersecting 
 //colliders using the final simplex obtained with the GJK algorithm
-Vector3 EPA(Vector3 a, Vector3 b, Vector3 c, Vector3 d, GJKColliderMesh* coll1, GJKColliderMesh* coll2);
+static Vector3 EPA(Vector3 a, Vector3 b, Vector3 c, Vector3 d, GJKColliderMesh* coll1, GJKColliderMesh* coll2);
 
 #define GJK_MAX_NUM_ITERATIONS 64
 
-Vector3 supportVec(GJKColliderMesh *mesh, Vector3 dir) {
-    Vector3 vert, maxPoint;
-    float maxDist = -100000.f, dist;
+static Vector3 supportVec(GJKColliderMesh *mesh, Vector3 dir) {
+    dir = Vector3Transform(dir, mesh->transformInverse);
+    Vector3 vert;
+    Vector3 maxPoint = (Vector3){
+        mesh->vertices[0], mesh->vertices[1], mesh->vertices[2]
+    };
+    //logMsg(LOG_LVL_INFO, "start");
+    //printf("input dir.: [%.2f %.2f %.2f]\n",
+    //       dir.x, dir.y, dir.z);
+    float maxDist = Vector3DotProduct(maxPoint, dir), dist;
     for(int i = 0; i < mesh->nVertices * 3; i += 3) {
         vert = (Vector3){mesh->vertices[i], mesh->vertices[i + 1], mesh->vertices[i + 2]};
-        //vert = Vector3Transform(vert, transform);
+        //vert = Vector3Scale(vert, 2);
+        //printf("[%.2f %.2f %.2f] ", vert.x, vert.y, vert.z);
         dist = Vector3DotProduct(vert, dir);
         if(dist > maxDist)
             maxDist = dist, maxPoint = vert;
     }
+    maxPoint = Vector3Transform(maxPoint, mesh->transform);
+    //maxPoint = Vector3Add(maxPoint, mesh->pos);
+    //printf("\nsupport vec.: [%.2f %.2f %.2f]\n",
+    //       maxPoint.x, maxPoint.y, maxPoint.z);
+    //logMsg(LOG_LVL_INFO, "stop");
     return maxPoint;
 }
 
-bool gjk(GJKColliderMesh *coll1, GJKColliderMesh *coll2, Vector3 *mtv){
+static uint8_t gjk(GJKColliderMesh *coll1, GJKColliderMesh *coll2, Vector3 *mtv){
     Vector3 a, b, c, d; //Simplex: just a set of points (a is always most recently added)
     Vector3 search_dir = Vector3Subtract(coll1->pos, coll2->pos); //initial search direction between colliders
-
+    //Vector3 search_dir = (Vector3){1, 0, 0};
     //Get initial point for simplex
     //c = coll2->support(search_dir) - coll1->support(-search_dir);
     c = Vector3Subtract(
@@ -77,7 +92,10 @@ bool gjk(GJKColliderMesh *coll1, GJKColliderMesh *coll2, Vector3 *mtv){
         supportVec(coll1, Vector3Negate(search_dir))
     );
 
-    if(Vector3DotProduct(b, search_dir)<0) { return false; }//we didn't reach the origin, won't enclose it
+    if(Vector3DotProduct(b, search_dir)<0) { 
+        //logMsg(LOG_LVL_WARN, "early exit");
+        return 0; //we didn't reach the origin, won't enclose it
+    }
 
     //search_dir = cross(cross(c-b,-b),c-b); //search perpendicular to line segment towards origin
     search_dir = Vector3CrossProduct(Vector3Subtract(c, b), Vector3Negate(b));
@@ -100,11 +118,13 @@ bool gjk(GJKColliderMesh *coll1, GJKColliderMesh *coll2, Vector3 *mtv){
     for(int iterations=0; iterations<GJK_MAX_NUM_ITERATIONS; iterations++)
     {
         //a = coll2->support(search_dir) - coll1->support(-search_dir);
-        c = Vector3Subtract(
+        //logMsg(LOG_LVL_WARN, "[%u] search_dir= %.2f, %.2f, %.2f\n",
+        //       iterations, search_dir.x, search_dir.y, search_dir.z);
+        a = Vector3Subtract(
             supportVec(coll2, search_dir),
             supportVec(coll1, Vector3Negate(search_dir))
         );
-        if(Vector3DotProduct(a, search_dir)<0) { return false; }//we didn't reach the origin, won't enclose it
+        if(Vector3DotProduct(a, search_dir)<0) { return 0; }//we didn't reach the origin, won't enclose it
     
         simp_dim++;
         if(simp_dim==3){
@@ -112,14 +132,15 @@ bool gjk(GJKColliderMesh *coll1, GJKColliderMesh *coll2, Vector3 *mtv){
         }
         else if(update_simplex4(&a,&b,&c,&d,&simp_dim,&search_dir)) {
             if(mtv) *mtv = EPA(a,b,c,d,coll1,coll2);
-            return true;
+            return 1;
         }
     }//endfor
-    return false;
+    //logMsg(LOG_LVL_WARN, "reached max num. of iterations");
+    return 0;
 }
 
 //Triangle case
-void update_simplex3(Vector3 *a, Vector3 *b, Vector3 *c, Vector3 *d, int *simp_dim, Vector3 *search_dir){
+static void update_simplex3(Vector3 *a, Vector3 *b, Vector3 *c, Vector3 *d, int *simp_dim, Vector3 *search_dir){
     /* Required winding order:
     //  b
     //  | \
@@ -146,7 +167,7 @@ void update_simplex3(Vector3 *a, Vector3 *b, Vector3 *c, Vector3 *d, int *simp_d
         AO
     );
     if(dp>0){ //Closest to edge AB
-        c = a;
+        *c = *a;
         //simp_dim = 2;
         //search_dir = cross(cross(b-a, AO), b-a);
         *search_dir = Vector3CrossProduct(Vector3Subtract(*b, *a), AO);
@@ -154,12 +175,12 @@ void update_simplex3(Vector3 *a, Vector3 *b, Vector3 *c, Vector3 *d, int *simp_d
         return;
     }
     //float dp = dot(cross(n, c-a), AO);
-    float dp = Vector3DotProduct(
+    dp = Vector3DotProduct(
         Vector3CrossProduct(n, Vector3Subtract(*c, *a)),
         AO
     );
     if(dp>0){ //Closest to edge AC
-        b = a;
+        *b = *a;
         //simp_dim = 2;
         //search_dir = cross(cross(c-a, AO), c-a);
         *search_dir = Vector3CrossProduct(Vector3Subtract(*c, *a), AO);
@@ -169,23 +190,23 @@ void update_simplex3(Vector3 *a, Vector3 *b, Vector3 *c, Vector3 *d, int *simp_d
     
     *simp_dim = 3;
     if(Vector3DotProduct(n, AO)>0){ //Above triangle
-        d = c;
-        c = b;
-        b = a;
+        *d = *c;
+        *c = *b;
+        *b = *a;
         //simp_dim = 3;
         *search_dir = n;
         return;
     }
     //else //Below triangle
-    d = b;
-    b = a;
+    *d = *b;
+    *b = *a;
     //simp_dim = 3;
     *search_dir = Vector3Negate(n);
     return;
 }
 
 //Tetrahedral case
-bool update_simplex4(Vector3 *a, Vector3 *b, Vector3 *c, Vector3 *d, int *simp_dim, Vector3 *search_dir){
+static uint8_t update_simplex4(Vector3 *a, Vector3 *b, Vector3 *c, Vector3 *d, int *simp_dim, Vector3 *search_dir){
     // a is peak/tip of pyramid, BCD is the base (counterclockwise winding order)
 	//We know a priori that origin is above BCD and below a
 
@@ -211,27 +232,27 @@ bool update_simplex4(Vector3 *a, Vector3 *b, Vector3 *c, Vector3 *d, int *simp_d
     // this method is good enough. Makes no difference for AABBS, should test with more complex colliders.
     */
     if(Vector3DotProduct(ABC, AO)>0){ //In front of ABC
-    	d = c;
-    	c = b;
-    	b = a;
+    	*d = *c;
+    	*c = *b;
+    	*b = *a;
         *search_dir = ABC;
-    	return false;
+    	return 0;
     }
     if(Vector3DotProduct(ACD, AO)>0){ //In front of ACD
-    	b = a;
+    	*b = *a;
         *search_dir = ACD;
-    	return false;
+    	return 0;
     }
     if(Vector3DotProduct(ADB, AO)>0){ //In front of ADB
-    	c = d;
-    	d = b;
-    	b = a;
+    	*c = *d;
+    	*d = *b;
+    	*b = *a;
         *search_dir = ADB;
-    	return false;
+    	return 0;
     }
 
     //else inside tetrahedron; enclosed!
-    return true;
+    return 1;
 
     //Note: in the case where two of the faces have similar normals,
     //The origin could conceivably be closest to an edge on the tetrahedron
@@ -245,7 +266,7 @@ bool update_simplex4(Vector3 *a, Vector3 *b, Vector3 *c, Vector3 *d, int *simp_d
 #define EPA_MAX_NUM_FACES 64
 #define EPA_MAX_NUM_LOOSE_EDGES 32
 #define EPA_MAX_NUM_ITERATIONS 64
-Vector3 EPA(Vector3 a, Vector3 b, Vector3 c, Vector3 d, GJKColliderMesh* coll1, GJKColliderMesh* coll2){
+static Vector3 EPA(Vector3 a, Vector3 b, Vector3 c, Vector3 d, GJKColliderMesh* coll1, GJKColliderMesh* coll2){
     Vector3 faces[EPA_MAX_NUM_FACES][4]; //Array of faces, each with 3 verts and a normal
     
     //Init with final simplex from GJK
@@ -387,7 +408,7 @@ Vector3 EPA(Vector3 a, Vector3 b, Vector3 c, Vector3 d, GJKColliderMesh* coll1, 
             num_faces++;
         }
     } //End for iterations
-    printf("EPA did not converge\n");
+    logMsg(LOG_LVL_ERR, "EPA did not converge");
     //Return most recent closest point
     return Vector3Scale(
         faces[closest_face][3],

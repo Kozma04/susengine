@@ -59,10 +59,11 @@ int main(void) {
     Lightbulb light;
 
     SetConfigFlags(FLAG_VSYNC_HINT);
-    InitWindow(2000 / 2, 1250 / 2, "Engine");
+    InitWindow(2000, 1125, "Engine");
+    SetWindowPosition((2560 - 2000) / 2, 0);
     DisableCursor();
     log_setHeaderThreshold("ecs.c", LOG_LVL_WARN);
-    SetTargetFPS(20);
+    //SetTargetFPS(20);
 
     engine_init(&engine);
     rend = render_init(16, 4);
@@ -85,6 +86,7 @@ int main(void) {
 
     // Game setup
     player = createPlayer(&engine);
+    player.transform->pos = (Vector3){0, 8, 0};
     //prop = createProp(&engine, 2);
     //prop.transform->pos = (Vector3){0, -5, 0};
     //prop.transform->scale = (Vector3){10, 2, 10};
@@ -95,13 +97,21 @@ int main(void) {
 
 
     Prop playerBarrel = createProp(&engine, 1);
-    playerBarrel.transform->anchor = player.id;
-    playerBarrel.transform->pos = (Vector3){0, -3, 7};
+    //playerBarrel.transform->anchor = player.id;
+    //playerBarrel.transform->pos = (Vector3){0, 0, 10};
+    physics_setPosition(playerBarrel.rb, (Vector3){0, -3, 7});
+    engine_entityPostCreate(&engine, playerBarrel.id);
+
+    Prop plane = createProp(&engine, 1);
+    physics_setPosition(plane.rb, (Vector3){0, -5, 0});
+    plane.rb->mass = 0;
+    plane.transform->scale = (Vector3){20, 1, 20};
+    engine_entityPostCreate(&engine, plane.id);
+    //plane.transform->pos = (Vector3){0, -5, 0};
 
 
     //light.transform->anchor = player.id;
 
-    player.transform->pos = (Vector3){0, 8, 0};
 
     ecs_getCompID(&engine.ecs, player.id, ENGINE_ECS_COMP_TYPE_CAMERA, &cameraId);
     engine_render_setCamera(&engine, cameraId);
@@ -109,8 +119,10 @@ int main(void) {
     for(int x = 0; x < 1; x++) {
         for(int y = 0; y < 1; y++) {
             Prop prop = createProp(&engine, 1);
-            prop.transform->pos = (Vector3){x * 5, 0, y * 5};
             prop.meshRenderer->color = (Vector3){0.7, 1, 0.7};
+            physics_setPosition(plane.rb, (Vector3){0, -5, 0});
+            engine_entityPostCreate(&engine, prop.id);
+            //prop.transform->pos = (Vector3){x * 5, 0, y * 5};
         }
     }
 

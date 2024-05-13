@@ -18,6 +18,10 @@
         "stdint.h": "c",
         "fifo.h": "c",
         "render.h": "c",
-        "gamecomp.h": "c"
+        "gamecomp.h": "c",
+        "raylib.h": "c",
+        "rlgl.h": "c",
+        "random": "c",
+        "physics.h": "c"
     }
 }

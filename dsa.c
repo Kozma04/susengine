@@ -113,8 +113,10 @@ uint8_t hashmap_delResize(Hashmap *const hmap, const uint32_t key,
     if(resize)
         hashmap_resize(hmap, hmap->nEntries - 1);
     hmap->nEntries = final_nEntries;
-    for(i = pos; i < final_nEntries - 1; i++)
-        hmap->entries[i] = hmap->entries[i + 1];
+    if(final_nEntries) {
+        for(i = pos; i < final_nEntries - 1; i++)
+            hmap->entries[i] = hmap->entries[i + 1];
+    }
     return 1;
 }
 
