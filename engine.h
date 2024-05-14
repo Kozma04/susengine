@@ -101,6 +101,9 @@ typedef struct EngineCallbackData {
         struct {
             EngineMsg *msg;
         } msgRecv;
+        struct {
+            Shader shader;
+        } render;
     };
 } EngineCallbackData;
 
@@ -118,10 +121,15 @@ typedef enum EngineECSCompTypeEnum {
 } EngineECSCompType;
 
 typedef enum EngineECSCallbackTypeEnum {
+    // Entity lifecycle
     ENGINE_ECS_CB_TYPE_ON_CREATE,
     ENGINE_ECS_CB_TYPE_ON_UPDATE,
+    ENGINE_ECS_CB_TYPE_ON_DESTROY,
+    // Communication between components
     ENGINE_ECS_CB_TYPE_ON_MSG_RECV,
-    ENGINE_ECS_CB_TYPE_ON_DESTROY
+    // Rendering
+    ENGINE_ECS_CB_TYPE_PRE_RENDER,
+    ENGINE_ECS_CB_TYPE_POST_RENDER
 } EngineECSCallbackType;
 
 typedef union EngineECSCompData {
@@ -191,13 +199,13 @@ EngineStatus engine_render_addShader(Engine *engine, EngineShaderID id,
 // Get shader for input id. If id is invalid, it returns the default shader.
 Shader engine_render_getShader(Engine *engine, EngineShaderID id);
 // Register a Mesh Renderer component to the renderer
-EngineStatus engine_render_registerMeshRenderer(
-    Engine *engine, ECSComponentID id
+/*EngineStatus engine_render_registerMeshRenderer(
+    Engine *engine, ECSEntityID id
 );
 // Unregister a Mesh Renderer component from the renderer
 EngineStatus engine_render_unregisterMeshRenderer(
-    Engine *engine, ECSComponentID id
-);
+    Engine *engine, ECSEntityID id
+);*/
 // Register a Light Source component to the renderer
 EngineStatus engine_render_registerLightSrc(Engine *engine, ECSComponentID id);
 // Unregister a Light Source component from the renderer

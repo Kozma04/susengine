@@ -77,7 +77,8 @@ static void render_sortMeshRenderers(Engine *const engine, Renderer *const rend,
     EngineCompMeshRenderer *meshRendComp;
     EngineECSCompData *ecsCompData;
     uint32_t i;
-    uint32_t compPos;
+    ECSEntityID entPos;
+    ECSComponentID compPos;
     uint8_t sorted = 0;
     float dist;
 
@@ -86,7 +87,9 @@ static void render_sortMeshRenderers(Engine *const engine, Renderer *const rend,
     // Compute distances between mesh renderers and camera
     array_clear(meshRendVisDist);
     for(i = 0; i < array_size(meshRendVis); i++) {
-        compPos = array_get(meshRendVis, i).u32;
+        entPos = array_get(meshRendVis, i).u32;
+        compPos = engine->ecs.entDesc[entPos].compIndex[ENGINE_ECS_COMP_TYPE_MESH_RENDERER];
+
         ecsCompData = (EngineECSCompData*)engine->ecs.comp[compPos].data;
         meshRendComp = &ecsCompData->meshR;
         meshBBCenter = engine_meshRendererCenter(meshRendComp);
@@ -125,13 +128,14 @@ static void render_createMeshRendererDrawList(
     EngineCompMeshRenderer *meshRendComp;
     EngineECSCompData *ecsCompData;
     uint32_t i;
-    uint32_t compPos;
+    uint32_t compPos, entPos;
     uint8_t sorted = 0;
     float dist;
 
     array_clear(meshRendVis);
     for(i = 0; i < array_size(meshRend); i++) {
-        compPos = array_get(meshRend, i).u32;
+        entPos = array_get(meshRend, i).u32;
+        compPos = engine->ecs.entDesc[entPos].compIndex[ENGINE_ECS_COMP_TYPE_MESH_RENDERER];
         ecsCompData = (EngineECSCompData*)engine->ecs.comp[compPos].data;
         meshRendComp = &ecsCompData->meshR;
         if(!meshRendComp->visible)
@@ -157,7 +161,7 @@ static void render_createMeshRendererDrawList(
         if(FrustumBoxIntersect(frustum, transBox) == 2)
             continue;
     
-        array_pushBack(meshRendVis, (ArrayVal)compPos);
+        array_pushBack(meshRendVis, (ArrayVal)entPos);
     }
 }
 
@@ -285,6 +289,8 @@ static void render_drawVisibleMeshes(Engine *const engine, Renderer *const rend,
     const ECSComponentID camId = engine->render.camera;
     EngineCompMeshRenderer *meshRendComp;
     ECSComponentID compId;
+    ECSEntityID entId;
+    EngineCallbackData cbData;
     Model *model;
     Shader *shader;
     uint8_t res;
@@ -293,7 +299,8 @@ static void render_drawVisibleMeshes(Engine *const engine, Renderer *const rend,
     defaultShader.locs = rlGetShaderLocsDefault();
 
     for(size_t i = 0; i < array_size(meshRendVis); i++) {
-        compId = array_get(meshRendVis, i).u32;
+        entId = array_get(meshRendVis, i).u32;
+        compId = engine->ecs.entDesc[entId].compIndex[ENGINE_ECS_COMP_TYPE_MESH_RENDERER];
         meshRendComp = (EngineCompMeshRenderer*)engine->ecs.comp[compId].data;
         res = hashmap_getP(&engine->render.models, meshRendComp->modelId, 
                            (void**)&model);
@@ -304,6 +311,8 @@ static void render_drawVisibleMeshes(Engine *const engine, Renderer *const rend,
             );
             continue;
         }
+        if(inShadowPass && !meshRendComp->castShadow)
+            continue;
 
         model->transform = meshRendComp->transform->globalMatrix;
         if(forceShader == NULL) {
@@ -332,7 +341,18 @@ static void render_drawVisibleMeshes(Engine *const engine, Renderer *const rend,
 
         for(uint32_t j = 0; j < model->materialCount; j++)
             model->materials[j].shader = *shader;
+        
+        cbData.engine = engine;
+        cbData.render.shader = *shader;
+        ecs_execCallback(
+            &engine->ecs, entId, ENGINE_ECS_COMP_TYPE_MESH_RENDERER,
+            ENGINE_ECS_CB_TYPE_PRE_RENDER, &cbData
+        );
         DrawModel(*model, (Vector3){0, 0, 0}, 1.f, RAYWHITE);
+        ecs_execCallback(
+            &engine->ecs, entId, ENGINE_ECS_COMP_TYPE_MESH_RENDERER,
+            ENGINE_ECS_CB_TYPE_POST_RENDER, &cbData
+        );
         //DrawBoundingBox(meshRendComp->_boundingBoxTrans, GREEN);
     }
 }

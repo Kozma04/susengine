@@ -22,6 +22,8 @@
         "raylib.h": "c",
         "rlgl.h": "c",
         "random": "c",
-        "physics.h": "c"
+        "physics.h": "c",
+        "text_encoding": "c",
+        "thread": "c"
     }
 }

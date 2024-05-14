@@ -157,7 +157,7 @@ static void engine_updateTransforms(Engine *const engine) {
 
 
 void engine_stepUpdate(Engine *const engine, const float deltaTime) {
-    const static int physSubsteps = 20;
+    const static int physSubsteps = 1;
 
     engine_dispatchMessages(engine);
     for(int i = 0; i < physSubsteps; i++) {
@@ -216,7 +216,7 @@ Shader engine_render_getShader(Engine *engine, EngineShaderID id) {
     return *shader;
 }
 
-EngineStatus engine_render_registerMeshRenderer(
+static EngineStatus engine_render_registerMeshRenderer(
     Engine *const engine, const ECSComponentID id
 ) {
     if(array_has(&engine->render.meshRend, (ArrayVal)id)) {
@@ -228,7 +228,7 @@ EngineStatus engine_render_registerMeshRenderer(
     return ENGINE_STATUS_OK;
 }
 
-EngineStatus engine_render_unregisterMeshRenderer(
+static EngineStatus engine_render_unregisterMeshRenderer(
     Engine *const engine, const ECSComponentID id
 ) {
     const uint32_t pos = array_at(&engine->render.meshRend, (ArrayVal)id);
@@ -342,7 +342,7 @@ static void engine_cbMeshRendererOnCreate(
     uint32_t compType, struct ECSComponent *comp, void *cbUserData
 ) {
     const EngineCallbackData *cbData = cbUserData;
-    engine_render_registerMeshRenderer(cbData->engine, compId);
+    engine_render_registerMeshRenderer(cbData->engine, entId);
 }
 
 static void engine_cbMeshRendererOnDestroy(
@@ -350,7 +350,7 @@ static void engine_cbMeshRendererOnDestroy(
     uint32_t compType, struct ECSComponent *comp, void *cbUserData
 ) {
     const EngineCallbackData *cbData = cbUserData;
-    engine_render_unregisterMeshRenderer(cbData->engine, compId);
+    engine_render_unregisterMeshRenderer(cbData->engine, entId);
 }
 
 static void engine_cbRigidBodyOnCreate(

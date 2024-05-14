@@ -27,6 +27,7 @@
         return 0; \
     }
 
+
 #define _INSERTSORT_FUNC(name, binsearch_func, buftype, searchtype) \
     uint32_t name(buftype *const buf, size_t size, searchtype val) { \
         int32_t pos, i; \
@@ -58,13 +59,16 @@ uint8_t hashmap_resize(Hashmap *const hmap, const size_t size) {
 uint8_t hashmap_set(Hashmap *const hmap, const uint32_t key,
                     const HashmapVal value) {
     uint32_t pos = 0;
-    uint8_t retVal;
-    if(hmap->entries == NULL || !binsearch_hashmapInc(hmap->entries, hmap->nEntries, key, &pos)) {
+    uint8_t retVal, res;
+    if(hmap->entries != NULL)
+        res = binsearch_hashmapInc(hmap->entries, hmap->nEntries, key, &pos);
+    //printf("%u insert at %u\n", key, pos);
+    if(hmap->entries == NULL || !res) {
         if(hmap->nEntries + 1 > hmap->allocSize) {
             if(!hashmap_resize(hmap, hmap->allocSize * 2 + 1))
                 return 0;
         }
-        if(hmap->nEntries)
+        if(hmap->nEntries && pos == hmap->nEntries - 1 && key > hmap->entries[pos].key)
             pos++;
         hmap->nEntries++;
         for(uint32_t i = hmap->nEntries - 1; i > pos; i--)
@@ -74,6 +78,11 @@ uint8_t hashmap_set(Hashmap *const hmap, const uint32_t key,
     else retVal = 2;
     hmap->entries[pos].key = key;
     hmap->entries[pos].val = value;
+
+    /*printf("values: ");
+    for(int i = 0; i < hmap->nEntries; i++)
+        printf("%u ", hmap->entries[i].key);
+    printf("\n");*/
     return retVal;
 }
 

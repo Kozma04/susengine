@@ -20,6 +20,18 @@ void registerModel(Engine *engine, EngineRenderModelID id, char *fname) {
     engine_render_addModel(engine, id, mdl);
 }
 
+void registerModelSkybox(Engine *engine, EngineRenderModelID id, char *fname) {
+    Model *mdl = malloc(sizeof(*mdl));
+    Mesh cube = GenMeshCube(50.0f, 50.0f, 50.0f);
+    *mdl = LoadModelFromMesh(cube);
+
+    Image img = LoadImage(fname);
+    mdl->materials[0].maps[MATERIAL_MAP_CUBEMAP].texture = LoadTextureCubemap(img, CUBEMAP_LAYOUT_AUTO_DETECT);    // CUBEMAP_LAYOUT_PANORAMA
+    UnloadImage(img);
+
+    engine_render_addModel(engine, id, mdl);
+}
+
 void registerModelHeightmap(Engine *engine, EngineRenderModelID id, Vector3 size, char *fname) {
     Image image = LoadImage(fname);
     Mesh mesh = GenMeshHeightmap(image, size);
@@ -50,6 +62,7 @@ void cleanup(Engine *engine) {
     }
 }
 
+
 int main(void) {
     Engine engine;
     Renderer rend;
@@ -58,9 +71,10 @@ int main(void) {
     Prop prop;
     Lightbulb light;
 
-    SetConfigFlags(FLAG_VSYNC_HINT);
-    InitWindow(2000, 1125, "Engine");
-    SetWindowPosition((2560 - 2000) / 2, 0);
+    SetConfigFlags(FLAG_VSYNC_HINT | FLAG_WINDOW_HIGHDPI);
+    InitWindow(1280, 720, "Engine");
+    //ToggleFullscreen();
+    //SetWindowPosition((2560 - 2000) / 2, 0);
     DisableCursor();
     log_setHeaderThreshold("ecs.c", LOG_LVL_WARN);
     //SetTargetFPS(20);
@@ -70,9 +84,10 @@ int main(void) {
     render_setupDirShadow(&rend, 20, 3, 512);
 
     // Asset loading
-    registerModel(&engine, 1, "assets/cube.obj");
     registerModelHeightmap(&engine, 2, (Vector3){16, 8, 16}, "assets/pei_heightmap.png");
+    registerModelSkybox(&engine, 4, "assets/skybox/panorama1.jpg");
     registerModelCylinder(&engine, 3, 1.f, 2.5f);
+    registerModel(&engine, 1, "assets/cube.obj");
 
     registerShader(
         &engine, SHADER_FORWARD_BASIC_ID,
@@ -92,20 +107,21 @@ int main(void) {
     //prop.transform->scale = (Vector3){10, 2, 10};
 
     //light = createLightbulb(&engine, (Vector3){1.3, 0.2, 0.1}, 50);
-    createWeather(&engine, (Vector3){0.1, 0.12, 0.15});
-    createEnvironment(&engine, (Vector3){0.3, 0.3, 0.3}, (Vector3){0.6, -0.6, 0.3});
+    Weather weather = createWeather(&engine, (Vector3){0.1, 0.12, 0.15});
+    createEnvironment(&engine, (Vector3){0.3, 0.3, 0.3}, (Vector3){0.6, -1.2, 0.3});
 
 
     Prop playerBarrel = createProp(&engine, 1);
     //playerBarrel.transform->anchor = player.id;
     //playerBarrel.transform->pos = (Vector3){0, 0, 10};
-    physics_setPosition(playerBarrel.rb, (Vector3){0, -3, 7});
+    physics_setPosition(playerBarrel.rb, (Vector3){0, 3, 7});
     engine_entityPostCreate(&engine, playerBarrel.id);
 
     Prop plane = createProp(&engine, 1);
     physics_setPosition(plane.rb, (Vector3){0, -5, 0});
     plane.rb->mass = 0;
-    plane.transform->scale = (Vector3){20, 1, 20};
+    plane.transform->scale = (Vector3){30, 1, 30};
+    physics_setPosition(plane.rb, (Vector3){0, 0, 0});
     engine_entityPostCreate(&engine, plane.id);
     //plane.transform->pos = (Vector3){0, -5, 0};
 
@@ -116,11 +132,13 @@ int main(void) {
     ecs_getCompID(&engine.ecs, player.id, ENGINE_ECS_COMP_TYPE_CAMERA, &cameraId);
     engine_render_setCamera(&engine, cameraId);
 
-    for(int x = 0; x < 1; x++) {
-        for(int y = 0; y < 1; y++) {
+    for(int x = -1; x < 2; x++) {
+        for(int y = -1; y < 2; y++) {
             Prop prop = createProp(&engine, 1);
             prop.meshRenderer->color = (Vector3){0.7, 1, 0.7};
-            physics_setPosition(plane.rb, (Vector3){0, -5, 0});
+            prop.rb->mass = 0.1f;
+            prop.meshRenderer->castShadow = 1;
+            physics_setPosition(prop.rb, (Vector3){x * 3, 8, y * 3});
             engine_entityPostCreate(&engine, prop.id);
             //prop.transform->pos = (Vector3){x * 5, 0, y * 5};
         }
@@ -133,6 +151,21 @@ int main(void) {
             cos(GetTime() * 2) * 20, 0, sin(GetTime() * 2) * 20
         };
         light.transform->localUpdate = 1;*/
+
+        weather.transform->pos = player.transform->pos;
+        weather.transform->localUpdate = 1;
+
+
+        if(IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
+            Vector3 fwd = Vector3Normalize(Vector3Subtract(
+                player.camera->cam.target,
+                player.camera->cam.position
+            ));
+            fwd = Vector3Scale(fwd, 20);
+            playerBarrel.rb->accel = fwd;
+        }
+        else playerBarrel.rb->accel = (Vector3){0, 0, 0};
+
 
         // Update
         engine_stepUpdate(&engine, GetFrameTime());

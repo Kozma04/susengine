@@ -1,6 +1,7 @@
 #pragma once
 
-#define PHYSICS_MAX_CONTACTS 4
+#define COLLIDER_MAX_CONTACTS 4
+#define PHYSICS_WORLD_MAX_CONTACTS 128
 
 #include <stdint.h>
 #include <raylib.h>
@@ -26,20 +27,24 @@ typedef enum ColliderTypeEnum {
 
 typedef struct PhysicsRigidBody {
     Vector3 pos;
-    Vector3 oldPos;
+    Vector3 vel;
     Vector3 accel;
+    Vector3 gravity;
+    float mediumFriction;
     float mass;
+    float bounce;
 } PhysicsRigidBody;
 
 typedef struct ColliderContact {
     Vector3 normal;
     float depth;
+    uint32_t sourceId;
     uint32_t targetId;
 } ColliderContact;
 
 typedef struct Collider {
     ColliderType type;
-    ColliderContact contacts[PHYSICS_MAX_CONTACTS];
+    ColliderContact contacts[COLLIDER_MAX_CONTACTS];
     size_t nContacts;
     uint32_t collMask;
     uint32_t collTargetMask;
@@ -59,7 +64,14 @@ typedef struct PhysicsSystemEntity {
 } PhysicsSystemEntity;
 
 typedef struct PhysicsSystem {
-    Hashmap sysEntities;  
+    Hashmap sysEntities;
+
+    struct {
+        PhysicsRigidBody *bodyA, *bodyB;
+        Vector3 normal;
+        float depth;
+    } contacts[PHYSICS_WORLD_MAX_CONTACTS];
+    size_t nContacts;
 } PhysicsSystem;
 
 

@@ -71,10 +71,40 @@ static void engine_cbCollisionDbgViewOnUpdate(
 
     if(coll->nContacts > 0) {
         mr->color = (Vector3){1, 0, 0};
+        
+        for(int i = 0; i < coll->nContacts; i++) {
+            logMsg(LOG_LVL_INFO, "%u collides with %u", entId, coll->contacts[i].targetId);
+        }
     }
     else {
         mr->color = (Vector3){0, 1, 0};
     }
+}
+
+static void weatherCbPreRender(
+    uint32_t cbType, ECSEntityID entId, ECSComponentID compId,
+    uint32_t compType, struct ECSComponent *comp, void *cbUserData
+) {
+    rlDisableBackfaceCulling();
+    EngineCallbackData *cbData = (EngineCallbackData*)cbUserData;
+    EngineCompMeshRenderer *mr = &((EngineECSCompData*)comp->data)->meshR;
+    Model *mdl = engine_render_getModel(cbData->engine, mr->modelId);
+    logMsg(LOG_LVL_INFO, "my model is %u", mr->modelId);
+    
+    const int texSlot = 0;
+    rlActiveTextureSlot(texSlot);
+    rlEnableTexture(mdl->materials[0].maps[0].texture.id);
+    SetShaderValue(
+        cbData->render.shader, GetShaderLocation(cbData->render.shader, "texture0"),
+        &texSlot, SHADER_UNIFORM_INT
+    );
+}
+
+static void weatherCbPostRender(
+    uint32_t cbType, ECSEntityID entId, ECSComponentID compId,
+    uint32_t compType, struct ECSComponent *comp, void *cbUserData
+) {
+    rlEnableBackfaceCulling();
 }
 
 static void engine_createCollisionDbgView(
@@ -112,6 +142,7 @@ Player createPlayer(Engine *engine) {
     player.info = engine_getInfo(engine, player.id);
     player.transform = engine_getTransform(engine, player.id);
     player.camera = engine_getCamera(engine, player.id);
+
     engine_entityPostCreate(engine, player.id);
     return player;
 }
@@ -141,7 +172,7 @@ Prop createProp(Engine *engine, EngineRenderModelID modelId) {
     engine_createConvexHullCollider(engine, prop.id, cubeCollVert, 8);
     //engine_createConvexHullColliderModel(engine, prop.id, modelId);
     engine_createRigidBody(engine, prop.id, 1.f);
-    engine_createCollisionDbgView(engine, prop.id);
+    //engine_createCollisionDbgView(engine, prop.id);
     prop.info = engine_getInfo(engine, prop.id);
     prop.transform = engine_getTransform(engine, prop.id);
     prop.rb = engine_getRigidBody(engine, prop.id);
@@ -160,6 +191,18 @@ Weather createWeather(Engine *engine, Vector3 ambientColor) {
     weather.info = engine_getInfo(engine, weather.id);
     weather.ambient = engine_getLightSrc(engine, weather.id);
     weather.transform = engine_getTransform(engine, weather.id);
+
+    
+    engine_createMeshRenderer(engine, weather.id, engine_getTransform(engine, weather.id), 4);
+    EngineCompMeshRenderer *mr = engine_getMeshRenderer(engine, weather.id);
+    mr->shaderId = SHADER_FORWARD_BASIC_ID;
+    mr->castShadow = 0;
+    ecs_setCallback(&engine->ecs, weather.id, ENGINE_ECS_COMP_TYPE_MESH_RENDERER,
+                    ENGINE_ECS_CB_TYPE_PRE_RENDER, weatherCbPreRender);
+    ecs_setCallback(&engine->ecs, weather.id, ENGINE_ECS_COMP_TYPE_MESH_RENDERER,
+                    ENGINE_ECS_CB_TYPE_POST_RENDER, weatherCbPostRender);
+    
+
     engine_entityPostCreate(engine, weather.id);
     return weather;
 }

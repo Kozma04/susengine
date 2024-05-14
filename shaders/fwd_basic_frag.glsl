@@ -24,7 +24,7 @@ in vec2 fragTexCoord;
 flat in vec3 fragNormal;
 in vec4 fragColor;
 
-//uniform sampler2D texture0;
+uniform sampler2D texture0;
 uniform sampler2D shadowMap[SHADOW_CASCADES];
 uniform int nShadowMaps;
 
@@ -54,7 +54,7 @@ float ShadowCalculation() {
 }
 
 void main() {
-    vec4 texelColor = fragColor;
+    vec4 texelColor = fragColor * texture(texture0, fragTexCoord);
     vec3 light = lightAmbient;
 
     for(int i = 0; i < nLightDir; i++) {

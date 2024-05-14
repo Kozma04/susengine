@@ -35,6 +35,9 @@ int FrustumBoxIntersect(Frustum frustum, BoundingBox box);
 int FrustumPointIntersect(Frustum frustum, Vector3 point);
 
 BoundingBox BoxTransform(BoundingBox box, Matrix trans);
+Plane PlaneFromTri(Vector3 v0, Vector3 v1, Vector3 v2);
+float DistanceFromPlane(Plane plane, Vector3 in);
+Vector3 ProjectPointOntoPlane(Plane plane, Vector3 point);
 
 Matrix GetProjectionMatrix(Camera cam, float aspect, uint8_t zInvert);
 Matrix GetViewMatrix(Camera cam);
