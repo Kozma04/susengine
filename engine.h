@@ -1,6 +1,6 @@
 #pragma once
 
-#define ENGINE_MAX_PENDING_MESSAGES 64
+#define ENGINE_MAX_PENDING_MESSAGES 128
 #define ENGINE_MESSAGE_DATA_SIZE 64
 
 #include <stdlib.h>

@@ -42,6 +42,13 @@ typedef struct Prop {
     PhysicsRigidBody *rb;
 } Prop;
 
+typedef struct Water {
+    ECSEntityID id;
+    EngineCompInfo *info;
+    EngineCompTransform *transform;
+    EngineCompMeshRenderer *meshRenderer;
+} Water;
+
 typedef struct Weather {
     ECSEntityID id;
     EngineCompInfo *info;
@@ -67,6 +74,7 @@ typedef struct Lightbulb {
 
 Player createPlayer(Engine *engine);
 Prop createProp(Engine *engine, EngineRenderModelID modelId);
+Water createWater(Engine *engine, EngineRenderModelID modelId);
 Weather createWeather(Engine *engine, Vector3 ambientColor);
 Environment createEnvironment(Engine *engine, Vector3 lightColor, Vector3 lightDir);
 Lightbulb createLightbulb(Engine *engine, Vector3 lightColor, float range);

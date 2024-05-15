@@ -20,14 +20,12 @@ void registerModel(Engine *engine, EngineRenderModelID id, char *fname) {
     engine_render_addModel(engine, id, mdl);
 }
 
-void registerModelSkybox(Engine *engine, EngineRenderModelID id, char *fname) {
+void registerModelSkybox(Engine *engine, EngineRenderModelID id, Texture2D tex) {
     Model *mdl = malloc(sizeof(*mdl));
-    Mesh cube = GenMeshCube(50.0f, 50.0f, 50.0f);
+    Mesh cube = GenMeshCube(2.0f, 2.0f, 2.0f);
     *mdl = LoadModelFromMesh(cube);
-
-    Image img = LoadImage(fname);
-    mdl->materials[0].maps[MATERIAL_MAP_CUBEMAP].texture = LoadTextureCubemap(img, CUBEMAP_LAYOUT_AUTO_DETECT);    // CUBEMAP_LAYOUT_PANORAMA
-    UnloadImage(img);
+    //Cubemap
+    mdl->materials[0].maps[MATERIAL_MAP_CUBEMAP].texture = tex;
 
     engine_render_addModel(engine, id, mdl);
 }
@@ -72,7 +70,7 @@ int main(void) {
     Lightbulb light;
 
     SetConfigFlags(FLAG_VSYNC_HINT | FLAG_WINDOW_HIGHDPI);
-    InitWindow(1280, 720, "Engine");
+    InitWindow(1600, 900, "who needs OOP anyway?");
     //ToggleFullscreen();
     //SetWindowPosition((2560 - 2000) / 2, 0);
     DisableCursor();
@@ -84,10 +82,30 @@ int main(void) {
     render_setupDirShadow(&rend, 20, 3, 512);
 
     // Asset loading
-    registerModelHeightmap(&engine, 2, (Vector3){16, 8, 16}, "assets/pei_heightmap.png");
-    registerModelSkybox(&engine, 4, "assets/skybox/panorama1.jpg");
-    registerModelCylinder(&engine, 3, 1.f, 2.5f);
+    Image skyboxImg = LoadImage("assets/skybox/cubemap.png");
+    Texture2D skyboxTex = LoadTextureCubemap(skyboxImg, CUBEMAP_LAYOUT_CROSS_FOUR_BY_THREE);
+    Texture2D waterTex = LoadTexture("assets/water.png");
+    SetTextureFilter(waterTex, TEXTURE_FILTER_BILINEAR);
+    UnloadImage(skyboxImg);
+
+    registerModelSkybox(&engine, 0, skyboxTex);
     registerModel(&engine, 1, "assets/cube.obj");
+    registerModelHeightmap(&engine, 2, (Vector3){16, 8, 16}, "assets/pei_heightmap.png");
+    registerModelCylinder(&engine, 3, 1.f, 2.5f);
+    
+    Model mdl = LoadModelFromMesh(GenMeshPlane(800, 800, 200, 200));
+    mdl.materials[0].maps[MATERIAL_MAP_CUBEMAP].texture = skyboxTex;
+    mdl.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = waterTex;
+    engine_render_addModel(&engine, 4, &mdl);
+
+    Model boatMdl = LoadModel("assets/model/boat/boat2.obj");
+    Texture2D boatTex = LoadTexture("assets/model/boat/boat_d.png");
+    boatMdl.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = boatTex;
+    engine_render_addModel(&engine, 5, &boatMdl);
+
+    Water water = createWater(&engine, 4);
+    water.transform->pos = (Vector3){0, -5, 0};
+    engine_entityPostCreate(&engine, water.id);
 
     registerShader(
         &engine, SHADER_FORWARD_BASIC_ID,
@@ -97,48 +115,62 @@ int main(void) {
         &engine, SHADER_SHADOWMAP_ID,
         "shaders/shadow_vert.glsl", "shaders/shadow_frag.glsl"
     );
+    registerShader(
+        &engine, SHADER_CUBEMAP_ID,
+        "shaders/cubemap_vert.glsl", "shaders/cubemap_frag.glsl"
+    );
+    registerShader(
+        &engine, SHADER_WATERPLANE_ID,
+        "shaders/water_vert.glsl", "shaders/water_frag.glsl"
+    );
 
 
     // Game setup
     player = createPlayer(&engine);
     player.transform->pos = (Vector3){0, 8, 0};
-    //prop = createProp(&engine, 2);
-    //prop.transform->pos = (Vector3){0, -5, 0};
-    //prop.transform->scale = (Vector3){10, 2, 10};
 
     //light = createLightbulb(&engine, (Vector3){1.3, 0.2, 0.1}, 50);
+
     Weather weather = createWeather(&engine, (Vector3){0.1, 0.12, 0.15});
-    createEnvironment(&engine, (Vector3){0.3, 0.3, 0.3}, (Vector3){0.6, -1.2, 0.3});
+    createEnvironment(&engine, (Vector3){0.6, 0.6, 0.6}, (Vector3){1, -1, 0.8});
 
 
     Prop playerBarrel = createProp(&engine, 1);
-    //playerBarrel.transform->anchor = player.id;
-    //playerBarrel.transform->pos = (Vector3){0, 0, 10};
+    playerBarrel.meshRenderer->color = (Vector3){1.2, 0.4, 1.2};
+    playerBarrel.transform->scale = (Vector3){3, 3, 3};
     physics_setPosition(playerBarrel.rb, (Vector3){0, 3, 7});
     engine_entityPostCreate(&engine, playerBarrel.id);
 
     Prop plane = createProp(&engine, 1);
+    plane.meshRenderer->color = (Vector3){1.3f, 0.9f, 0.6f};
     physics_setPosition(plane.rb, (Vector3){0, -5, 0});
     plane.rb->mass = 0;
     plane.transform->scale = (Vector3){30, 1, 30};
     physics_setPosition(plane.rb, (Vector3){0, 0, 0});
     engine_entityPostCreate(&engine, plane.id);
-    //plane.transform->pos = (Vector3){0, -5, 0};
 
 
-    //light.transform->anchor = player.id;
+    Prop heavyProp = createProp(&engine, 5);
+    heavyProp.transform->scale = (Vector3){8, 8, 8};
+    heavyProp.rb->mass = 20;
+    physics_setPosition(heavyProp.rb, (Vector3){0, 0, 30});
+    engine_entityPostCreate(&engine, heavyProp.id);
 
 
     ecs_getCompID(&engine.ecs, player.id, ENGINE_ECS_COMP_TYPE_CAMERA, &cameraId);
     engine_render_setCamera(&engine, cameraId);
 
-    for(int x = -1; x < 2; x++) {
-        for(int y = -1; y < 2; y++) {
+    for(int x = -4; x < 4; x++) {
+        for(int y = -4; y < 4; y++) {
             Prop prop = createProp(&engine, 1);
+            prop.info->typeMask = 0x00000001;
+
             prop.meshRenderer->color = (Vector3){0.7, 1, 0.7};
             prop.rb->mass = 0.1f;
+            prop.rb->bounce = 1.f;
             prop.meshRenderer->castShadow = 1;
-            physics_setPosition(prop.rb, (Vector3){x * 3, 8, y * 3});
+            prop.transform->scale = (Vector3){2, 2, 2};
+            physics_setPosition(prop.rb, (Vector3){x * 3, 15, y * 3});
             engine_entityPostCreate(&engine, prop.id);
             //prop.transform->pos = (Vector3){x * 5, 0, y * 5};
         }
@@ -165,6 +197,16 @@ int main(void) {
             playerBarrel.rb->accel = fwd;
         }
         else playerBarrel.rb->accel = (Vector3){0, 0, 0};
+
+        /*if(IsKeyPressed(KEY_ENTER)) {
+            for(int i = 0; i < engine.phys.sysEntities.nEntries; i++) {
+                PhysicsSystemEntity *ent = (PhysicsSystemEntity*)engine.phys.sysEntities.entries[i].val.ptr;
+                Vector3 diff = Vector3Subtract(ent->body->pos, player.transform->pos);
+                diff = Vector3Scale(diff, 4);
+                diff.y = 50;
+                ent->body->vel = diff;
+            }
+        }*/
 
 
         // Update

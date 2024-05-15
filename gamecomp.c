@@ -1,14 +1,20 @@
 #include "gamecomp.h"
 
 
+const EngineEntType ALL_BOXES = 0x00000001;
+const EngineMsgType BOOM = ENGINE_MSG_TYPE_INTERACT + 1;
+
+
 static void game_cbPlayerControllerOnUpdate(
     uint32_t cbType, ECSEntityID entId, ECSComponentID compId,
     uint32_t compType, struct ECSComponent *comp, void *cbUserData
 ) {
     static const float sensitivity = 0.004;
-    static const float speed = 20;
+    static const float speed = 30;
     static Vector3 forward = (Vector3){0, -0.8, 0.1};
     static int framecnt = 0;
+
+    static Vector3 actualDeltaPos;
 
     framecnt++;
 
@@ -56,8 +62,19 @@ static void game_cbPlayerControllerOnUpdate(
     deltaPos = Vector3Normalize(deltaPos);
     deltaPos = Vector3Scale(deltaPos, speed * cbData->update.deltaTime);
 
-    trans->pos = Vector3Add(trans->pos, deltaPos);
+    actualDeltaPos = Vector3Add(actualDeltaPos, Vector3Scale(
+        Vector3Subtract(deltaPos, actualDeltaPos), 0.1
+    ));
+
+    trans->pos = Vector3Add(trans->pos, actualDeltaPos);
     trans->localUpdate = 1;
+
+    if(IsKeyPressed(KEY_ENTER)) {
+        engine_entityBroadcastMsg(
+            cbData->engine, entId, ALL_BOXES, BOOM,
+            &cam->cam.position, sizeof(&cam->cam.position)
+        );
+    }
 }
 
 
@@ -81,21 +98,20 @@ static void engine_cbCollisionDbgViewOnUpdate(
     }
 }
 
+
 static void weatherCbPreRender(
     uint32_t cbType, ECSEntityID entId, ECSComponentID compId,
     uint32_t compType, struct ECSComponent *comp, void *cbUserData
 ) {
     rlDisableBackfaceCulling();
+    rlDisableDepthTest();
     EngineCallbackData *cbData = (EngineCallbackData*)cbUserData;
     EngineCompMeshRenderer *mr = &((EngineECSCompData*)comp->data)->meshR;
     Model *mdl = engine_render_getModel(cbData->engine, mr->modelId);
-    logMsg(LOG_LVL_INFO, "my model is %u", mr->modelId);
-    
-    const int texSlot = 0;
-    rlActiveTextureSlot(texSlot);
-    rlEnableTexture(mdl->materials[0].maps[0].texture.id);
+
+    int texSlot = MATERIAL_MAP_CUBEMAP;
     SetShaderValue(
-        cbData->render.shader, GetShaderLocation(cbData->render.shader, "texture0"),
+        cbData->render.shader, GetShaderLocation(cbData->render.shader, "environmentMap"),
         &texSlot, SHADER_UNIFORM_INT
     );
 }
@@ -105,6 +121,37 @@ static void weatherCbPostRender(
     uint32_t compType, struct ECSComponent *comp, void *cbUserData
 ) {
     rlEnableBackfaceCulling();
+    rlEnableDepthTest();
+}
+
+static void waterCbPreRender(
+    uint32_t cbType, ECSEntityID entId, ECSComponentID compId,
+    uint32_t compType, struct ECSComponent *comp, void *cbUserData
+) {
+    EngineCallbackData *cbData = (EngineCallbackData*)cbUserData;
+    EngineCompMeshRenderer *mr = &((EngineECSCompData*)comp->data)->meshR;
+    Model *mdl = engine_render_getModel(cbData->engine, mr->modelId);
+    EngineCompCamera *cam = (EngineCompCamera*)cbData->engine->ecs.comp[cbData->engine->render.camera].data;
+
+    int texSlot = MATERIAL_MAP_CUBEMAP;
+    float time = GetTime();
+    SetShaderValue(
+        cbData->render.shader, GetShaderLocation(cbData->render.shader, "environmentMap"),
+        &texSlot, SHADER_UNIFORM_INT
+    );
+    texSlot = MATERIAL_MAP_DIFFUSE;
+    SetShaderValue(
+        cbData->render.shader, GetShaderLocation(cbData->render.shader, "texDiffuse"),
+        &texSlot, SHADER_UNIFORM_INT
+    );
+    SetShaderValue(
+        cbData->render.shader, GetShaderLocation(cbData->render.shader, "time"),
+        &time, SHADER_UNIFORM_FLOAT
+    );
+    SetShaderValue(
+        cbData->render.shader, GetShaderLocation(cbData->render.shader, "cameraPosition"),
+        &cam->cam.position, SHADER_UNIFORM_VEC3
+    );
 }
 
 static void engine_createCollisionDbgView(
@@ -121,6 +168,28 @@ static void engine_createCollisionDbgView(
         engine_cbCollisionDbgViewOnUpdate
     );
 }
+
+static void boxPropCustomCallback(
+    uint32_t cbType, ECSEntityID entId, ECSComponentID compId,
+    uint32_t compType, struct ECSComponent *comp, void *cbUserData
+) {
+    EngineCallbackData *cbData = cbUserData;
+    PhysicsRigidBody *body = engine_getRigidBody(cbData->engine, entId);
+
+    if(cbData->msgRecv.msg->msgType == BOOM) {
+        logMsg(LOG_LVL_INFO, "entity %u blows up!", entId);
+
+        Vector3 *playerPos = (Vector3*)cbData->msgRecv.msg->msgData;
+        
+        Vector3 diff = Vector3Subtract(body->pos, *playerPos);
+        diff = Vector3Scale(diff, 4);
+        diff.y = 50;
+
+        body->vel = diff;
+    }
+}
+
+
 
 
 Player createPlayer(Engine *engine) {
@@ -170,14 +239,43 @@ Prop createProp(Engine *engine, EngineRenderModelID modelId) {
         engine, prop.id, engine_getTransform(engine, prop.id), modelId
     );
     engine_createConvexHullCollider(engine, prop.id, cubeCollVert, 8);
-    //engine_createConvexHullColliderModel(engine, prop.id, modelId);
     engine_createRigidBody(engine, prop.id, 1.f);
     //engine_createCollisionDbgView(engine, prop.id);
+
+    ecs_setCallback(
+        &engine->ecs, prop.id, ENGINE_ECS_COMP_TYPE_RIGIDBODY,
+        ENGINE_ECS_CB_TYPE_ON_MSG_RECV, boxPropCustomCallback
+    );
+
+
     prop.info = engine_getInfo(engine, prop.id);
     prop.transform = engine_getTransform(engine, prop.id);
     prop.rb = engine_getRigidBody(engine, prop.id);
     prop.meshRenderer = engine_getMeshRenderer(engine, prop.id);
     prop.meshRenderer->shaderId = SHADER_FORWARD_BASIC_ID;
+    return prop;
+}
+
+Water createWater(Engine *engine, EngineRenderModelID modelId) {
+    const static char *const name = "prop";
+    Water prop;
+    ecs_registerEntity(&engine->ecs, &prop.id, name);
+    engine_createInfo(engine, prop.id, GAME_ENT_TYPE_PROP);
+    engine_createTransform(engine, prop.id, ECS_INVALID_ID);
+    engine_createMeshRenderer(
+        engine, prop.id, engine_getTransform(engine, prop.id), modelId
+    );
+    //engine_createConvexHullColliderModel(engine, prop.id, modelId);
+    //engine_createCollisionDbgView(engine, prop.id);
+    prop.info = engine_getInfo(engine, prop.id);
+    prop.transform = engine_getTransform(engine, prop.id);
+    prop.meshRenderer = engine_getMeshRenderer(engine, prop.id);
+    prop.meshRenderer->shaderId = SHADER_WATERPLANE_ID;
+    prop.meshRenderer->castShadow = 0;
+    ecs_setCallback(&engine->ecs, prop.id, ENGINE_ECS_COMP_TYPE_MESH_RENDERER,
+                    ENGINE_ECS_CB_TYPE_PRE_RENDER, waterCbPreRender);
+    //ecs_setCallback(&engine->ecs, prop.id, ENGINE_ECS_COMP_TYPE_MESH_RENDERER,
+    //                ENGINE_ECS_CB_TYPE_POST_RENDER, waterCbPostRender);
     return prop;
 }
 
@@ -193,9 +291,9 @@ Weather createWeather(Engine *engine, Vector3 ambientColor) {
     weather.transform = engine_getTransform(engine, weather.id);
 
     
-    engine_createMeshRenderer(engine, weather.id, engine_getTransform(engine, weather.id), 4);
+    engine_createMeshRenderer(engine, weather.id, engine_getTransform(engine, weather.id), 0);
     EngineCompMeshRenderer *mr = engine_getMeshRenderer(engine, weather.id);
-    mr->shaderId = SHADER_FORWARD_BASIC_ID;
+    mr->shaderId = SHADER_CUBEMAP_ID;
     mr->castShadow = 0;
     ecs_setCallback(&engine->ecs, weather.id, ENGINE_ECS_COMP_TYPE_MESH_RENDERER,
                     ENGINE_ECS_CB_TYPE_PRE_RENDER, weatherCbPreRender);

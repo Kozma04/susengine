@@ -31,7 +31,7 @@ void physics_addRigidBody(
     hashmap_set(&sys->sysEntities, id, (HashmapVal)(void*)ent);
 
     //ent->body->oldPos = ent->body->pos;
-    logMsg(LOG_LVL_WARN, "rb pos=%f %f %f", ent->body->pos.x, ent->body->pos.y, ent->body->pos.z);
+    //logMsg(LOG_LVL_WARN, "rb pos=%f %f %f", ent->body->pos.x, ent->body->pos.y, ent->body->pos.z);
     logMsg(LOG_LVL_DEBUG, "added entry id %u to physics system", id);
 }
 
@@ -53,8 +53,19 @@ void physics_setPosition(PhysicsRigidBody *rb, Vector3 pos) {
 
 void physics_bodyUpdate(PhysicsRigidBody *body, float dt) {
     Vector3 totalAccel = body->accel;
+
     if(body->mass != .0f)
         totalAccel = Vector3Add(totalAccel, body->gravity);
+
+    const float waterLevel = -5.f + sin(GetTime()) + 1;
+    if(body->pos.y < waterLevel) {
+        float depth = waterLevel - body->pos.y + 1 + 3;
+        totalAccel = Vector3Add(
+            totalAccel, (Vector3){0, depth * 3, 0}
+        );
+        body->vel = Vector3Scale(body->vel, 0.98);
+    }
+
     body->vel = Vector3Add(body->vel, Vector3Scale(totalAccel, dt));
     body->vel = Vector3Scale(body->vel, 1.f - body->mediumFriction);
     body->pos = Vector3Add(body->pos, Vector3Scale(body->vel, dt));
