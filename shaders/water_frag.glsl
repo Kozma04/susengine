@@ -46,17 +46,17 @@ void main()
     vec3 R = reflect(I, N);
     vec3 F = normalize(refract(I, -N, 1.0 / 1.33));
 
-    float fresnel = pow(abs(dot(I, N)), 1.f);
+    float fresnel = pow(abs(dot(I, N)), 5.f);
 
     vec3 tex = texture(texDiffuse, fragTexCoord * 80 + vec2(time / 3.f) * vec2(normalize(vec2(1, 0.7)))).rgb;
-    tex *= 1.8;
+    tex *= 1.2;
 
     vec3 colR = pow(texture(environmentMap, R).rgb, vec3(1.0 / 1.5));
     vec3 colF = pow(texture(environmentMap, F).rgb, vec3(1.0 / 1.5));
 
-    colF = mix(colF, tex, 0.2);
     if(ShadowCalculation() < 0.5) colF *= 0.2;
     color = mix(colR, colF, fresnel);
+    color = mix(color, tex, 0.3);
     //color = texture(environmentMap, F).rgb;
     //color = mix(vec3(1, 1, 1), vec3(0), fresnel);
 

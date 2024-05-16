@@ -387,6 +387,7 @@ static void engine_cbRigidBodyOnUpdate(
     PhysicsRigidBody *rb = &((EngineECSCompData*)comp->data)->rigidBody;
 
     trans->pos = rb->pos;
+    trans->rot = rb->rot;
     trans->localUpdate = 1;
 }
 

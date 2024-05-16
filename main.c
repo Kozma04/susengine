@@ -70,7 +70,7 @@ int main(void) {
     Lightbulb light;
 
     SetConfigFlags(FLAG_VSYNC_HINT | FLAG_WINDOW_HIGHDPI);
-    InitWindow(1600, 900, "who needs OOP anyway?");
+    InitWindow(1280, 720, "who needs OOP anyway?");
     //ToggleFullscreen();
     //SetWindowPosition((2560 - 2000) / 2, 0);
     DisableCursor();
@@ -166,7 +166,7 @@ int main(void) {
     const Vector3 COLOR_BLUE = (Vector3){0.7, 0.7, 1};
 
     // Initialize the game entity
-    Prop cube = createProp(&engine, MODEL_CUBE); // Ask for a 3D model
+    /*Prop cube = createProp(&engine, MODEL_CUBE); // Ask for a 3D model
     cube.info->typeMask = CAN_EXPLODE;           // Respond to BOOM message
     cube.rb->mass = 0.1f;                        // Rigid body mass
     cube.rb->bounce = 1.0f;                      // Rigid body elasticity
@@ -175,6 +175,7 @@ int main(void) {
     cube.transform->scale = (Vector3){1, 1, 1};  // 3D model size
     // Pass it to the game engine
     engine_entityPostCreate(&engine, cube.id);
+    */
 
 
     for(int x = -4; x < 4; x++) {
@@ -185,6 +186,8 @@ int main(void) {
             prop.meshRenderer->color = (Vector3){0.7, 1, 0.7};
             prop.rb->mass = 0.1f;
             prop.rb->bounce = GetRandomValue(1, 20) / 10.f;
+            prop.rb->inverseInertia = (Vector3){1, 1, 1};
+            prop.rb->enableAngularVel = 1;
             prop.meshRenderer->castShadow = 1;
             prop.transform->scale = (Vector3){2, 2, 2};
             physics_setPosition(prop.rb, (Vector3){x * 3, 15, y * 3});
@@ -201,12 +204,14 @@ int main(void) {
         weather.transform->localUpdate = 1;
 
 
-        if(IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
+        if(IsMouseButtonDown(MOUSE_BUTTON_LEFT) || IsMouseButtonDown(MOUSE_BUTTON_RIGHT)) {
             Vector3 fwd = Vector3Normalize(Vector3Subtract(
                 player.camera->cam.target,
                 player.camera->cam.position
             ));
             fwd = Vector3Scale(fwd, 20);
+            if(IsMouseButtonDown(MOUSE_BUTTON_RIGHT))
+                fwd = Vector3Negate(fwd);
             playerBarrel.rb->accel = fwd;
         }
         else playerBarrel.rb->accel = (Vector3){0, 0, 0};

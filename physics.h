@@ -30,14 +30,25 @@ typedef struct PhysicsRigidBody {
     Vector3 vel;
     Vector3 accel;
     Vector3 gravity;
+
+    Vector3 angularVel;
+    //Vector3 torque;
+    Vector3 inverseInertia;
+    Matrix inverseInertiaTensor;
+    Quaternion rot;
+
     float mediumFriction;
     float mass;
     float bounce;
     float staticFriction;
     float dynamicFriction;
+    
+    uint8_t enableAngularVel;
 } PhysicsRigidBody;
 
 typedef struct ColliderContact {
+    Vector3 pointA;
+    Vector3 pointB;
     Vector3 normal;
     float depth;
     uint32_t sourceId;
@@ -70,6 +81,7 @@ typedef struct PhysicsSystem {
 
     struct {
         PhysicsRigidBody *bodyA, *bodyB;
+        Vector3 pointA, pointB;
         Vector3 normal;
         float depth;
     } contacts[PHYSICS_WORLD_MAX_CONTACTS];
@@ -86,5 +98,6 @@ void physics_addRigidBody(
 void physics_removeRigidBody(PhysicsSystem *sys, uint32_t id);
 
 void physics_setPosition(PhysicsRigidBody *rb, Vector3 pos);
+void physics_applyAngularImpulse(PhysicsRigidBody *rb, Vector3 force);
 
 void physics_updateSystem(PhysicsSystem *sys, float dt);

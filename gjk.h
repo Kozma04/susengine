@@ -43,13 +43,13 @@ typedef struct Point {
 
 //Returns true if two colliders are intersecting. Has optional Minimum Translation Vector output param;
 //If supplied the EPA will be used to find the vector to separate coll1 from coll2
-static uint8_t gjk(GJKColliderMesh *coll1, GJKColliderMesh *coll2, Vector3 *mtv);
+static uint8_t gjk(GJKColliderMesh *coll1, GJKColliderMesh *coll2, Vector3 *mtv, Vector3 *locA, Vector3 *locB);
 //Internal functions used in the GJK algorithm
 static void update_simplex3(Point *a, Point *b, Point *c, Point *d, int *simp_dim, Vector3 *search_dir);
 static uint8_t update_simplex4(Point *a, Point *b, Point *c, Point *d, int *simp_dim, Vector3 *search_dir);
 //Expanding Polytope Algorithm. Used to find the mtv of two intersecting 
 //colliders using the final simplex obtained with the GJK algorithm
-static Vector3 EPA(Point *a, Point *b, Point *c, Point *d, GJKColliderMesh* coll1, GJKColliderMesh* coll2);
+static uint8_t EPA(Point *a, Point *b, Point *c, Point *d, GJKColliderMesh* coll1, GJKColliderMesh* coll2, Vector3 *nor, Vector3 *locA, Vector3 *locB);
 
 #define GJK_MAX_NUM_ITERATIONS 64
 
@@ -87,7 +87,7 @@ static void calculateSearchPoint(
     point->p = Vector3Subtract(point->b, point->a);
 }
 
-static uint8_t gjk(GJKColliderMesh *coll1, GJKColliderMesh *coll2, Vector3 *mtv){
+static uint8_t gjk(GJKColliderMesh *coll1, GJKColliderMesh *coll2, Vector3 *mtv, Vector3 *contactA, Vector3 *contactB){
     Point a, b, c, d; //Simplex: just a set of points (a is always most recently added)
     Vector3 search_dir = Vector3Subtract(coll1->pos, coll2->pos); //initial search direction between colliders
     //Vector3 search_dir = (Vector3){1, 0, 0};
@@ -152,7 +152,15 @@ static uint8_t gjk(GJKColliderMesh *coll1, GJKColliderMesh *coll2, Vector3 *mtv)
             update_simplex3(&a,&b,&c,&d,&simp_dim,&search_dir);
         }
         else if(update_simplex4(&a,&b,&c,&d,&simp_dim,&search_dir)) {
-            if(mtv) *mtv = EPA(&a,&b,&c,&d,coll1,coll2);
+            //if(mtv) *mtv = EPA(&a,&b,&c,&d,coll1,coll2);
+            Vector3 mtvInt, contactAInt, contactBInt;
+            if(mtv && contactA && contactB) {
+                if(EPA(&a, &b, &c, &d, coll1, coll2, &mtvInt, &contactAInt, &contactBInt)) {
+                    *mtv = mtvInt;
+                    *contactA = contactAInt;
+                    *contactB = contactBInt;
+                }
+            }
             return 1;
         }
     }//endfor
@@ -329,7 +337,7 @@ static void AddIfUniqueEdge(Edge *edges, int *faces, int *nEdges, int a, int b) 
     edges[*nEdges++] = (Edge){faces[a], faces[b]};
 }
 
-static Vector3 EPA(Point *a, Point *b, Point *c, Point *d, GJKColliderMesh* coll1, GJKColliderMesh* coll2) {
+static uint8_t EPA(Point *a, Point *b, Point *c, Point *d, GJKColliderMesh* coll1, GJKColliderMesh* coll2, Vector3 *nor, Vector3 *locA, Vector3 *locB) {
     Point faces[EPA_MAX_NUM_FACES][4]; //Array of faces, each with 3 verts and a normal
     Vector3 vertexA[3], vertexB[3];
 
@@ -424,10 +432,17 @@ static Vector3 EPA(Point *a, Point *b, Point *c, Point *d, GJKColliderMesh* coll
 
             float penetration = Vector3Length(Vector3Subtract(localA, localB));
             Vector3 normal = Vector3Normalize(Vector3Subtract(localA, localB));
+
+            *locA = localA;
+            *locB = localB;
+
             localA = Vector3Subtract(localA, coll1->pos);
             localB = Vector3Subtract(localB, coll2->pos);
             normal = Vector3Scale(normal, penetration);
-            return normal;
+
+            //return normal;
+            *nor = normal;
+            return 1;
         }
 
         Point loose_edges[EPA_MAX_NUM_LOOSE_EDGES][2]; //keep track of edges we need to fix after removing faces
@@ -511,6 +526,7 @@ static Vector3 EPA(Point *a, Point *b, Point *c, Point *d, GJKColliderMesh* coll
         }
     } //End for iterations
     logMsg(LOG_LVL_ERR, "EPA did not converge");
+    return 0;
     //Return most recent closest point
     
     Vector3 search_dir = faces[closest_face][3].p;
@@ -551,5 +567,9 @@ static Vector3 EPA(Point *a, Point *b, Point *c, Point *d, GJKColliderMesh* coll
     float penetration = Vector3Length(Vector3Subtract(localA, localB));
     Vector3 normal = Vector3Normalize(Vector3Subtract(localA, localB));
     normal = Vector3Scale(normal, penetration);
-    return normal;
+    *nor = normal;
+    *locA = localA;
+    *locB = localB;
+    return 0;
+    //return normal;
 }
