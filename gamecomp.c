@@ -182,8 +182,8 @@ static void boxPropCustomCallback(
         Vector3 *playerPos = (Vector3*)cbData->msgRecv.msg->msgData;
         
         Vector3 diff = Vector3Subtract(body->pos, *playerPos);
-        diff = Vector3Scale(diff, 4);
-        diff.y = 50;
+        diff = Vector3Scale(diff, GetRandomValue(10, 30) / 10.f);
+        diff.y = GetRandomValue(0, 30);
 
         body->vel = diff;
     }
@@ -238,7 +238,8 @@ Prop createProp(Engine *engine, EngineRenderModelID modelId) {
     engine_createMeshRenderer(
         engine, prop.id, engine_getTransform(engine, prop.id), modelId
     );
-    engine_createConvexHullCollider(engine, prop.id, cubeCollVert, 8);
+    //engine_createConvexHullCollider(engine, prop.id, cubeCollVert, 8);
+    engine_createConvexHullColliderModel(engine, prop.id, modelId);
     engine_createRigidBody(engine, prop.id, 1.f);
     //engine_createCollisionDbgView(engine, prop.id);
 

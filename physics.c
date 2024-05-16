@@ -9,6 +9,8 @@ PhysicsRigidBody physics_initRigidBody(float mass) {
     res.gravity = (Vector3){0, -9.8f, 0};
     res.mass = mass;
     res.bounce = .6f;
+    res.staticFriction = 0.1f;
+    res.dynamicFriction = 0.4f;
     res.mediumFriction = 0.001f;
     return res;
 }
@@ -192,6 +194,11 @@ void physics_updateSystem(PhysicsSystem *sys, float dt) {
             continue;
 
         Vector3 rv = Vector3Subtract(rbB->vel, rbA->vel);
+        Vector3 tangent = Vector3Subtract(rv, Vector3Scale(
+            sys->contacts[i].normal,
+            Vector3DotProduct(sys->contacts[i].normal, rv))
+        );
+        tangent = Vector3Normalize(tangent);
         float velAlongNormal = Vector3DotProduct(rv, sys->contacts[i].normal);
 
         if(velAlongNormal > 0)
@@ -202,7 +209,10 @@ void physics_updateSystem(PhysicsSystem *sys, float dt) {
 
         float e = rbA->bounce < rbB->bounce ? rbA->bounce : rbB->bounce;
         float j = -(1 + e) * velAlongNormal / (massAInv + massBInv);
+        float jt = -Vector3DotProduct(rv, tangent) / (massAInv + massBInv);
+        float mu = sqrtf(powf(rbA->staticFriction, 2.f) + powf(rbB->staticFriction, 2.f));
 
+        // Impulse response
         Vector3 imp = Vector3Scale(sys->contacts[i].normal, j);
         const float percent = 0.2;
         Vector3 corr = Vector3Scale(
@@ -218,6 +228,21 @@ void physics_updateSystem(PhysicsSystem *sys, float dt) {
             rbB->vel = Vector3Add(rbB->vel, Vector3Scale(imp, massBInv));
             rbB->pos = Vector3Add(rbB->pos, Vector3Scale(corr, massBInv));
         }
+
+        // Friction response
+        Vector3 fImpulse = (Vector3){0, 0, 0};
+        if(fabsf(jt) < j * mu)
+            fImpulse = Vector3Scale(tangent, jt);
+        else {
+            float dynF = sqrtf(
+                powf(rbA->dynamicFriction, 2.f) + powf(rbB->dynamicFriction, 2.f)
+            );
+            fImpulse = Vector3Scale(tangent, -j * dynF);
+        }
+        if(massAInv != .0f)
+            rbA->vel = Vector3Subtract(rbA->vel, Vector3Scale(fImpulse, massAInv));
+        if(massBInv != .0f)
+            rbB->vel = Vector3Add(rbB->vel, Vector3Scale(fImpulse, massBInv));
     }
 
     for(size_t i = 0; i < sys->sysEntities.nEntries; i++) {

@@ -33,6 +33,8 @@ typedef struct PhysicsRigidBody {
     float mediumFriction;
     float mass;
     float bounce;
+    float staticFriction;
+    float dynamicFriction;
 } PhysicsRigidBody;
 
 typedef struct ColliderContact {
@@ -73,7 +75,6 @@ typedef struct PhysicsSystem {
     } contacts[PHYSICS_WORLD_MAX_CONTACTS];
     size_t nContacts;
 } PhysicsSystem;
-
 
 PhysicsSystem physics_initSystem();
 PhysicsRigidBody physics_initRigidBody(float mass);

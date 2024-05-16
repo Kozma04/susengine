@@ -135,7 +135,7 @@ int main(void) {
     createEnvironment(&engine, (Vector3){0.6, 0.6, 0.6}, (Vector3){1, -1, 0.8});
 
 
-    Prop playerBarrel = createProp(&engine, 1);
+    Prop playerBarrel = createProp(&engine, 3);
     playerBarrel.meshRenderer->color = (Vector3){1.2, 0.4, 1.2};
     playerBarrel.transform->scale = (Vector3){3, 3, 3};
     physics_setPosition(playerBarrel.rb, (Vector3){0, 3, 7});
@@ -159,6 +159,23 @@ int main(void) {
 
     ecs_getCompID(&engine.ecs, player.id, ENGINE_ECS_COMP_TYPE_CAMERA, &cameraId);
     engine_render_setCamera(&engine, cameraId);
+    
+    // Boring constants
+    const EngineRenderModelID MODEL_CUBE = 1;
+    const uint32_t CAN_EXPLODE = 1;
+    const Vector3 COLOR_BLUE = (Vector3){0.7, 0.7, 1};
+
+    // Initialize the game entity
+    Prop cube = createProp(&engine, MODEL_CUBE); // Ask for a 3D model
+    cube.info->typeMask = CAN_EXPLODE;           // Respond to BOOM message
+    cube.rb->mass = 0.1f;                        // Rigid body mass
+    cube.rb->bounce = 1.0f;                      // Rigid body elasticity
+    cube.rb->pos = (Vector3){0, 20, 0};          // Rigid body position
+    cube.meshRenderer->color = COLOR_BLUE;       // 3D model color
+    cube.transform->scale = (Vector3){1, 1, 1};  // 3D model size
+    // Pass it to the game engine
+    engine_entityPostCreate(&engine, cube.id);
+
 
     for(int x = -4; x < 4; x++) {
         for(int y = -4; y < 4; y++) {
@@ -167,7 +184,7 @@ int main(void) {
 
             prop.meshRenderer->color = (Vector3){0.7, 1, 0.7};
             prop.rb->mass = 0.1f;
-            prop.rb->bounce = 1.f;
+            prop.rb->bounce = GetRandomValue(1, 20) / 10.f;
             prop.meshRenderer->castShadow = 1;
             prop.transform->scale = (Vector3){2, 2, 2};
             physics_setPosition(prop.rb, (Vector3){x * 3, 15, y * 3});
@@ -179,10 +196,6 @@ int main(void) {
     // Game loop
     logMsg(LOG_LVL_INFO, "Running game loop");
     while(!WindowShouldClose()) {
-        /*light.transform->pos = (Vector3){
-            cos(GetTime() * 2) * 20, 0, sin(GetTime() * 2) * 20
-        };
-        light.transform->localUpdate = 1;*/
 
         weather.transform->pos = player.transform->pos;
         weather.transform->localUpdate = 1;
@@ -243,7 +256,7 @@ int main(void) {
         EndDrawing();
     }
 
-    cleanup(&engine);
+    //cleanup(&engine);
 
     CloseWindow();
 }
