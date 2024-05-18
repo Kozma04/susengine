@@ -159,7 +159,9 @@ static uint8_t gjk(GJKColliderMesh *coll1, GJKColliderMesh *coll2, Vector3 *mtv,
                     *mtv = mtvInt;
                     *contactA = contactAInt;
                     *contactB = contactBInt;
+                    return 1;
                 }
+                else return 0;
             }
             return 1;
         }

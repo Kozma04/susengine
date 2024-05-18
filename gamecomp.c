@@ -105,6 +105,7 @@ static void weatherCbPreRender(
 ) {
     rlDisableBackfaceCulling();
     rlDisableDepthTest();
+    rlDisableDepthMask();
     EngineCallbackData *cbData = (EngineCallbackData*)cbUserData;
     EngineCompMeshRenderer *mr = &((EngineECSCompData*)comp->data)->meshR;
     Model *mdl = engine_render_getModel(cbData->engine, mr->modelId);
@@ -122,6 +123,7 @@ static void weatherCbPostRender(
 ) {
     rlEnableBackfaceCulling();
     rlEnableDepthTest();
+    rlEnableDepthMask();
 }
 
 static void waterCbPreRender(
@@ -273,6 +275,8 @@ Water createWater(Engine *engine, EngineRenderModelID modelId) {
     prop.meshRenderer = engine_getMeshRenderer(engine, prop.id);
     prop.meshRenderer->shaderId = SHADER_WATERPLANE_ID;
     prop.meshRenderer->castShadow = 0;
+    prop.meshRenderer->alpha = .3f;
+    prop.meshRenderer->distanceMode = RENDER_DIST_MIN;
     ecs_setCallback(&engine->ecs, prop.id, ENGINE_ECS_COMP_TYPE_MESH_RENDERER,
                     ENGINE_ECS_CB_TYPE_PRE_RENDER, waterCbPreRender);
     //ecs_setCallback(&engine->ecs, prop.id, ENGINE_ECS_COMP_TYPE_MESH_RENDERER,
@@ -296,6 +300,7 @@ Weather createWeather(Engine *engine, Vector3 ambientColor) {
     EngineCompMeshRenderer *mr = engine_getMeshRenderer(engine, weather.id);
     mr->shaderId = SHADER_CUBEMAP_ID;
     mr->castShadow = 0;
+    mr->distanceMode = RENDER_DIST_MAX;
     ecs_setCallback(&engine->ecs, weather.id, ENGINE_ECS_COMP_TYPE_MESH_RENDERER,
                     ENGINE_ECS_CB_TYPE_PRE_RENDER, weatherCbPreRender);
     ecs_setCallback(&engine->ecs, weather.id, ENGINE_ECS_COMP_TYPE_MESH_RENDERER,

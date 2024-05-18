@@ -76,7 +76,7 @@ static void render_sortMeshRenderers(Engine *const engine, Renderer *const rend,
     Vector3 meshBBCenter;
     EngineCompMeshRenderer *meshRendComp;
     EngineECSCompData *ecsCompData;
-    uint32_t i;
+    int32_t i;
     ECSEntityID entPos;
     ECSComponentID compPos;
     uint8_t sorted = 0;
@@ -93,7 +93,19 @@ static void render_sortMeshRenderers(Engine *const engine, Renderer *const rend,
         ecsCompData = (EngineECSCompData*)engine->ecs.comp[compPos].data;
         meshRendComp = &ecsCompData->meshR;
         meshBBCenter = engine_meshRendererCenter(meshRendComp);
-        dist = Vector3DistanceSqr(meshBBCenter, camPos);
+
+        if(meshRendComp->distanceMode == RENDER_DIST_MAX)
+            dist = FLT_MAX;
+        else if(meshRendComp->distanceMode == RENDER_DIST_MIN)
+            dist = -1.f;
+        else if(meshRendComp->distanceMode == RENDER_DIST_FROM_CAMERA)
+            dist = Vector3DistanceSqr(meshBBCenter, camPos);
+        else {
+            logMsg(
+                LOG_LVL_ERR, "invalid distance mode for mesh %u: %u",
+                entPos, meshRendComp->distanceMode
+            );
+        }
         array_pushBack(meshRendVisDist, (ArrayVal)dist);
     }
 
@@ -105,7 +117,7 @@ static void render_sortMeshRenderers(Engine *const engine, Renderer *const rend,
         for(i = 0; i < array_size(meshRendVis) - 1; i++) {
             float distA = array_get(meshRendVisDist, i).flt;
             float distB = array_get(meshRendVisDist, i + 1).flt;
-            if(distA > distB) {
+            if(distA < distB) {
                 array_swap(meshRendVis, i, i + 1);
                 array_swap(meshRendVisDist, i, i + 1);
                 sorted = 0;
@@ -272,7 +284,6 @@ void render_setMeshRendererUniforms(
         shader, GetShaderLocation(shader, "nShadowMaps"),
         &rend->shadowDir.nCascades, SHADER_UNIFORM_INT
     );
-
     SetShaderValue(
         shader, GetShaderLocation(shader, "meshCol"), &meshColor,
         SHADER_UNIFORM_VEC4

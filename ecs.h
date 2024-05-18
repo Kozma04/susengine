@@ -94,6 +94,8 @@ const char *ecs_getEntityNameCstrP(const ECS *ecs, ECSEntityID id);
 ECSStatus ecs_findEntity(const ECS *ecs, const char *name, ECSEntityID *out);
 // Check if entity exists
 ECSStatus ecs_entityExists(const ECS *ecs, ECSEntityID id);
+// Check if component exists
+ECSStatus ecs_compExists(const ECS *ecs, ECSEntityID ent, uint32_t compType);
 
 // Register component to entity. The callbacks in comp are ignored!
 ECSStatus ecs_registerComp(ECS *ecs, ECSEntityID id, uint32_t compType,

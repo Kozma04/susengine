@@ -362,6 +362,7 @@ static void engine_cbRigidBodyOnCreate(
     Collider *coll = engine_getCollider(cbData->engine, entId);
     PhysicsRigidBody *rb = &((EngineECSCompData*)comp->data)->rigidBody;
     Matrix *mat;
+    BoundingBox *bb;
 
     if(trans == NULL) {
         logMsg(LOG_LVL_FATAL, "no transform found for rigidbody in ent. %u", entId);
@@ -373,8 +374,28 @@ static void engine_cbRigidBodyOnCreate(
     }
 
     mat = &trans->globalMatrix;
+    bb = &coll->bounds;
+    Vector3 fullWidth = (Vector3){mat->m0 * 2, mat->m5 * 2, mat->m10 * 2};
+    fullWidth = Vector3Multiply(fullWidth, (Vector3){
+        bb->max.x - bb->min.x, bb->max.y - bb->min.y, bb->max.z - bb->min.z
+    });
+    Vector3 dimsSqr = Vector3Multiply(fullWidth, fullWidth);
+    if(rb->mass != 0.0f) {
+        rb->inverseInertia = (Vector3){
+            12.f / (rb->mass * (dimsSqr.y + dimsSqr.z)),
+            12.f / (rb->mass * (dimsSqr.x + dimsSqr.z)),
+            12.f / (rb->mass * (dimsSqr.x + dimsSqr.y))
+        };
+        logMsg(
+            LOG_LVL_INFO, "init %s to inv inertia %.2f, %.2f, %.2f",
+            ecs_getEntityNameCstrP(&cbData->engine->ecs, entId),
+            rb->inverseInertia.x, rb->inverseInertia.y, rb->inverseInertia.z
+        );
+    }
+
     trans->pos = rb->pos;
     trans->localUpdate = 1;
+
     physics_addRigidBody(&cbData->engine->phys, entId, rb, coll, mat);
 }
 
@@ -549,6 +570,7 @@ EngineStatus engine_createMeshRenderer(
     comp->modelId = modelId;
     comp->visible = 1;
     comp->shaderId = ECS_INVALID_ID;
+    comp->distanceMode = RENDER_DIST_FROM_CAMERA;
     
     if(transformAnchor)
         comp->transform = transformAnchor;
@@ -699,6 +721,7 @@ EngineStatus engine_createRigidBody(
     const EngineECSCompType type = ENGINE_ECS_COMP_TYPE_RIGIDBODY;
     ECSComponent compRaw;
     PhysicsRigidBody *const comp = &(((EngineECSCompData*)&compRaw.data)->rigidBody);
+    const Collider *coll;
     *comp = physics_initRigidBody(mass);
     
     if(ecs_registerComp(&engine->ecs, ent, type, compRaw) == ECS_RES_OK) {
@@ -742,12 +765,17 @@ EngineStatus engine_createConvexHullCollider(
     const EngineECSCompType type = ENGINE_ECS_COMP_TYPE_COLLIDER;
     ECSComponent compRaw;
     Collider *const comp = &(((EngineECSCompData*)&compRaw.data)->coll);
+    Mesh tempMesh;
     comp->collMask = 0xffffffff;
     comp->collTargetMask = 0;
     comp->nContacts = 0;
     comp->type = COLLIDER_TYPE_CONVEX_HULL;
     comp->convexHull.vertices = vert;
     comp->convexHull.nVertices = nVert;
+
+    tempMesh.vertexCount = nVert;
+    tempMesh.vertices = vert;
+    comp->bounds = GetMeshBoundingBox(tempMesh);
     
     if(ecs_registerComp(&engine->ecs, ent, type, compRaw) == ECS_RES_OK)
         return ENGINE_STATUS_OK;

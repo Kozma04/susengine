@@ -7,6 +7,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <raymath.h>
+#include <float.h>
 #include "logger.h"
 
 
@@ -35,6 +36,8 @@ int FrustumBoxIntersect(Frustum frustum, BoundingBox box);
 int FrustumPointIntersect(Frustum frustum, Vector3 point);
 
 BoundingBox BoxTransform(BoundingBox box, Matrix trans);
+uint8_t BoxIntersect(BoundingBox a, BoundingBox b);
+
 Plane PlaneFromTri(Vector3 v0, Vector3 v1, Vector3 v2);
 float DistanceFromPlane(Plane plane, Vector3 in);
 Vector3 ProjectPointOntoPlane(Plane plane, Vector3 point);

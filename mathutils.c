@@ -206,7 +206,7 @@ int FrustumPointIntersect(Frustum frustum, Vector3 point) {
 
 
 BoundingBox BoxTransform(BoundingBox box, Matrix trans) {
-    BoundingBox res;
+    /*BoundingBox res;
     box.min = Vector3Transform(box.min, trans);
     box.max = Vector3Transform(box.max, trans);
     
@@ -223,9 +223,38 @@ BoundingBox BoxTransform(BoundingBox box, Matrix trans) {
     if(box.max.z > box.min.z)
         res.min.z = box.min.z, res.max.z = box.max.z;
     else
-        res.min.z = box.max.z, res.max.z = box.min.z;
+        res.min.z = box.max.z, res.max.z = box.min.z;*/
 
-    return res;
+    Vector3 vec[8] = {
+        {box.min.x, box.min.y, box.min.z},
+        {box.min.x, box.min.y, box.max.z},
+        {box.min.x, box.max.y, box.min.z},
+        {box.min.x, box.max.y, box.max.z},
+        {box.max.x, box.min.y, box.min.z},
+        {box.max.x, box.min.y, box.max.z},
+        {box.max.x, box.max.y, box.min.z},
+        {box.max.x, box.max.y, box.max.z}
+    };
+    Vector3 min = (Vector3){FLT_MAX, FLT_MAX, FLT_MAX};
+    Vector3 max = (Vector3){-FLT_MAX, -FLT_MAX, -FLT_MAX};
+
+    for(int i = 0; i < 8; i++) {
+        vec[i] = Vector3Transform(vec[i], trans);
+        if(vec[i].x < min.x) min.x = vec[i].x;
+        if(vec[i].x > max.x) max.x = vec[i].x;
+        if(vec[i].y < min.y) min.y = vec[i].y;
+        if(vec[i].y > max.y) max.y = vec[i].y;
+        if(vec[i].z < min.z) min.z = vec[i].z;
+        if(vec[i].z > max.z) max.z = vec[i].z;
+    }
+
+    return (BoundingBox){min, max};
+}
+
+uint8_t BoxIntersect(BoundingBox a, BoundingBox b) {
+    return (a.min.x <= b.max.x && a.max.x >= b.min.x) &&
+           (a.min.y <= b.max.y && a.max.y >= b.min.y) &&
+           (a.min.z <= b.max.z && a.max.z >= b.min.z);
 }
 
 Plane PlaneFromTri(Vector3 v0, Vector3 v1, Vector3 v2) {

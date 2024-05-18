@@ -17,6 +17,7 @@ uniform int nShadowMaps;
 in vec4 fragPositionShadow[SHADOW_CASCADES];
 in vec2 fragTexCoord;
 in vec3 fragNormal;
+in vec4 fragColor;
 out vec4 finalColor;
 
 float ShadowCalculation() {
@@ -61,5 +62,5 @@ void main()
     //color = mix(vec3(1, 1, 1), vec3(0), fresnel);
 
     
-    finalColor = vec4(color, 1.0);
+    finalColor = vec4(color, 1.0) * fragColor;
 }

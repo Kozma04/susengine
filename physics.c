@@ -10,7 +10,7 @@ PhysicsRigidBody physics_initRigidBody(float mass) {
 
     res.angularVel = (Vector3){0, 0, 0};
     //res.torque = (Vector3){0, 0, 0};
-    res.inverseInertia = (Vector3){.05f, .05f, .05f};
+    res.inverseInertia = (Vector3){.5f, .5f, .5f};
     res.inverseInertiaTensor = MatrixIdentity();
     res.rot = QuaternionIdentity();
 
@@ -20,13 +20,15 @@ PhysicsRigidBody physics_initRigidBody(float mass) {
     res.dynamicFriction = 0.4f;
     res.mediumFriction = 0.001f;
 
-    res.enableAngularVel = 1;
+    res.enableRot = (Vector3){1, 1, 1};
     return res;
 }
 
 PhysicsSystem physics_initSystem() {
     PhysicsSystem sys;
     sys.sysEntities = hashmap_init();
+    sys.nContacts = 0;
+    sys.nContactsBroad = 0;
     return sys;
 }
 
@@ -88,7 +90,7 @@ static void physics_bodyUpdate(PhysicsRigidBody *body, float dt) {
     body->vel = Vector3Scale(body->vel, 1.f - body->mediumFriction * dt);
     body->pos = Vector3Add(body->pos, Vector3Scale(body->vel, dt));
 
-    if(body->enableAngularVel) {
+    //if(body->enableAngularVel) {
         // Update inverse inertia tensor
         Vector3 invIn = (Vector3){0, 0, 0};
         if(body->mass != .0f)
@@ -109,17 +111,17 @@ static void physics_bodyUpdate(PhysicsRigidBody *body, float dt) {
 
         // Update orientation
         Quaternion angVelQ = (Quaternion) {
-            body->angularVel.x * dt * 0.5f,
-            body->angularVel.y * dt * 0.5f,
-            body->angularVel.z * dt * 0.5f,
+            body->angularVel.x * dt * 0.5f * body->enableRot.x,
+            body->angularVel.y * dt * 0.5f * body->enableRot.y,
+            body->angularVel.z * dt * 0.5f * body->enableRot.z,
             0.f
         };
         body->rot = QuaternionAdd(body->rot, QuaternionMultiply(angVelQ, body->rot));
         body->rot = QuaternionNormalize(body->rot);
 
         // Angular velocity damping
-        body->angularVel = Vector3Scale(body->angularVel, 1.f - 5.8f * dt);
-    }
+        body->angularVel = Vector3Scale(body->angularVel, 1.f - 0.6f * dt);
+    //}
 }
 
 static void physics_applyForce(PhysicsRigidBody *body, Vector3 force) {
@@ -133,11 +135,46 @@ static Vector3 getMatrixTranslation(Matrix *mat) {
     return (Vector3){mat->m12, mat->m13, mat->m14};
 }
 
-static void physics_updateCollisions(PhysicsSystem *sys) {
+static void physics_collisionBroadPhase(PhysicsSystem *sys) {
+    const PhysicsSystemEntity *entA, *entB;
+    BoundingBox bbA, bbB;
+    
+    sys->nContactsBroad = 0;
+    for(size_t i = 0; i < sys->sysEntities.nEntries; i++) {
+        entA = (const PhysicsSystemEntity*)sys->sysEntities.entries[i].val.ptr;
+
+        for(size_t j = i + 1; j < sys->sysEntities.nEntries; j++) {
+            entB = (const PhysicsSystemEntity*)sys->sysEntities.entries[j].val.ptr;
+            bbA = BoxTransform(entA->collider->bounds, *entA->transform);
+            bbB = BoxTransform(entB->collider->bounds, *entB->transform);
+            if(BoxIntersect(bbA, bbB)) {
+                sys->contactsBroad[sys->nContactsBroad].bodyIdxA = i;
+                sys->contactsBroad[sys->nContactsBroad].bodyIdxB = j;
+                sys->nContactsBroad++;
+            }
+        }
+    }
+}
+
+static GJKColliderMesh genGJKMesh(PhysicsSystemEntity *ent) {
+    GJKColliderMesh gjkMesh;
+    gjkMesh.vertices = ent->collider->convexHull.vertices;
+    gjkMesh.nVertices = ent->collider->convexHull.nVertices;
+    gjkMesh.pos = getMatrixTranslation(ent->transform);
+    gjkMesh.transform = *ent->transform;
+    gjkMesh.transform.m12 = 0;
+    gjkMesh.transform.m13 = 0;
+    gjkMesh.transform.m14 = 0;
+    gjkMesh.transformInverse = MatrixInvert(gjkMesh.transform);
+    return gjkMesh;
+}
+
+static void physics_collisionNarrowPhase(PhysicsSystem *sys) {
     PhysicsSystemEntity *entA, *entB;
     Collider *collA, *collB;
     GJKColliderMesh gjkMeshA, gjkMeshB;
     ColliderContact cont;
+    int idxA, idxB;
 
     for(size_t i = 0; i < sys->sysEntities.nEntries; i++) {
         entA = (PhysicsSystemEntity*)sys->sysEntities.entries[i].val.ptr;
@@ -147,91 +184,93 @@ static void physics_updateCollisions(PhysicsSystem *sys) {
     }
     
     sys->nContacts = 0;
-    for(size_t i = 0; i < sys->sysEntities.nEntries; i++) {
-        entA = (PhysicsSystemEntity*)sys->sysEntities.entries[i].val.ptr;
+    for(size_t i = 0; i < sys->nContactsBroad; i++) {
+        idxA = sys->contactsBroad[i].bodyIdxA;
+        idxB = sys->contactsBroad[i].bodyIdxB;
+        entA = sys->sysEntities.entries[idxA].val.ptr;
+        entB = sys->sysEntities.entries[idxB].val.ptr;
         collA = entA->collider;
-        gjkMeshA.vertices = collA->convexHull.vertices;
-        gjkMeshA.nVertices = collA->convexHull.nVertices;
-        gjkMeshA.pos = getMatrixTranslation(entA->transform);
-        gjkMeshA.transform = *entA->transform;
-        gjkMeshA.transform.m12 = 0;
-        gjkMeshA.transform.m13 = 0;
-        gjkMeshA.transform.m14 = 0;
-        //gjkMeshA.transformInverse = entA->transformInverse;
-        gjkMeshA.transformInverse = MatrixInvert(gjkMeshA.transform);
-        for(size_t j = i + 1; j < sys->sysEntities.nEntries; j++) {
-            entB = (PhysicsSystemEntity*)sys->sysEntities.entries[j].val.ptr;
-            collB = entB->collider;
-            gjkMeshB.vertices = collB->convexHull.vertices;
-            gjkMeshB.nVertices = collB->convexHull.nVertices;
-            gjkMeshB.pos = getMatrixTranslation(entB->transform);
-            gjkMeshB.transform = *entB->transform;
-            gjkMeshB.transform.m12 = 0;
-            gjkMeshB.transform.m13 = 0;
-            gjkMeshB.transform.m14 = 0;
-            //gjkMeshB.transformInverse = entB->transformInverse;
-            gjkMeshB.transformInverse = MatrixInvert(gjkMeshB.transform);
-            
-            //logMsg(LOG_LVL_DEBUG, "check coll against %u and %u", i, j);
+        collB = entB->collider;
 
-            if((collA->collTargetMask & collB->collMask) != collA->collTargetMask)
-                continue;
-            
-            if(collA->type != COLLIDER_TYPE_CONVEX_HULL || collB->type != COLLIDER_TYPE_CONVEX_HULL) {
-                logMsg(LOG_LVL_WARN, "only convex hull collision is supported");
+        gjkMeshA = genGJKMesh(entA);
+        gjkMeshB = genGJKMesh(entB);
+
+        if((collA->collTargetMask & collB->collMask) != collA->collTargetMask)
+            continue;
+        
+        if(collA->type != COLLIDER_TYPE_CONVEX_HULL || collB->type != COLLIDER_TYPE_CONVEX_HULL) {
+            logMsg(LOG_LVL_WARN, "only convex hull collision is supported");
+            continue;
+        }
+        //uint8_t collRes = computeGJK(collA->convexHull, collB->convexHull, matA, matB);
+        
+        Vector3 nor, locA, locB;
+        uint8_t collRes = gjk(&gjkMeshA, &gjkMeshB, &nor, &locA, &locB);
+        if(collRes) {
+            if(isnan(nor.x) || isnan(nor.y) || isnan(nor.z)) {
+                printf("nor: %g %g %g\n", nor.x, nor.y, nor.z);
                 continue;
             }
-            //uint8_t collRes = computeGJK(collA->convexHull, collB->convexHull, matA, matB);
+            if(isnan(locA.x) || isnan(locA.y) || isnan(locA.z)) {
+                printf("locA: %g %g %g\n", locA.x, locA.y, locA.z);
+                continue;
+            }
+            if(isnan(locB.x) || isnan(locB.y) || isnan(locB.z)) {
+                printf("locB: %g %g %g\n", locB.x, locB.y, locB.z);
+                continue;
+            }
+
+            cont.depth = Vector3Length(nor);
+            cont.normal = Vector3Normalize(nor);
             
-            Vector3 nor, locA, locB;
-            uint8_t collRes = gjk(&gjkMeshA, &gjkMeshB, &nor, &locA, &locB);
-            if(collRes) {
+            //logMsg(LOG_LVL_WARN, "[%u,%u]: %.2f %.2f %.2f", idxA, idxB, nor.x, nor.y, nor.z);
+
+            if(sys->nContacts < PHYSICS_WORLD_MAX_CONTACTS) {
+                sys->contacts[sys->nContacts].bodyA = entA->body;
+                sys->contacts[sys->nContacts].bodyB = entB->body;
+                sys->contacts[sys->nContacts].depth = cont.depth;
+                sys->contacts[sys->nContacts].normal = cont.normal;
+                sys->contacts[sys->nContacts].pointA = locA;
+                sys->contacts[sys->nContacts].pointB = locB;
+                sys->nContacts++;
+            }
+            else logMsg(LOG_LVL_ERR, "too many collisions in system");
+
+            if(collA->nContacts < COLLIDER_MAX_CONTACTS) {
+                cont.sourceId = sys->sysEntities.entries[idxA].key;
+                cont.targetId = sys->sysEntities.entries[idxB].key;
                 cont.pointA = locA;
                 cont.pointB = locB;
-                cont.depth = Vector3Length(nor);
-                cont.normal = Vector3Normalize(nor);
-                //cont.normal = (Vector3){0, 0, 0};
-
-                //logMsg(LOG_LVL_INFO, "Collide between %u and %u", i, j);
-
-                if(sys->nContacts < PHYSICS_WORLD_MAX_CONTACTS) {
-                    sys->contacts[sys->nContacts].bodyA = entA->body;
-                    sys->contacts[sys->nContacts].bodyB = entB->body;
-                    sys->contacts[sys->nContacts].depth = cont.depth;
-                    sys->contacts[sys->nContacts].normal = cont.normal;
-                    sys->contacts[sys->nContacts].pointA = cont.pointA;
-                    sys->contacts[sys->nContacts].pointB = cont.pointB;
-                    sys->nContacts++;
-                }
-                else logMsg(LOG_LVL_ERR, "too many collisions in system");
-
-                if(collA->nContacts < COLLIDER_MAX_CONTACTS) {
-                    cont.targetId = sys->sysEntities.entries[j].key;
-                    collA->contacts[collA->nContacts++] = cont;
-                    //printf("[%.2f %.2f %.2f]\n", cont.normal.x, cont.normal.y, cont.normal.z);
-                }
-                else {
-                    /*logMsg(
-                        LOG_LVL_WARN, "too many collisions for collider %u",
-                        sys->sysEntities.entries[i].key
-                    );*/
-                }
-                if(collB->nContacts < COLLIDER_MAX_CONTACTS) {
-                    cont.targetId = sys->sysEntities.entries[i].key;
-                    cont.normal = Vector3Scale(cont.normal, -1);
-                    cont.pointA = locB;
-                    cont.pointB = locA;
-                    collB->contacts[collB->nContacts++] = cont;
-                }
-                else {
-                    /*logMsg(
-                        LOG_LVL_WARN, "too many collisions for collider %u",
-                        sys->sysEntities.entries[j].key
-                    );*/
-                }
+                collA->contacts[collA->nContacts++] = cont;
+                //printf("[%.2f %.2f %.2f]\n", cont.normal.x, cont.normal.y, cont.normal.z);
+            }
+            else {
+                /*logMsg(
+                    LOG_LVL_WARN, "too many collisions for collider %u",
+                    sys->sysEntities.entries[i].key
+                );*/
+            }
+            if(collB->nContacts < COLLIDER_MAX_CONTACTS) {
+                cont.sourceId = sys->sysEntities.entries[idxB].key;
+                cont.targetId = sys->sysEntities.entries[idxA].key;
+                cont.normal = Vector3Scale(cont.normal, -1);
+                cont.pointA = locB;
+                cont.pointB = locA;
+                collB->contacts[collB->nContacts++] = cont;
+            }
+            else {
+                /*logMsg(
+                    LOG_LVL_WARN, "too many collisions for collider %u",
+                    sys->sysEntities.entries[j].key
+                );*/
             }
         }
     }
+}
+
+void physics_updateCollisions(PhysicsSystem *sys) {
+    physics_collisionBroadPhase(sys);
+    physics_collisionNarrowPhase(sys);
 }
 
 void physics_updateSystem(PhysicsSystem *sys, float dt) {
@@ -299,7 +338,7 @@ void physics_updateSystem(PhysicsSystem *sys, float dt) {
         Vector3 imp = Vector3Scale(sys->contacts[i].normal, j);
 
 
-        const float percent = 0.6;
+        const float percent = 0.4;
         const float kSlop = 0.1;
         float corrDepth = sys->contacts[i].depth - kSlop;
         if(corrDepth < 0) corrDepth = 0;
@@ -339,6 +378,7 @@ void physics_updateSystem(PhysicsSystem *sys, float dt) {
                     Vector3Subtract(sys->contacts[i].pointA, rbA->pos),
                     Vector3Negate(imp)
                 );
+                angularImp = Vector3Scale(angularImp, dt);
                 physics_applyAngularImpulse(rbA, angularImp);
             }
             if(massBInv != .0f) {
@@ -346,6 +386,7 @@ void physics_updateSystem(PhysicsSystem *sys, float dt) {
                     Vector3Subtract(sys->contacts[i].pointB, rbB->pos),
                     imp
                 );
+                angularImp = Vector3Scale(angularImp, dt);
                 physics_applyAngularImpulse(rbB, angularImp);
             }
         }

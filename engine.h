@@ -29,6 +29,12 @@ typedef enum EngineMsgTypeEnum {
     ENGINE_MSG_TYPE_INTERACT
 } EngineMsgType;
 
+typedef enum RenderDistModeEnum {
+    RENDER_DIST_MIN,
+    RENDER_DIST_MAX,
+    RENDER_DIST_FROM_CAMERA
+} RenderDistMode;
+
 typedef struct EngineMsg {
     ECSEntityID srcId;
     ECSEntityID dstId;
@@ -67,9 +73,10 @@ typedef struct EngineCompMeshRenderer {
     float alpha;
     Vector3 color;
     BoundingBox boundingBox;
-    BoundingBox _boundingBoxTrans;
     EngineRenderModelID modelId;
     EngineShaderID shaderId;
+    RenderDistMode distanceMode;
+    BoundingBox _boundingBoxTrans;
 } EngineCompMeshRenderer;
 
 typedef enum EngineLightSrcTypeEnum {

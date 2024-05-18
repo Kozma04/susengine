@@ -22,7 +22,7 @@ void registerModel(Engine *engine, EngineRenderModelID id, char *fname) {
 
 void registerModelSkybox(Engine *engine, EngineRenderModelID id, Texture2D tex) {
     Model *mdl = malloc(sizeof(*mdl));
-    Mesh cube = GenMeshCube(2.0f, 2.0f, 2.0f);
+    Mesh cube = GenMeshCube(200.0f, 200.0f, 200.0f);
     *mdl = LoadModelFromMesh(cube);
     //Cubemap
     mdl->materials[0].maps[MATERIAL_MAP_CUBEMAP].texture = tex;
@@ -61,8 +61,8 @@ void cleanup(Engine *engine) {
 }
 
 
-int main(void) {
     Engine engine;
+int main(void) {
     Renderer rend;
     ECSComponentID cameraId;
     Player player;
@@ -75,7 +75,7 @@ int main(void) {
     //SetWindowPosition((2560 - 2000) / 2, 0);
     DisableCursor();
     log_setHeaderThreshold("ecs.c", LOG_LVL_WARN);
-    //SetTargetFPS(20);
+    SetTargetFPS(60);
 
     engine_init(&engine);
     rend = render_init(16, 4);
@@ -104,6 +104,7 @@ int main(void) {
     engine_render_addModel(&engine, 5, &boatMdl);
 
     Water water = createWater(&engine, 4);
+    water.meshRenderer->visible = 1;
     water.transform->pos = (Vector3){0, -5, 0};
     engine_entityPostCreate(&engine, water.id);
 
@@ -136,6 +137,8 @@ int main(void) {
 
 
     Prop playerBarrel = createProp(&engine, 3);
+    engine.ecs.entDesc[playerBarrel.id].name = "PLAYERBARREL";
+    playerBarrel.rb->mass = 10.f;
     playerBarrel.meshRenderer->color = (Vector3){1.2, 0.4, 1.2};
     playerBarrel.transform->scale = (Vector3){3, 3, 3};
     physics_setPosition(playerBarrel.rb, (Vector3){0, 3, 7});
@@ -145,6 +148,7 @@ int main(void) {
     plane.meshRenderer->color = (Vector3){1.3f, 0.9f, 0.6f};
     physics_setPosition(plane.rb, (Vector3){0, -5, 0});
     plane.rb->mass = 0;
+    plane.rb->enableRot = (Vector3){0, 0, 0};
     plane.transform->scale = (Vector3){30, 1, 30};
     physics_setPosition(plane.rb, (Vector3){0, 0, 0});
     engine_entityPostCreate(&engine, plane.id);
@@ -166,7 +170,7 @@ int main(void) {
     const Vector3 COLOR_BLUE = (Vector3){0.7, 0.7, 1};
 
     // Initialize the game entity
-    /*Prop cube = createProp(&engine, MODEL_CUBE); // Ask for a 3D model
+    Prop cube = createProp(&engine, MODEL_CUBE); // Ask for a 3D model
     cube.info->typeMask = CAN_EXPLODE;           // Respond to BOOM message
     cube.rb->mass = 0.1f;                        // Rigid body mass
     cube.rb->bounce = 1.0f;                      // Rigid body elasticity
@@ -175,29 +179,28 @@ int main(void) {
     cube.transform->scale = (Vector3){1, 1, 1};  // 3D model size
     // Pass it to the game engine
     engine_entityPostCreate(&engine, cube.id);
-    */
+    
 
-
+    
     for(int x = -4; x < 4; x++) {
         for(int y = -4; y < 4; y++) {
             Prop prop = createProp(&engine, 1);
             prop.info->typeMask = 0x00000001;
 
             prop.meshRenderer->color = (Vector3){0.7, 1, 0.7};
-            prop.rb->mass = 0.1f;
+            prop.rb->mass = 1.f;
             prop.rb->bounce = GetRandomValue(1, 20) / 10.f;
-            prop.rb->inverseInertia = (Vector3){1, 1, 1};
-            prop.rb->enableAngularVel = 1;
+            prop.rb->enableRot = (Vector3){1, 1, 1};
             prop.meshRenderer->castShadow = 1;
             prop.transform->scale = (Vector3){2, 2, 2};
             physics_setPosition(prop.rb, (Vector3){x * 3, 15, y * 3});
             engine_entityPostCreate(&engine, prop.id);
-            //prop.transform->pos = (Vector3){x * 5, 0, y * 5};
         }
     }
 
     // Game loop
     logMsg(LOG_LVL_INFO, "Running game loop");
+
     while(!WindowShouldClose()) {
 
         weather.transform->pos = player.transform->pos;
@@ -215,6 +218,8 @@ int main(void) {
             playerBarrel.rb->accel = fwd;
         }
         else playerBarrel.rb->accel = (Vector3){0, 0, 0};
+        Vector3 pos = playerBarrel.transform->pos;
+        //logMsg(LOG_LVL_DEBUG, "player: %.2f %.2f %.2f", pos.x, pos.y, pos.z);
 
         /*if(IsKeyPressed(KEY_ENTER)) {
             for(int i = 0; i < engine.phys.sysEntities.nEntries; i++) {

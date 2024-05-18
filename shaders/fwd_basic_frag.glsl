@@ -71,7 +71,7 @@ void main() {
         light += max(dot(dir, fragNormal), 0.0) * lightPoint[i].color * attenuation;
     }
 
-    finalColor = vec4(texelColor.rgb * light, 1);
+    finalColor = vec4(texelColor.rgb * light, fragColor.a);
     //finalColor = vec4(vec3(texture(shadowMap[0], gl_FragCoord.xy / vec2(2000, 1250)).r), 1);
     //finalColor = vec4(fragPositionShadow[0].xy / fragPositionShadow[0].w, 0, 1);
 }

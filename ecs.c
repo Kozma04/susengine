@@ -298,6 +298,18 @@ ECSStatus ecs_entityExists(const ECS *const ecs, const ECSEntityID id) {
     return ECS_RES_OK;
 }
 
+ECSStatus ecs_compExists(
+    const ECS *ecs, const ECSEntityID ent, const uint32_t compType
+) {
+    ECSStatus res = ecs_entityExists(ecs, ent);
+    if(res != ECS_RES_OK)
+        return res;
+    const ECSComponentID comp = ecs->entDesc[ent].compIndex[compType];
+    if(comp == ECS_INVALID_ID)
+        return ECS_RES_COMP_NOT_FOUND;
+    return ECS_RES_OK;
+}
+
 ECSStatus ecs_setCallback(
     ECS *const ecs, const ECSEntityID id, const uint32_t compType,
     const uint32_t cbType, ECSComponentCallback cb

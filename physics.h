@@ -43,7 +43,8 @@ typedef struct PhysicsRigidBody {
     float staticFriction;
     float dynamicFriction;
     
-    uint8_t enableAngularVel;
+    //uint8_t enableAngularVel;
+    Vector3 enableRot;
 } PhysicsRigidBody;
 
 typedef struct ColliderContact {
@@ -61,6 +62,7 @@ typedef struct Collider {
     size_t nContacts;
     uint32_t collMask;
     uint32_t collTargetMask;
+    BoundingBox bounds;
     union {
         struct {
             float radius;
@@ -86,6 +88,11 @@ typedef struct PhysicsSystem {
         float depth;
     } contacts[PHYSICS_WORLD_MAX_CONTACTS];
     size_t nContacts;
+
+    struct {
+        int bodyIdxA, bodyIdxB;
+    } contactsBroad[PHYSICS_WORLD_MAX_CONTACTS];
+    size_t nContactsBroad;
 } PhysicsSystem;
 
 PhysicsSystem physics_initSystem();
