@@ -39,6 +39,13 @@ typedef enum GamePlayerModeEnum {
     GAME_PLAYERMODE_PHYSICAL
 } GamePlayerMode;
 
+enum {
+    GAME_MODEL_SKYBOX,
+    GAME_MODEL_CYLINDER,
+    GAME_MODEL_CUBE,
+    GAME_MODEL_PLAYER_COLL
+};
+
 
 typedef struct GameCompPlayerController {
     float sensitivity;

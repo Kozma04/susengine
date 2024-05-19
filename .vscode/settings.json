@@ -26,6 +26,7 @@
         "text_encoding": "c",
         "thread": "c",
         "raymath.h": "c",
-        "mathutils.h": "c"
+        "mathutils.h": "c",
+        "cstdint": "c"
     }
 }

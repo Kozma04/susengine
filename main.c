@@ -61,8 +61,8 @@ void cleanup(Engine *engine) {
 }
 
 
-    Engine engine;
 int main(void) {
+    Engine engine;
     Renderer rend;
     ECSComponentID cameraId;
     Player player;
@@ -76,7 +76,7 @@ int main(void) {
     DisableCursor();
     log_setHeaderThreshold("engine/ecs.c", LOG_LVL_WARN);
     log_setHeaderThreshold("engine/engine.c", LOG_LVL_INFO);
-    log_setHeaderThreshold("engine/physics.c", LOG_LVL_INFO);
+    log_setHeaderThreshold("engine/physics.c", LOG_LVL_DEBUG);
     SetTargetFPS(60);
 
     engine_init(&engine);
@@ -90,10 +90,11 @@ int main(void) {
     SetTextureFilter(waterTex, TEXTURE_FILTER_BILINEAR);
     UnloadImage(skyboxImg);
 
-    registerModelSkybox(&engine, 0, skyboxTex);
-    registerModel(&engine, 1, "assets/cube.obj");
+    registerModel(&engine, GAME_MODEL_CUBE, "assets/cube.obj");
+    registerModelCylinder(&engine, GAME_MODEL_CYLINDER, 1.f, 1.f);
+    registerModelCylinder(&engine, GAME_MODEL_PLAYER_COLL, 1.f, 1.f);
     registerModelHeightmap(&engine, 2, (Vector3){16, 8, 16}, "assets/pei_heightmap.png");
-    registerModelCylinder(&engine, 3, 1.f, 2.5f);
+    registerModelSkybox(&engine, GAME_MODEL_SKYBOX, skyboxTex);
     
     Model mdl = LoadModelFromMesh(GenMeshPlane(800, 800, 200, 200));
     mdl.materials[0].maps[MATERIAL_MAP_CUBEMAP].texture = skyboxTex;
@@ -130,7 +131,8 @@ int main(void) {
 
     // Game setup
     player = createPlayer(&engine);
-    player.transform->pos = (Vector3){0, 8, 0};
+    player.transform->pos = (Vector3){0, 12, 0};
+    engine_entityPostCreate(&engine, player.id);
 
     //light = createLightbulb(&engine, (Vector3){1.3, 0.2, 0.1}, 50);
 
@@ -138,15 +140,15 @@ int main(void) {
     createEnvironment(&engine, (Vector3){0.6, 0.6, 0.6}, (Vector3){1, -1, 0.8});
 
 
-    Prop playerBarrel = createProp(&engine, 3);
+    Prop playerBarrel = createProp(&engine, GAME_MODEL_CYLINDER);
     engine.ecs.entDesc[playerBarrel.id].name = "PLAYERBARREL";
     playerBarrel.rb->mass = 10.f;
     playerBarrel.meshRenderer->color = (Vector3){1.2, 0.4, 1.2};
-    playerBarrel.transform->scale = (Vector3){3, 3, 3};
+    playerBarrel.transform->scale = (Vector3){2, 8, 2};
     physics_setPosition(playerBarrel.rb, (Vector3){0, 3, 7});
     engine_entityPostCreate(&engine, playerBarrel.id);
 
-    Prop plane = createProp(&engine, 1);
+    Prop plane = createProp(&engine, GAME_MODEL_CUBE);
     plane.meshRenderer->color = (Vector3){1.3f, 0.9f, 0.6f};
     physics_setPosition(plane.rb, (Vector3){0, -5, 0});
     plane.rb->mass = 0;
@@ -167,12 +169,11 @@ int main(void) {
     engine_render_setCamera(&engine, cameraId);
     
     // Boring constants
-    const EngineRenderModelID MODEL_CUBE = 1;
     const uint32_t CAN_EXPLODE = 1;
     const Vector3 COLOR_BLUE = (Vector3){0.7, 0.7, 1};
 
     // Initialize the game entity
-    Prop cube = createProp(&engine, MODEL_CUBE); // Ask for a 3D model
+    Prop cube = createProp(&engine, GAME_MODEL_CUBE); // Ask for a 3D model
     cube.info->typeMask = CAN_EXPLODE;           // Respond to BOOM message
     cube.rb->mass = 0.1f;                        // Rigid body mass
     cube.rb->bounce = 1.0f;                      // Rigid body elasticity
@@ -183,10 +184,9 @@ int main(void) {
     engine_entityPostCreate(&engine, cube.id);
     
 
-    
     for(int x = -4; x < 4; x++) {
         for(int y = -4; y < 4; y++) {
-            Prop prop = createProp(&engine, 1);
+            Prop prop = createProp(&engine, GAME_MODEL_CUBE);
             prop.info->typeMask = 0x00000001;
 
             prop.meshRenderer->color = (Vector3){0.7, 1, 0.7};
@@ -243,6 +243,23 @@ int main(void) {
 
         ClearBackground(DARKGRAY);
         render_drawScene(&engine, &rend);
+
+        ColliderRayContact cont[8];
+        size_t nCont;
+        Ray ray;
+        ray.position = player.camera->cam.position;
+        ray.direction = Vector3Normalize(Vector3Subtract(player.camera->cam.target, player.camera->cam.position));
+        physics_raycast(&engine.phys, ray, 10, cont, &nCont, 8, 0);
+
+        logMsg(LOG_LVL_INFO, "raycast: %u contacts", nCont);
+
+        BeginMode3D(rend.state.mainCam);
+        for(int i = 0; i < nCont; i++) {
+            Vector3 pos = Vector3Add(ray.position, Vector3Scale(ray.direction, cont[i].dist));
+            DrawSphere(pos, 0.5f, GREEN);
+        }
+        EndMode3D();
+
 
         DrawText(
             TextFormat("%u FPS / %.2f ms", GetFPS(), GetFrameTime() * 1000),

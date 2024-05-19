@@ -355,6 +355,8 @@ static void render_drawVisibleMeshes(Engine *const engine, Renderer *const rend,
         
         cbData.engine = engine;
         cbData.render.shader = *shader;
+        cbData.render.cam = rend->state.mainCam;
+        cbData.render.pass = inShadowPass ? RENDER_PASS_SHADOW : RENDER_PASS_BASE;
         ecs_execCallback(
             &engine->ecs, entId, ENGINE_COMP_MESHRENDERER,
             ENGINE_CB_PRERENDER, &cbData

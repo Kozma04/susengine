@@ -35,6 +35,11 @@ typedef enum RenderDistModeEnum {
     RENDER_DIST_FROM_CAMERA
 } RenderDistMode;
 
+typedef enum RenderPassEnum {
+    RENDER_PASS_SHADOW,
+    RENDER_PASS_BASE
+} RenderPass;
+
 typedef struct EngineMsg {
     ECSEntityID srcId;
     ECSEntityID dstId;
@@ -111,6 +116,8 @@ typedef struct EngineCallbackData {
         } msgRecv;
         struct {
             Shader shader;
+            Camera cam;
+            RenderPass pass;
         } render;
     };
 } EngineCallbackData;
@@ -277,7 +284,7 @@ EngineStatus engine_createSphereCollider(
 );
 // Create and initialize Collider component of Convex Hull type 
 EngineStatus engine_createConvexHullCollider(
-    Engine *engine, ECSEntityID ent, float *vert, size_t nVert
+    Engine *engine, ECSEntityID ent, short *ind, float *vert, size_t nVert
 );
 // Create and initialize Collider component of Convex Hull type from model ID
 EngineStatus engine_createConvexHullColliderModel(

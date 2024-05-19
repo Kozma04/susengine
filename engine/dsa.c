@@ -96,6 +96,12 @@ uint8_t hashmap_get(const Hashmap *const hmap, const uint32_t key,
     return 1;
 }
 
+uint8_t hashmap_exists(const Hashmap *const hmap, const uint32_t key) {
+    if(hmap->entries == NULL || !binsearch_hashmapInc(hmap->entries, hmap->nEntries, key, NULL))
+        return 0;
+    return 1;
+}
+
 uint8_t hashmap_getU32(const Hashmap *hmap, const uint32_t key,
                        uint32_t *const out) {
     HashmapVal val;
@@ -240,3 +246,4 @@ _INSERTSORT_FUNC(insertsort_s32Inc, binsearch_s32Inc, int32_t, int32_t);
 
 
 #undef _BINSEARCH_FUNC
+#undef _INSERTSORT_FUNC

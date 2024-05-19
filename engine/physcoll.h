@@ -16,6 +16,7 @@
 typedef struct ColliderMesh {
     float *vertices; // set of (X, Y, Z) coordinates
     size_t nVertices; // number of coordinates (vertices size = nVertices * 3)
+    short *indices; // only used in raycasting to define mesh triangles
 } ColliderMesh;
 
 
@@ -26,25 +27,24 @@ typedef enum ColliderTypeEnum {
 } ColliderType;
 
 typedef struct PhysicsRigidBody {
+    uint8_t enableDynamics;
+
     Vector3 pos;
     Vector3 vel;
     Vector3 accel;
     Vector3 gravity;
 
     Vector3 angularVel;
-    //Vector3 torque;
     Vector3 inverseInertia;
     Matrix inverseInertiaTensor;
     Quaternion rot;
+    Vector3 enableRot;
 
     float mediumFriction;
     float mass;
     float bounce;
     float staticFriction;
     float dynamicFriction;
-    
-    //uint8_t enableAngularVel;
-    Vector3 enableRot;
 } PhysicsRigidBody;
 
 typedef struct ColliderContact {
@@ -56,6 +56,12 @@ typedef struct ColliderContact {
     uint32_t targetId;
 } ColliderContact;
 
+typedef struct ColliderRayContact {
+    uint32_t id;
+    float dist;
+    Vector3 normal;
+} ColliderRayContact;
+
 typedef struct Collider {
     ColliderType type;
     ColliderContact contacts[COLLIDER_MAX_CONTACTS];
@@ -63,6 +69,8 @@ typedef struct Collider {
     uint32_t collMask;
     uint32_t collTargetMask;
     BoundingBox bounds;
+    BoundingBox _boundsTransformed;
+    Matrix localTransform;
     union {
         struct {
             float radius;
@@ -71,18 +79,26 @@ typedef struct Collider {
     };
 } Collider;
 
-typedef struct PhysicsSystemEntity {
+/*typedef struct PhysicsSystemEntity {
     PhysicsRigidBody *body;
     Collider *collider;
     Matrix *transform;
     Matrix transformInverse;
-} PhysicsSystemEntity;
+} PhysicsSystemEntity;*/
+
+typedef struct ColliderEntity {
+    Collider *coll;
+    Matrix *transform;
+    Matrix transformInverse;
+} ColliderEntity;
 
 typedef struct PhysicsSystem {
-    Hashmap sysEntities;
+    // A body's Collider and PhysicsSystemEntity share the same index
+    Hashmap collEnt; // ColliderEntity*
+    Hashmap rigidBodies; // PhysicsRigidBody*
 
     struct {
-        PhysicsRigidBody *bodyA, *bodyB;
+        int posA, posB;
         Vector3 pointA, pointB;
         Vector3 normal;
         float depth;
@@ -90,7 +106,7 @@ typedef struct PhysicsSystem {
     size_t nContacts;
 
     struct {
-        int bodyIdxA, bodyIdxB;
+        int posA, posB;
     } contactsBroad[PHYSICS_WORLD_MAX_CONTACTS];
     size_t nContactsBroad;
 
@@ -103,13 +119,21 @@ typedef struct PhysicsSystem {
 PhysicsSystem physics_initSystem();
 PhysicsRigidBody physics_initRigidBody(float mass);
 
-void physics_addRigidBody(
-    PhysicsSystem *sys, uint32_t id, PhysicsRigidBody *rb,
-    Collider *coll, Matrix *transform
+void physics_addCollider(
+    PhysicsSystem *sys, uint32_t id, Collider *coll, Matrix *transform
 );
+void physics_addRigidBody(
+    PhysicsSystem *sys, uint32_t id, PhysicsRigidBody *rb
+);
+void physics_removeCollider(PhysicsSystem *sys, uint32_t id);
 void physics_removeRigidBody(PhysicsSystem *sys, uint32_t id);
 
 void physics_setPosition(PhysicsRigidBody *rb, Vector3 pos);
 void physics_applyAngularImpulse(PhysicsRigidBody *rb, Vector3 force);
 
-void physics_updateSystem(PhysicsSystem *sys, float dt);
+void physics_raycast(
+    PhysicsSystem *sys, Ray ray, float maxDist, ColliderRayContact *cont,
+    size_t *nCont, size_t maxCont, uint32_t mask
+);
+void physics_updateCollisions(PhysicsSystem *sys);
+void physics_updateBodies(PhysicsSystem *sys, float dt);

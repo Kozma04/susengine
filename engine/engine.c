@@ -3,7 +3,7 @@
 
 void engine_init(Engine *const engine) {
     if(sizeof(EngineECSCompData) > ECS_COMPONENT_DATA_SIZE) {
-        logMsg(LOG_LVL_FATAL, "can't fit component in max size: %u vs %u",
+        logMsg(LOG_LVL_FATAL, "can't fit all components in max size: %u vs %u",
                sizeof(EngineECSCompData), ECS_COMPONENT_DATA_SIZE);
     }
 
@@ -166,9 +166,10 @@ void engine_stepUpdate(Engine *const engine, const float deltaTime) {
 
     engine_dispatchMessages(engine);
     for(int i = 0; i < physSubsteps; i++) {
-        physics_updateSystem(&engine->phys, 1.f / 60.f / physSubsteps);
+        physics_updateCollisions(&engine->phys);
+        physics_updateBodies(&engine->phys, 1.f / 60.f / physSubsteps);
+        engine_updateTransforms(engine);
     }
-    engine_updateTransforms(engine);
     engine_execUpdateCallbacks(engine, deltaTime);
 }
 
@@ -378,9 +379,10 @@ static void engine_cbRigidBodyOnCreate(
         return;
     }
 
-    mat = &trans->globalMatrix;
+    //mat = &trans->globalMatrix;
     bb = &coll->bounds;
-    Vector3 fullWidth = (Vector3){mat->m0 * 2, mat->m5 * 2, mat->m10 * 2};
+    //Vector3 fullWidth = (Vector3){mat->m0 * 2, mat->m5 * 2, mat->m10 * 2};
+    Vector3 fullWidth = Vector3Scale(trans->scale, 2);
     fullWidth = Vector3Multiply(fullWidth, (Vector3){
         bb->max.x - bb->min.x, bb->max.y - bb->min.y, bb->max.z - bb->min.z
     });
@@ -402,7 +404,7 @@ static void engine_cbRigidBodyOnCreate(
     trans->pos = rb->pos;
     trans->localUpdate = 1;
 
-    physics_addRigidBody(&cbData->engine->phys, entId, rb, coll, mat);
+    physics_addRigidBody(&cbData->engine->phys, entId, rb);
 }
 
 static void engine_cbRigidBodyOnUpdate(
@@ -424,6 +426,30 @@ static void engine_cbRigidBodyOnDestroy(
 ) {
     const EngineCallbackData *cbData = cbUserData;
     physics_removeRigidBody(&cbData->engine->phys, entId);
+}
+
+static void engine_cbColliderOnCreate(
+    uint32_t cbType, ECSEntityID entId, ECSComponentID compId,
+    uint32_t compType, struct ECSComponent *comp, void *cbUserData
+) {
+    const EngineCallbackData *cbData = cbUserData;
+    EngineCompTransform *trans = engine_getTransform(cbData->engine, entId);
+    Collider *coll = &((EngineECSCompData*)comp->data)->coll;
+
+    if(trans == NULL) {
+        logMsg(LOG_LVL_FATAL, "no transform found for collider in ent. %u", entId);
+        return;
+    }
+
+    physics_addCollider(&cbData->engine->phys, entId, coll, &trans->globalMatrix);
+}
+
+static void engine_cbColliderOnDestroy(
+    uint32_t cbType, ECSEntityID entId, ECSComponentID compId,
+    uint32_t compType, struct ECSComponent *comp, void *cbUserData
+) {
+    const EngineCallbackData *cbData = cbUserData;
+    physics_removeCollider(&cbData->engine->phys, entId);
 }
 
 static void engine_cbLightSourceOnCreate(
@@ -767,7 +793,7 @@ EngineStatus engine_createSphereCollider(
 }
 
 EngineStatus engine_createConvexHullCollider(
-    Engine *engine, ECSEntityID ent, float *vert, size_t nVert
+    Engine *engine, ECSEntityID ent, short *ind, float *vert, size_t nVert
 ) {
     const EngineECSCompType type = ENGINE_COMP_COLLIDER;
     ECSComponent compRaw;
@@ -777,6 +803,8 @@ EngineStatus engine_createConvexHullCollider(
     comp->collTargetMask = 0;
     comp->nContacts = 0;
     comp->type = COLLIDER_TYPE_CONVEX_HULL;
+    comp->localTransform = MatrixIdentity();
+    comp->convexHull.indices = ind;
     comp->convexHull.vertices = vert;
     comp->convexHull.nVertices = nVert;
 
@@ -784,9 +812,15 @@ EngineStatus engine_createConvexHullCollider(
     tempMesh.vertices = vert;
     comp->bounds = GetMeshBoundingBox(tempMesh);
     
-    if(ecs_registerComp(&engine->ecs, ent, type, compRaw) == ECS_RES_OK)
-        return ENGINE_STATUS_OK;
-    return ENGINE_STATUS_REGISTER_FAILED;
+    if(ecs_registerComp(&engine->ecs, ent, type, compRaw) != ECS_RES_OK)
+        return ENGINE_STATUS_REGISTER_FAILED;
+    ecs_setCallback(
+        &engine->ecs, ent, type, ENGINE_CB_CREATE, engine_cbColliderOnCreate
+    );
+    ecs_setCallback(
+        &engine->ecs, ent, type, ENGINE_CB_DESTROY, engine_cbColliderOnDestroy
+    );
+    return ENGINE_STATUS_OK;
 }
 
 EngineStatus engine_createConvexHullColliderModel(
@@ -797,8 +831,9 @@ EngineStatus engine_createConvexHullColliderModel(
         logMsg(LOG_LVL_ERR, "model id %u not found", id);
         return ENGINE_STATUS_MODEL_NOT_FOUND;
     }
+    Mesh *mesh = &mdl->meshes[0];
     return engine_createConvexHullCollider(
-        engine, ent, mdl->meshes[0].vertices, mdl->meshes[0].vertexCount
+        engine, ent, mesh->indices, mesh->vertices, mesh->vertexCount
     );
 }
 

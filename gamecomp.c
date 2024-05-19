@@ -48,19 +48,27 @@ static void game_cbPlayerControllerOnUpdate(
     else if(IsKeyDown(KEY_A))
         deltaPos = Vector3Subtract(deltaPos, right);
     deltaPos.y = 0;
-    if(IsKeyDown(KEY_SPACE))
-        deltaPos = Vector3Add(deltaPos, (Vector3){0, 1, 0});
-    else if(IsKeyDown(KEY_LEFT_SHIFT))
-        deltaPos = Vector3Add(deltaPos, (Vector3){0, -1, 0});
-    deltaPos = Vector3Normalize(deltaPos);
-    deltaPos = Vector3Scale(deltaPos, pc->moveSpeed * cbData->update.deltaTime);
 
-    actualDeltaPos = Vector3Add(actualDeltaPos, Vector3Scale(
-        Vector3Subtract(deltaPos, actualDeltaPos), 0.1
-    ));
+    if(pc->mode == GAME_PLAYERMODE_NOCLIP) {
+        if(IsKeyDown(KEY_SPACE))
+            deltaPos = Vector3Add(deltaPos, (Vector3){0, 1, 0});
+        else if(IsKeyDown(KEY_LEFT_SHIFT))
+            deltaPos = Vector3Add(deltaPos, (Vector3){0, -1, 0});
+        deltaPos = Vector3Normalize(deltaPos);
+        deltaPos = Vector3Scale(deltaPos, pc->moveSpeed * cbData->update.deltaTime);
+        
+        actualDeltaPos = Vector3Add(actualDeltaPos, Vector3Scale(
+            Vector3Subtract(deltaPos, actualDeltaPos), 0.1
+        ));
 
-    trans->pos = Vector3Add(trans->pos, actualDeltaPos);
-    trans->localUpdate = 1;
+        trans->pos = Vector3Add(trans->pos, actualDeltaPos);
+        trans->localUpdate = 1;
+    }
+    else {
+        PhysicsRigidBody *rb = engine_getRigidBody(cbData->engine, entId);
+    }
+
+    
 
     if(IsKeyPressed(KEY_ENTER)) {
         engine_entityBroadcastMsg(
@@ -187,12 +195,12 @@ static void boxPropCustomCallback(
 
 static void gameCreatePlayerController(Engine *engine, ECSEntityID ent) {
     ECSComponent controller;
-    GameCompController *ctrl = controller.data;
+    GameCompController *ctrl = (GameCompController*)controller.data;
     ctrl->type = GAME_CONTROLLER_PLAYER;
     ctrl->player.camForward = (Vector3){0.f, -.8f, .1f};
     ctrl->player.sensitivity = .004f;
     ctrl->player.moveSpeed = 30.f;
-    ctrl->player.mode = GAME_PLAYERMODE_NOCLIP;
+    ctrl->player.mode = GAME_PLAYERMODE_PHYSICAL;
 
     ecs_registerComp(
         &engine->ecs, ent, GAME_COMP_CONTROLLER, controller
@@ -210,13 +218,13 @@ Player createPlayer(Engine *engine) {
     engine_createInfo(engine, player.id, GAME_ENT_TYPE_PLAYER);
     engine_createTransform(engine, player.id, ECS_INVALID_ID);
     engine_createCamera(engine, player.id, 75, CAMERA_PERSPECTIVE);
+    //engine_createConvexHullColliderModel(engine, player.id, GAME_MODEL_PLAYER_COLL);
     gameCreatePlayerController(engine, player.id);
     
     player.info = engine_getInfo(engine, player.id);
     player.transform = engine_getTransform(engine, player.id);
     player.camera = engine_getCamera(engine, player.id);
 
-    engine_entityPostCreate(engine, player.id);
     return player;
 }
 
@@ -247,7 +255,7 @@ Prop createProp(Engine *engine, EngineRenderModelID modelId) {
 }
 
 Water createWater(Engine *engine, EngineRenderModelID modelId) {
-    const static char *const name = "prop";
+    const static char *const name = "water";
     Water prop;
     ecs_registerEntity(&engine->ecs, &prop.id, name);
     engine_createInfo(engine, prop.id, GAME_ENT_TYPE_PROP);
@@ -262,7 +270,7 @@ Water createWater(Engine *engine, EngineRenderModelID modelId) {
     prop.meshRenderer = engine_getMeshRenderer(engine, prop.id);
     prop.meshRenderer->shaderId = SHADER_WATERPLANE_ID;
     prop.meshRenderer->castShadow = 0;
-    prop.meshRenderer->alpha = .3f;
+    prop.meshRenderer->alpha = .4f;
     prop.meshRenderer->distanceMode = RENDER_DIST_MIN;
     ecs_setCallback(&engine->ecs, prop.id, ENGINE_COMP_MESHRENDERER,
                     ENGINE_CB_PRERENDER, waterCbPreRender);
@@ -281,9 +289,8 @@ Weather createWeather(Engine *engine, Vector3 ambientColor) {
     weather.info = engine_getInfo(engine, weather.id);
     weather.ambient = engine_getLightSrc(engine, weather.id);
     weather.transform = engine_getTransform(engine, weather.id);
-
     
-    engine_createMeshRenderer(engine, weather.id, engine_getTransform(engine, weather.id), 0);
+    engine_createMeshRenderer(engine, weather.id, engine_getTransform(engine, weather.id), GAME_MODEL_SKYBOX);
     EngineCompMeshRenderer *mr = engine_getMeshRenderer(engine, weather.id);
     mr->shaderId = SHADER_CUBEMAP_ID;
     mr->castShadow = 0;
@@ -292,7 +299,6 @@ Weather createWeather(Engine *engine, Vector3 ambientColor) {
                     ENGINE_CB_PRERENDER, weatherCbPreRender);
     ecs_setCallback(&engine->ecs, weather.id, ENGINE_COMP_MESHRENDERER,
                     ENGINE_CB_POSTRENDER, weatherCbPostRender);
-    
 
     engine_entityPostCreate(engine, weather.id);
     return weather;

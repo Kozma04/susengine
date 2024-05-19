@@ -43,6 +43,7 @@ uint8_t hashmap_set(Hashmap *hmap, uint32_t key, HashmapVal value);
 uint8_t hashmap_get(const Hashmap *hmap, uint32_t key, HashmapVal *out);
 uint8_t hashmap_getU32(const Hashmap *hmap, uint32_t key, uint32_t *out);
 uint8_t hashmap_getP(const Hashmap *hmap, uint32_t key, void **out);
+uint8_t hashmap_exists(const Hashmap *hmap, uint32_t key);
 uint8_t hashmap_delResize(Hashmap *hmap, uint32_t key, uint8_t resize);
 uint8_t hashmap_del(Hashmap *hmap, uint32_t key, uint8_t resize);
 
