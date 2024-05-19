@@ -9,14 +9,9 @@ static void game_cbPlayerControllerOnUpdate(
     uint32_t cbType, ECSEntityID entId, ECSComponentID compId,
     uint32_t compType, struct ECSComponent *comp, void *cbUserData
 ) {
-    static const float sensitivity = 0.004;
-    static const float speed = 30;
-    static Vector3 forward = (Vector3){0, -0.8, 0.1};
-    static int framecnt = 0;
+    GameCompPlayerController *pc = &((GameCompController*)comp->data)->player;
 
     static Vector3 actualDeltaPos;
-
-    framecnt++;
 
     Vector3 deltaPos = (Vector3){0, 0, 0};
     EngineCallbackData *cbData = cbUserData;
@@ -31,25 +26,23 @@ static void game_cbPlayerControllerOnUpdate(
         return;
     }
 
-    Vector2 md = Vector2Scale(GetMouseDelta(), sensitivity);
-    Vector3 right = Vector3CrossProduct(forward, (Vector3){0, 1, 0});
-    if(framecnt >= 5) {
-        forward = Vector3Normalize(forward);
-        forward = Vector3RotateByAxisAngle(forward, (Vector3){0, -1, 0}, md.x);
-        forward = Vector3RotateByAxisAngle(forward, right, -md.y);
-    }
+    Vector2 md = Vector2Scale(GetMouseDelta(), pc->sensitivity);
+    Vector3 right = Vector3CrossProduct(pc->camForward, (Vector3){0, 1, 0});
+    pc->camForward = Vector3Normalize(pc->camForward);
+    pc->camForward = Vector3RotateByAxisAngle(pc->camForward, (Vector3){0, -1, 0}, md.x);
+    pc->camForward = Vector3RotateByAxisAngle(pc->camForward, right, -md.y);
 
     //printf("rotation = %.3f deg\n", atan2(forward.x, forward.z) * RAD2DEG);
-    float yaw = atan2(forward.x, forward.z);
-    float pitch = -asin(forward.y);
+    float yaw = atan2(pc->camForward.x, pc->camForward.z);
+    float pitch = -asin(pc->camForward.y);
     trans->rot = QuaternionFromEuler(pitch, yaw, 0);
 
-    cam->cam.target = Vector3Add(cam->cam.position, forward);
+    cam->cam.target = Vector3Add(cam->cam.position, pc->camForward);
 
     if(IsKeyDown(KEY_W))
-        deltaPos = Vector3Add(deltaPos, forward);
+        deltaPos = Vector3Add(deltaPos, pc->camForward);
     else if(IsKeyDown(KEY_S))
-        deltaPos = Vector3Subtract(deltaPos, forward);
+        deltaPos = Vector3Subtract(deltaPos, pc->camForward);
     if(IsKeyDown(KEY_D))
         deltaPos = Vector3Add(deltaPos, right);
     else if(IsKeyDown(KEY_A))
@@ -60,7 +53,7 @@ static void game_cbPlayerControllerOnUpdate(
     else if(IsKeyDown(KEY_LEFT_SHIFT))
         deltaPos = Vector3Add(deltaPos, (Vector3){0, -1, 0});
     deltaPos = Vector3Normalize(deltaPos);
-    deltaPos = Vector3Scale(deltaPos, speed * cbData->update.deltaTime);
+    deltaPos = Vector3Scale(deltaPos, pc->moveSpeed * cbData->update.deltaTime);
 
     actualDeltaPos = Vector3Add(actualDeltaPos, Vector3Scale(
         Vector3Subtract(deltaPos, actualDeltaPos), 0.1
@@ -159,14 +152,14 @@ static void waterCbPreRender(
 static void engine_createCollisionDbgView(
     Engine *const engine, const ECSEntityID ent
 ) {
-    const EngineECSCompType type = ENGINE_ECS_COMP_TYPE_USER + 1;
+    const EngineECSCompType type = ENGINE_COMP_USER + 1;
     ECSComponent compRaw;
     if(ecs_registerComp(&engine->ecs, ent, type, compRaw) != ECS_RES_OK) {
         logMsg(LOG_LVL_ERR, "couldn't register collision debug view component");
         return;
     }
     ecs_setCallback(
-        &engine->ecs, ent, type, ENGINE_ECS_CB_TYPE_ON_UPDATE,
+        &engine->ecs, ent, type, ENGINE_CB_UPDATE,
         engine_cbCollisionDbgViewOnUpdate
     );
 }
@@ -192,7 +185,23 @@ static void boxPropCustomCallback(
 }
 
 
+static void gameCreatePlayerController(Engine *engine, ECSEntityID ent) {
+    ECSComponent controller;
+    GameCompController *ctrl = controller.data;
+    ctrl->type = GAME_CONTROLLER_PLAYER;
+    ctrl->player.camForward = (Vector3){0.f, -.8f, .1f};
+    ctrl->player.sensitivity = .004f;
+    ctrl->player.moveSpeed = 30.f;
+    ctrl->player.mode = GAME_PLAYERMODE_NOCLIP;
 
+    ecs_registerComp(
+        &engine->ecs, ent, GAME_COMP_CONTROLLER, controller
+    );
+    ecs_setCallback(
+        &engine->ecs, ent, GAME_COMP_CONTROLLER,
+        ENGINE_CB_UPDATE, game_cbPlayerControllerOnUpdate
+    );
+}
 
 Player createPlayer(Engine *engine) {
     const static char *const name = "player";
@@ -201,15 +210,8 @@ Player createPlayer(Engine *engine) {
     engine_createInfo(engine, player.id, GAME_ENT_TYPE_PLAYER);
     engine_createTransform(engine, player.id, ECS_INVALID_ID);
     engine_createCamera(engine, player.id, 75, CAMERA_PERSPECTIVE);
-
-    ECSComponent controller;
-    ecs_registerComp(
-        &engine->ecs, player.id, ENGINE_ECS_COMP_TYPE_USER, controller
-    );
-    ecs_setCallback(
-        &engine->ecs, player.id, ENGINE_ECS_COMP_TYPE_USER,
-        ENGINE_ECS_CB_TYPE_ON_UPDATE, game_cbPlayerControllerOnUpdate
-    );
+    gameCreatePlayerController(engine, player.id);
+    
     player.info = engine_getInfo(engine, player.id);
     player.transform = engine_getTransform(engine, player.id);
     player.camera = engine_getCamera(engine, player.id);
@@ -217,19 +219,6 @@ Player createPlayer(Engine *engine) {
     engine_entityPostCreate(engine, player.id);
     return player;
 }
-
-
-static float cubeCollVert[] = {
-    -0.5, -0.5, -0.5,
-     0.5, -0.5, -0.5,
-    -0.5,  0.5, -0.5,
-     0.5,  0.5, -0.5,
-    -0.5, -0.5,  0.5,
-     0.5, -0.5,  0.5,
-    -0.5,  0.5,  0.5,
-     0.5,  0.5,  0.5
-};
-
 
 Prop createProp(Engine *engine, EngineRenderModelID modelId) {
     const static char *const name = "prop";
@@ -240,14 +229,12 @@ Prop createProp(Engine *engine, EngineRenderModelID modelId) {
     engine_createMeshRenderer(
         engine, prop.id, engine_getTransform(engine, prop.id), modelId
     );
-    //engine_createConvexHullCollider(engine, prop.id, cubeCollVert, 8);
     engine_createConvexHullColliderModel(engine, prop.id, modelId);
     engine_createRigidBody(engine, prop.id, 1.f);
-    //engine_createCollisionDbgView(engine, prop.id);
 
     ecs_setCallback(
-        &engine->ecs, prop.id, ENGINE_ECS_COMP_TYPE_RIGIDBODY,
-        ENGINE_ECS_CB_TYPE_ON_MSG_RECV, boxPropCustomCallback
+        &engine->ecs, prop.id, ENGINE_COMP_RIGIDBODY,
+        ENGINE_CB_MSGRECV, boxPropCustomCallback
     );
 
 
@@ -277,8 +264,8 @@ Water createWater(Engine *engine, EngineRenderModelID modelId) {
     prop.meshRenderer->castShadow = 0;
     prop.meshRenderer->alpha = .3f;
     prop.meshRenderer->distanceMode = RENDER_DIST_MIN;
-    ecs_setCallback(&engine->ecs, prop.id, ENGINE_ECS_COMP_TYPE_MESH_RENDERER,
-                    ENGINE_ECS_CB_TYPE_PRE_RENDER, waterCbPreRender);
+    ecs_setCallback(&engine->ecs, prop.id, ENGINE_COMP_MESHRENDERER,
+                    ENGINE_CB_PRERENDER, waterCbPreRender);
     //ecs_setCallback(&engine->ecs, prop.id, ENGINE_ECS_COMP_TYPE_MESH_RENDERER,
     //                ENGINE_ECS_CB_TYPE_POST_RENDER, waterCbPostRender);
     return prop;
@@ -301,10 +288,10 @@ Weather createWeather(Engine *engine, Vector3 ambientColor) {
     mr->shaderId = SHADER_CUBEMAP_ID;
     mr->castShadow = 0;
     mr->distanceMode = RENDER_DIST_MAX;
-    ecs_setCallback(&engine->ecs, weather.id, ENGINE_ECS_COMP_TYPE_MESH_RENDERER,
-                    ENGINE_ECS_CB_TYPE_PRE_RENDER, weatherCbPreRender);
-    ecs_setCallback(&engine->ecs, weather.id, ENGINE_ECS_COMP_TYPE_MESH_RENDERER,
-                    ENGINE_ECS_CB_TYPE_POST_RENDER, weatherCbPostRender);
+    ecs_setCallback(&engine->ecs, weather.id, ENGINE_COMP_MESHRENDERER,
+                    ENGINE_CB_PRERENDER, weatherCbPreRender);
+    ecs_setCallback(&engine->ecs, weather.id, ENGINE_COMP_MESHRENDERER,
+                    ENGINE_CB_POSTRENDER, weatherCbPostRender);
     
 
     engine_entityPostCreate(engine, weather.id);

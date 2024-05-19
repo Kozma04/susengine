@@ -7,10 +7,10 @@
 #include <raylib.h>
 #include <raymath.h>
 
-#include "logger.h"
-#include "ecs.h"
-#include "engine.h"
-#include "render.h"
+#include "engine/logger.h"
+#include "engine/ecs.h"
+#include "engine/engine.h"
+#include "engine/render.h"
 #include "gamecomp.h"
 
 
@@ -74,12 +74,14 @@ int main(void) {
     //ToggleFullscreen();
     //SetWindowPosition((2560 - 2000) / 2, 0);
     DisableCursor();
-    log_setHeaderThreshold("ecs.c", LOG_LVL_WARN);
+    log_setHeaderThreshold("engine/ecs.c", LOG_LVL_WARN);
+    log_setHeaderThreshold("engine/engine.c", LOG_LVL_INFO);
+    log_setHeaderThreshold("engine/physics.c", LOG_LVL_INFO);
     SetTargetFPS(60);
 
     engine_init(&engine);
     rend = render_init(16, 4);
-    render_setupDirShadow(&rend, 20, 3, 512);
+    render_setupDirShadow(&rend, 40, 3, 512);
 
     // Asset loading
     Image skyboxImg = LoadImage("assets/skybox/cubemap.png");
@@ -161,7 +163,7 @@ int main(void) {
     engine_entityPostCreate(&engine, heavyProp.id);
 
 
-    ecs_getCompID(&engine.ecs, player.id, ENGINE_ECS_COMP_TYPE_CAMERA, &cameraId);
+    ecs_getCompID(&engine.ecs, player.id, ENGINE_COMP_CAMERA, &cameraId);
     engine_render_setCamera(&engine, cameraId);
     
     // Boring constants

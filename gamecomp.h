@@ -5,12 +5,12 @@
 #include <stdlib.h>
 #include <raylib.h>
 #include <raymath.h>
-#include "dsa.h"
-#include "ecs.h"
-#include "engine.h"
-#include "render.h"
-#include "logger.h"
-#include "physics.h"
+#include "engine/dsa.h"
+#include "engine/ecs.h"
+#include "engine/engine.h"
+#include "engine/render.h"
+#include "engine/logger.h"
+#include "engine/physcoll.h"
 
 
 typedef enum GameEntTypeEnum {
@@ -26,12 +26,41 @@ typedef enum GameEntTypeEnum {
     GAME_ENT_TYPE_PROP = 1 << 9
 } GameEntType;
 
+typedef enum GameCompTypeEnum {
+    GAME_COMP_CONTROLLER = ENGINE_COMP_USER
+} GameCompType;
+
+typedef enum GameControllerTypeEnum {
+    GAME_CONTROLLER_PLAYER
+} GameControllerType;
+
+typedef enum GamePlayerModeEnum {
+    GAME_PLAYERMODE_NOCLIP,
+    GAME_PLAYERMODE_PHYSICAL
+} GamePlayerMode;
+
+
+typedef struct GameCompPlayerController {
+    float sensitivity;
+    float moveSpeed;
+    Vector3 camForward;
+    GamePlayerMode mode;
+} GameCompPlayerController;
+
+typedef struct GameCompController {
+    GameControllerType type;
+    union {
+        GameCompPlayerController player;
+    };
+} GameCompController;
+
 
 typedef struct Player {
     ECSEntityID id;
     EngineCompInfo *info;
     EngineCompTransform *transform;
     EngineCompCamera *camera;
+    GameCompPlayerController *playerCtrl;
 } Player;
 
 typedef struct Prop {
