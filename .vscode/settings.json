@@ -24,6 +24,8 @@
         "random": "c",
         "physics.h": "c",
         "text_encoding": "c",
-        "thread": "c"
+        "thread": "c",
+        "raymath.h": "c",
+        "mathutils.h": "c"
     }
 }
