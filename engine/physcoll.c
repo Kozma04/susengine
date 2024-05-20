@@ -1,8 +1,8 @@
 #include "./physcoll.h"
 
 
-PhysicsRigidBody physics_initRigidBody(float mass) {
-    PhysicsRigidBody res;
+RigidBody physics_initRigidBody(float mass) {
+    RigidBody res;
     res.enableDynamics = 1;
     res.vel = (Vector3){0, 0, 0};
     res.accel = (Vector3){0, 0, 0};
@@ -47,7 +47,7 @@ void physics_addCollider(
     logMsg(LOG_LVL_DEBUG, "added collider id %u to physics system", id);
 }
 
-void physics_addRigidBody(PhysicsSystem *sys, uint32_t id, PhysicsRigidBody *rb) {
+void physics_addRigidBody(PhysicsSystem *sys, uint32_t id, RigidBody *rb) {
     hashmap_set(&sys->rigidBodies, id, (HashmapVal)(void*)rb);
     logMsg(LOG_LVL_DEBUG, "added rigidbody id %u to physics system", id);
 }
@@ -67,18 +67,24 @@ void physics_removeRigidBody(PhysicsSystem *sys, uint32_t id) {
     hashmap_del(&sys->rigidBodies, id, 0);
 }
 
-void physics_setPosition(PhysicsRigidBody *rb, Vector3 pos) {
+void physics_setPosition(RigidBody *rb, Vector3 pos) {
     rb->pos = pos;
 }
 
-void physics_applyAngularImpulse(PhysicsRigidBody *rb, Vector3 force) {
+void physics_applyForce(RigidBody *rb, Vector3 force) {
+    if(rb->mass == 0.f)
+        return;
+    rb->accel = Vector3Add(rb->accel, Vector3Scale(force, 1.f / rb->mass));
+}
+
+void physics_applyAngularImpulse(RigidBody *rb, Vector3 force) {
     rb->angularVel = Vector3Add(
         rb->angularVel, Vector3Transform(force, rb->inverseInertiaTensor)
     );
 }
 
 
-static void physics_bodyUpdate(PhysicsRigidBody *body, float dt) {
+static void physics_bodyUpdate(RigidBody *body, float dt) {
     if(!body->enableDynamics)
         return;
 
@@ -132,12 +138,6 @@ static void physics_bodyUpdate(PhysicsRigidBody *body, float dt) {
     body->angularVel = Vector3Scale(body->angularVel, 1.f - 0.6f * dt);
 }
 
-static void physics_applyForce(PhysicsRigidBody *body, Vector3 force) {
-    if(body->mass == .0f)
-        return;
-    body->accel = Vector3Scale(force, 1.f / body->mass);
-}
-
 
 static Vector3 getMatrixTranslation(Matrix *mat) {
     return (Vector3){mat->m12, mat->m13, mat->m14};
@@ -152,7 +152,7 @@ static void physics_collisionBroadPhase(PhysicsSystem *sys) {
         entA = (const ColliderEntity*)sys->collEnt.entries[i].val.ptr;
         entA->coll->_boundsTransformed = BoxTransform(
             entA->coll->bounds,
-            MatrixMultiply(*entA->transform, entA->coll->localTransform)
+            MatrixMultiply(entA->coll->localTransform, *entA->transform)
         );
     }
 
@@ -170,6 +170,10 @@ static void physics_collisionBroadPhase(PhysicsSystem *sys) {
             if((maskA & maskB) != maskA)
                 continue;
             if(BoxIntersect(bbA, bbB)) {
+                if(sys->nContactsBroad >= PHYSICS_WORLD_MAX_CONTACTS) {
+                    logMsg(LOG_LVL_ERR, "too many AABB contacts in system");
+                    return;
+                }
                 sys->contactsBroad[sys->nContactsBroad].posA = i;
                 sys->contactsBroad[sys->nContactsBroad].posB = j;
                 sys->nContactsBroad++;
@@ -186,7 +190,9 @@ static GJKColliderMesh genGJKMesh(ColliderEntity *ent) {
         getMatrixTranslation(ent->transform),
         getMatrixTranslation(&ent->coll->localTransform)
     );
+    //gjkMesh.pos = getMatrixTranslation(ent->transform);
     gjkMesh.transform = *ent->transform;
+    gjkMesh.transform = MatrixMultiply(ent->coll->localTransform, gjkMesh.transform);
     gjkMesh.transform.m12 = 0;
     gjkMesh.transform.m13 = 0;
     gjkMesh.transform.m14 = 0;
@@ -315,8 +321,8 @@ void physics_raycast(
     *nCont = 0;
     for(size_t i = 0; i < sys->collEnt.nEntries && *nCont < maxCont; i++) {
         ent = (const ColliderEntity*)sys->collEnt.entries[i].val.ptr;
-        //if((mask & ent->coll->collMask) != mask)
-        //    continue;
+        if((mask & ent->coll->collMask) != mask)
+            continue;
 
         bb = ent->coll->_boundsTransformed;
         collRes = GetRayCollisionBox(ray, bb);
@@ -372,7 +378,7 @@ void physics_updateCollisions(PhysicsSystem *sys) {
 }
 
 void physics_updateBodies(PhysicsSystem *sys, float dt) {
-    PhysicsRigidBody *rbA, *rbB;
+    RigidBody *rbA, *rbB;
     ColliderEntity *collA, *collB;
 
     for(size_t i = 0; i < sys->nContacts; i++) {
@@ -383,6 +389,8 @@ void physics_updateBodies(PhysicsSystem *sys, float dt) {
 
         Vector3 posA = Vector3Add(rbA->pos, getMatrixTranslation(&collA->coll->localTransform));
         Vector3 posB = Vector3Add(rbB->pos, getMatrixTranslation(&collB->coll->localTransform));
+        //posA = rbA->pos;
+        //posB = rbB->pos;
 
         if(rbA->mass == .0f && rbB->mass == .0f)
             continue;
@@ -492,7 +500,7 @@ void physics_updateBodies(PhysicsSystem *sys, float dt) {
     }
 
     for(size_t i = 0; i < sys->rigidBodies.nEntries; i++) {
-        rbA = (PhysicsRigidBody*)sys->rigidBodies.entries[i].val.ptr;
+        rbA = (RigidBody*)sys->rigidBodies.entries[i].val.ptr;
         physics_bodyUpdate(rbA, dt);
     }
 }

@@ -366,7 +366,7 @@ static void engine_cbRigidBodyOnCreate(
     const EngineCallbackData *cbData = cbUserData;
     EngineCompTransform *trans = engine_getTransform(cbData->engine, entId);
     Collider *coll = engine_getCollider(cbData->engine, entId);
-    PhysicsRigidBody *rb = &((EngineECSCompData*)comp->data)->rigidBody;
+    RigidBody *rb = &((EngineECSCompData*)comp->data)->rigidBody;
     Matrix *mat;
     BoundingBox *bb;
 
@@ -413,7 +413,7 @@ static void engine_cbRigidBodyOnUpdate(
 ) {
     const EngineCallbackData *cbData = cbUserData;
     EngineCompTransform *trans = engine_getTransform(cbData->engine, entId);
-    PhysicsRigidBody *rb = &((EngineECSCompData*)comp->data)->rigidBody;
+    RigidBody *rb = &((EngineECSCompData*)comp->data)->rigidBody;
 
     trans->pos = rb->pos;
     trans->rot = rb->rot;
@@ -753,7 +753,7 @@ EngineStatus engine_createRigidBody(
 ) {
     const EngineECSCompType type = ENGINE_COMP_RIGIDBODY;
     ECSComponent compRaw;
-    PhysicsRigidBody *const comp = &(((EngineECSCompData*)&compRaw.data)->rigidBody);
+    RigidBody *const comp = &(((EngineECSCompData*)&compRaw.data)->rigidBody);
     const Collider *coll;
     *comp = physics_initRigidBody(mass);
     
@@ -896,7 +896,7 @@ EngineCompLightSrc *engine_getLightSrc(
     return &data->light;
 }
 
-PhysicsRigidBody *engine_getRigidBody(Engine *engine, ECSEntityID ent) {
+RigidBody *engine_getRigidBody(Engine *engine, ECSEntityID ent) {
     EngineECSCompData *data;
     const ECSStatus res = ecs_getCompData(
         &engine->ecs, ent, ENGINE_COMP_RIGIDBODY, (void**)&data

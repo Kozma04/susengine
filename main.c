@@ -81,7 +81,7 @@ int main(void) {
 
     engine_init(&engine);
     rend = render_init(16, 4);
-    render_setupDirShadow(&rend, 40, 3, 512);
+    render_setupDirShadow(&rend, 20, 3, 1024);
 
     // Asset loading
     Image skyboxImg = LoadImage("assets/skybox/cubemap.png");
@@ -131,7 +131,7 @@ int main(void) {
 
     // Game setup
     player = createPlayer(&engine);
-    player.transform->pos = (Vector3){0, 12, 0};
+    physics_setPosition(player.rb, (Vector3){0, 12, 0});
     engine_entityPostCreate(&engine, player.id);
 
     //light = createLightbulb(&engine, (Vector3){1.3, 0.2, 0.1}, 50);
@@ -144,8 +144,9 @@ int main(void) {
     engine.ecs.entDesc[playerBarrel.id].name = "PLAYERBARREL";
     playerBarrel.rb->mass = 10.f;
     playerBarrel.meshRenderer->color = (Vector3){1.2, 0.4, 1.2};
-    playerBarrel.transform->scale = (Vector3){2, 8, 2};
-    physics_setPosition(playerBarrel.rb, (Vector3){0, 3, 7});
+    playerBarrel.transform->scale = (Vector3){2, 6, 2};
+    //playerBarrel.coll->localTransform = MatrixMultiply(MatrixScale(2, 8, 2), MatrixTranslate(0, -8, 0));
+    physics_setPosition(playerBarrel.rb, (Vector3){0, 10, 7});
     engine_entityPostCreate(&engine, playerBarrel.id);
 
     Prop plane = createProp(&engine, GAME_MODEL_CUBE);
@@ -179,7 +180,7 @@ int main(void) {
     cube.rb->bounce = 1.0f;                      // Rigid body elasticity
     cube.rb->pos = (Vector3){0, 20, 0};          // Rigid body position
     cube.meshRenderer->color = COLOR_BLUE;       // 3D model color
-    cube.transform->scale = (Vector3){1, 1, 1};  // 3D model size
+    cube.transform->scale = (Vector3){.25f, .25f, .25f};  // 3D model size
     // Pass it to the game engine
     engine_entityPostCreate(&engine, cube.id);
     
@@ -194,9 +195,10 @@ int main(void) {
             prop.rb->bounce = GetRandomValue(1, 20) / 10.f;
             prop.rb->enableRot = (Vector3){1, 1, 1};
             prop.meshRenderer->castShadow = 1;
-            prop.transform->scale = (Vector3){2, 2, 2};
-            physics_setPosition(prop.rb, (Vector3){x * 3, 15, y * 3});
+            prop.transform->scale = (Vector3){1.2f, 1.2f, 1.2f};
+            physics_setPosition(prop.rb, (Vector3){x * 2, 15, y * 2});
             engine_entityPostCreate(&engine, prop.id);
+            prop.rb->inverseInertia = Vector3Scale(prop.rb->inverseInertia, 3.f);
         }
     }
 
@@ -249,14 +251,14 @@ int main(void) {
         Ray ray;
         ray.position = player.camera->cam.position;
         ray.direction = Vector3Normalize(Vector3Subtract(player.camera->cam.target, player.camera->cam.position));
-        physics_raycast(&engine.phys, ray, 10, cont, &nCont, 8, 0);
+        physics_raycast(&engine.phys, ray, 10, cont, &nCont, 8, CAN_EXPLODE);
 
         logMsg(LOG_LVL_INFO, "raycast: %u contacts", nCont);
 
         BeginMode3D(rend.state.mainCam);
         for(int i = 0; i < nCont; i++) {
             Vector3 pos = Vector3Add(ray.position, Vector3Scale(ray.direction, cont[i].dist));
-            DrawSphere(pos, 0.5f, GREEN);
+            //DrawSphere(pos, 0.5f, GREEN);
         }
         EndMode3D();
 

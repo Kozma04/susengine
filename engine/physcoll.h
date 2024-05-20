@@ -26,7 +26,7 @@ typedef enum ColliderTypeEnum {
     COLLIDER_TYPE_CONVEX_HULL
 } ColliderType;
 
-typedef struct PhysicsRigidBody {
+typedef struct RigidBody {
     uint8_t enableDynamics;
 
     Vector3 pos;
@@ -45,7 +45,7 @@ typedef struct PhysicsRigidBody {
     float bounce;
     float staticFriction;
     float dynamicFriction;
-} PhysicsRigidBody;
+} RigidBody;
 
 typedef struct ColliderContact {
     Vector3 pointA;
@@ -117,19 +117,20 @@ typedef struct PhysicsSystem {
 } PhysicsSystem;
 
 PhysicsSystem physics_initSystem();
-PhysicsRigidBody physics_initRigidBody(float mass);
+RigidBody physics_initRigidBody(float mass);
 
 void physics_addCollider(
     PhysicsSystem *sys, uint32_t id, Collider *coll, Matrix *transform
 );
 void physics_addRigidBody(
-    PhysicsSystem *sys, uint32_t id, PhysicsRigidBody *rb
+    PhysicsSystem *sys, uint32_t id, RigidBody *rb
 );
 void physics_removeCollider(PhysicsSystem *sys, uint32_t id);
 void physics_removeRigidBody(PhysicsSystem *sys, uint32_t id);
 
-void physics_setPosition(PhysicsRigidBody *rb, Vector3 pos);
-void physics_applyAngularImpulse(PhysicsRigidBody *rb, Vector3 force);
+void physics_setPosition(RigidBody *rb, Vector3 pos);
+void physics_applyForce(RigidBody *rb, Vector3 force);
+void physics_applyAngularImpulse(RigidBody *rb, Vector3 force);
 
 void physics_raycast(
     PhysicsSystem *sys, Ray ray, float maxDist, ColliderRayContact *cont,

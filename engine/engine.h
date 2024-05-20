@@ -153,7 +153,7 @@ typedef union EngineECSCompData {
     EngineCompCamera cam;
     EngineCompMeshRenderer meshR;
     EngineCompLightSrc light;
-    PhysicsRigidBody rigidBody;
+    RigidBody rigidBody;
     Collider coll;
 } EngineECSCompData;
 
@@ -303,7 +303,7 @@ EngineCompMeshRenderer *engine_getMeshRenderer(Engine *engine, ECSEntityID id);
 EngineCompLightSrc *engine_getLightSrc(Engine *engine, ECSEntityID id);
 
 // Get Rigid Body component
-PhysicsRigidBody *engine_getRigidBody(Engine *engine, ECSEntityID id);
+RigidBody *engine_getRigidBody(Engine *engine, ECSEntityID id);
 // Get Collider component
 Collider *engine_getCollider(Engine *engine, ECSEntityID id);
 

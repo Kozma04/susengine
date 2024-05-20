@@ -28,14 +28,32 @@ static void game_cbPlayerControllerOnUpdate(
 
     Vector2 md = Vector2Scale(GetMouseDelta(), pc->sensitivity);
     Vector3 right = Vector3CrossProduct(pc->camForward, (Vector3){0, 1, 0});
+    Vector3 prevForward;
+    RigidBody *rb = engine_getRigidBody(cbData->engine, entId);
+    Collider *coll = engine_getCollider(cbData->engine, entId);
+
     pc->camForward = Vector3Normalize(pc->camForward);
     pc->camForward = Vector3RotateByAxisAngle(pc->camForward, (Vector3){0, -1, 0}, md.x);
+    prevForward = pc->camForward;
     pc->camForward = Vector3RotateByAxisAngle(pc->camForward, right, -md.y);
+    // Clamp camera vertical orientation
+    if(Vector3DotProduct(
+        Vector3CrossProduct(pc->camForward, (Vector3){0, 1, 0}),
+        Vector3CrossProduct(prevForward, (Vector3){0, 1, 0})
+    ) < 0) {
+        Vector2 dirXZ = Vector2Normalize(
+            (Vector2){prevForward.x, prevForward.z}
+        );
+        prevForward.x = dirXZ.x * .001f;
+        prevForward.z = dirXZ.y * .001f;
+        prevForward.y = prevForward.y > 0 ? 1 : -1;
+        prevForward = Vector3Normalize(prevForward);
+        pc->camForward = prevForward;
+    }
 
-    //printf("rotation = %.3f deg\n", atan2(forward.x, forward.z) * RAD2DEG);
     float yaw = atan2(pc->camForward.x, pc->camForward.z);
     float pitch = -asin(pc->camForward.y);
-    trans->rot = QuaternionFromEuler(pitch, yaw, 0);
+    //trans->rot = QuaternionFromEuler(pitch, yaw, 0);
 
     cam->cam.target = Vector3Add(cam->cam.position, pc->camForward);
 
@@ -50,6 +68,8 @@ static void game_cbPlayerControllerOnUpdate(
     deltaPos.y = 0;
 
     if(pc->mode == GAME_PLAYERMODE_NOCLIP) {
+        rb->enableDynamics = 0;
+
         if(IsKeyDown(KEY_SPACE))
             deltaPos = Vector3Add(deltaPos, (Vector3){0, 1, 0});
         else if(IsKeyDown(KEY_LEFT_SHIFT))
@@ -65,7 +85,26 @@ static void game_cbPlayerControllerOnUpdate(
         trans->localUpdate = 1;
     }
     else {
-        PhysicsRigidBody *rb = engine_getRigidBody(cbData->engine, entId);
+        uint8_t fast = IsKeyDown(KEY_LEFT_SHIFT) && Vector3Length(deltaPos) > .5f;
+        float maxVel = fast ? 8.f : 5.f;
+        float camFOV = fast ? 90.f : 75.f;
+
+        float velY = rb->vel.y;
+        rb->enableDynamics = 1;
+        rb->vel = Vector3Add(rb->vel, Vector3Scale(deltaPos, 1.f));
+        rb->vel.y = 0;
+        if(Vector3Length(rb->vel) > maxVel)
+            rb->vel = Vector3Scale(Vector3Normalize(rb->vel), maxVel);
+        rb->vel.y = velY;
+
+        if(IsKeyPressed(KEY_SPACE)) {
+            if(coll->nContacts) {
+                rb->pos.y += 0.1f;
+                rb->vel.y = 6.26f;
+            }
+        }
+        
+        cam->cam.fovy += (camFOV - cam->cam.fovy) * 10 * cbData->update.deltaTime;
     }
 
     
@@ -177,7 +216,7 @@ static void boxPropCustomCallback(
     uint32_t compType, struct ECSComponent *comp, void *cbUserData
 ) {
     EngineCallbackData *cbData = cbUserData;
-    PhysicsRigidBody *body = engine_getRigidBody(cbData->engine, entId);
+    RigidBody *body = engine_getRigidBody(cbData->engine, entId);
 
     if(cbData->msgRecv.msg->msgType == BOOM) {
         logMsg(LOG_LVL_INFO, "entity %u blows up!", entId);
@@ -218,12 +257,23 @@ Player createPlayer(Engine *engine) {
     engine_createInfo(engine, player.id, GAME_ENT_TYPE_PLAYER);
     engine_createTransform(engine, player.id, ECS_INVALID_ID);
     engine_createCamera(engine, player.id, 75, CAMERA_PERSPECTIVE);
-    //engine_createConvexHullColliderModel(engine, player.id, GAME_MODEL_PLAYER_COLL);
+    engine_createConvexHullColliderModel(engine, player.id, GAME_MODEL_CYLINDER);
+    engine_createRigidBody(engine, player.id, 1.f);
     gameCreatePlayerController(engine, player.id);
     
     player.info = engine_getInfo(engine, player.id);
     player.transform = engine_getTransform(engine, player.id);
     player.camera = engine_getCamera(engine, player.id);
+    player.rb = engine_getRigidBody(engine, player.id);
+    player.coll = engine_getCollider(engine, player.id);
+
+    player.rb->dynamicFriction = .85f;
+    player.rb->mass = 1.f;
+    player.rb->enableRot = (Vector3){0, 0, 0};
+    player.rb->bounce = 0.f;
+    player.coll->localTransform = MatrixMultiply(
+        MatrixScale(1, 1.8, 1), MatrixTranslate(0, -1.8, 0)
+    );
 
     return player;
 }
@@ -249,6 +299,7 @@ Prop createProp(Engine *engine, EngineRenderModelID modelId) {
     prop.info = engine_getInfo(engine, prop.id);
     prop.transform = engine_getTransform(engine, prop.id);
     prop.rb = engine_getRigidBody(engine, prop.id);
+    prop.coll = engine_getCollider(engine, prop.id);
     prop.meshRenderer = engine_getMeshRenderer(engine, prop.id);
     prop.meshRenderer->shaderId = SHADER_FORWARD_BASIC_ID;
     return prop;

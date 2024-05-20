@@ -68,6 +68,8 @@ typedef struct Player {
     EngineCompTransform *transform;
     EngineCompCamera *camera;
     GameCompPlayerController *playerCtrl;
+    RigidBody *rb;
+    Collider *coll;
 } Player;
 
 typedef struct Prop {
@@ -75,7 +77,8 @@ typedef struct Prop {
     EngineCompInfo *info;
     EngineCompTransform *transform;
     EngineCompMeshRenderer *meshRenderer;
-    PhysicsRigidBody *rb;
+    RigidBody *rb;
+    Collider *coll;
 } Prop;
 
 typedef struct Water {
