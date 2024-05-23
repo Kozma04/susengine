@@ -260,6 +260,10 @@ Vector3 ProjectPointOntoPlane(Plane plane, Vector3 point) {
     );
 }
 
+Vector3 Vector3SetLength(Vector3 vec, float length) {
+    return Vector3Scale(Vector3Normalize(vec), length);
+}
+
 
 Matrix GetProjectionMatrix(Camera cam, float aspect, uint8_t zInvert) {
     Matrix proj = MatrixIdentity();

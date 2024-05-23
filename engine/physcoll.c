@@ -17,10 +17,13 @@ RigidBody physics_initRigidBody(float mass) {
     res.mass = mass;
     res.bounce = .0f;
     res.staticFriction = 0.1f;
-    res.dynamicFriction = 0.4f;
+    res.dynamicFriction = 0.5f;
     res.mediumFriction = 0.001f;
 
     res.enableRot = (Vector3){1, 1, 1};
+    res._idleVelTicks = 0;
+    res._idleAngularVelTicks = 0;
+    res._avgVelLen = 0;
     return res;
 }
 
@@ -30,8 +33,13 @@ PhysicsSystem physics_initSystem() {
     sys.rigidBodies = hashmap_init();
     sys.nContacts = 0;
     //sys.nContactsBroad = 0;
-    sys.correction.penetrationOffset = 0.1;
-    sys.correction.penetrationScale = 0.6;
+    sys.correction.penetrationOffset = 0.001f; //0.0002f;
+    sys.correction.penetrationScale = 0.5f; //0.005f;
+    sys.correction.idleAngVelThres = 0.8f;
+    sys.correction.idleAngVelTicks = 60 * 2;
+    sys.correction.idleVelThres = 0.2f;
+    sys.correction.idleVelTicks = 60 * 6;
+    sys.correction.angularVelDamping = 3.6f;
     return sys;
 }
 
@@ -78,17 +86,33 @@ void physics_applyForce(RigidBody *rb, Vector3 force) {
 }
 
 void physics_applyAngularImpulse(RigidBody *rb, Vector3 force) {
+    if(rb->mass == 0.f)
+        return;
     rb->angularVel = Vector3Add(
         rb->angularVel, Vector3Transform(force, rb->inverseInertiaTensor)
     );
 }
+void physics_applyImpulse(RigidBody *rb, Vector3 impulse) {
+    if(rb->mass == 0.f)
+        return;
+    impulse = Vector3Scale(impulse, 1.f / rb->mass);
+    rb->vel = Vector3Add(rb->vel, impulse);
+}
+
+void physics_applyImpulseAt(RigidBody *rb, Vector3 impulse, Vector3 relPos) {
+    if(rb->mass == 0.f)
+        return;
+    physics_applyImpulse(rb, impulse);
+    physics_applyAngularImpulse(rb, Vector3CrossProduct(relPos, impulse));
+}
 
 
-static void physics_bodyUpdate(RigidBody *body, float dt) {
+static void physics_bodyUpdate(PhysicsSystem *sys, RigidBody *body, float dt) {
     if(!body->enableDynamics)
         return;
 
     Vector3 totalAccel = body->accel;
+    uint8_t idle = 0;
 
     if(body->mass != .0f)
         totalAccel = Vector3Add(totalAccel, body->gravity);
@@ -104,7 +128,23 @@ static void physics_bodyUpdate(RigidBody *body, float dt) {
 
     body->vel = Vector3Add(body->vel, Vector3Scale(totalAccel, dt));
     body->vel = Vector3Scale(body->vel, 1.f - body->mediumFriction * dt);
-    body->pos = Vector3Add(body->pos, Vector3Scale(body->vel, dt));
+
+    idle = 0;
+    body->_avgVelLen += (Vector3LengthSqr(body->vel) - body->_avgVelLen) * 4.f * dt;
+    if(body->_avgVelLen < powf(sys->correction.idleVelThres, 2.f)) {
+        body->_idleVelTicks++;
+        if(body->_idleVelTicks >= sys->correction.idleVelTicks) {
+            //body->vel = (Vector3){0, 0, 0};
+            idle = 1;
+        }
+    }
+    else {
+        if(body->_idleVelTicks >= sys->correction.idleVelTicks)
+            body->vel = (Vector3){0, 0, 0};
+        body->_idleVelTicks = 0;
+    }
+    if(!idle)
+        body->pos = Vector3Add(body->pos, Vector3Scale(body->vel, dt));
 
     // Update inverse inertia tensor
     Vector3 invIn = (Vector3){0, 0, 0};
@@ -124,18 +164,35 @@ static void physics_bodyUpdate(RigidBody *body, float dt) {
         invRot
     );
 
-    // Update orientation
-    Quaternion angVelQ = (Quaternion) {
-        body->angularVel.x * dt * 0.5f * body->enableRot.x,
-        body->angularVel.y * dt * 0.5f * body->enableRot.y,
-        body->angularVel.z * dt * 0.5f * body->enableRot.z,
-        0.f
-    };
-    body->rot = QuaternionAdd(body->rot, QuaternionMultiply(angVelQ, body->rot));
-    body->rot = QuaternionNormalize(body->rot);
+    // Apply rotation
+    idle = 0;
+    if(Vector3LengthSqr(Vector3Multiply(body->angularVel, body->enableRot)) <
+       powf(sys->correction.idleAngVelThres, 2.f)) {
+        body->_idleAngularVelTicks++;
+        if(body->_idleAngularVelTicks >= sys->correction.idleAngVelTicks) {
+            body->angularVel = (Vector3){0, 0, 0};
+            idle = 1;
+        }
+    }
+    else {
+        body->_idleAngularVelTicks = 0;
+    }
+    if(!idle) {
+        // Update orientation
+        Quaternion angVelQ = (Quaternion) {
+            body->angularVel.x * dt * 0.5f * body->enableRot.x,
+            body->angularVel.y * dt * 0.5f * body->enableRot.y,
+            body->angularVel.z * dt * 0.5f * body->enableRot.z,
+            0.f
+        };
+        body->rot = QuaternionAdd(body->rot, QuaternionMultiply(angVelQ, body->rot));
+        body->rot = QuaternionNormalize(body->rot);
 
-    // Angular velocity damping
-    body->angularVel = Vector3Scale(body->angularVel, 1.f - 0.6f * dt);
+        // Angular velocity damping
+        body->angularVel = Vector3Scale(
+            body->angularVel, 1.f - sys->correction.angularVelDamping * dt
+        );
+    }
 }
 
 
@@ -250,7 +307,7 @@ static void physics_collisionNarrowPhase(PhysicsSystem *sys) {
                 continue;
             }
 
-            cont.depth = Vector3Length(nor);
+            cont.depth = Vector3Length(nor) * .5f;
             cont.normal = Vector3Normalize(nor);
 
             if(sys->nContacts < PHYSICS_WORLD_MAX_CONTACTS) {
@@ -395,8 +452,13 @@ void physics_updateBodies(PhysicsSystem *sys, float dt) {
         if(rbA->mass == .0f && rbB->mass == .0f)
             continue;
 
-        Vector3 velAFull = rbA->vel;//Vector3Add(rbA->vel, rbA->angularVel);
-        Vector3 velBFull = rbB->vel;//Vector3Add(rbB->vel, rbB->angularVel);
+        if(!rbA->enableDynamics || !rbB->enableDynamics)
+            continue;
+
+        //Vector3 velAFull = Vector3Add(rbA->vel, rbA->angularVel);
+        //Vector3 velBFull = Vector3Add(rbB->vel, rbB->angularVel);
+        Vector3 velAFull = rbA->vel;
+        Vector3 velBFull = rbB->vel;
 
         //Vector3 rv = Vector3Subtract(rbB->vel, rbA->vel);
         Vector3 rv = Vector3Subtract(velBFull, velAFull);
@@ -418,8 +480,10 @@ void physics_updateBodies(PhysicsSystem *sys, float dt) {
         float jt = -Vector3DotProduct(rv, tangent) / (massAInv + massBInv);
         float mu = sqrtf(powf(rbA->staticFriction, 2.f) + powf(rbB->staticFriction, 2.f));
 
-        Vector3 relativeA = Vector3Subtract(sys->contacts[i].pointA, posA);
-        Vector3 relativeB = Vector3Subtract(sys->contacts[i].pointB, posB);
+        Vector3 contA = sys->contacts[i].pointA;
+        Vector3 contB = sys->contacts[i].pointB;
+        Vector3 relPosA = Vector3Subtract(contA, posA);
+        Vector3 relPosB = Vector3Subtract(contB, posB);
 
         /*Vector3 inertiaA = Vector3CrossProduct(
             Vector3Transform(
@@ -447,19 +511,19 @@ void physics_updateBodies(PhysicsSystem *sys, float dt) {
 
         const float percent = sys->correction.penetrationScale;
         const float kSlop = sys->correction.penetrationOffset;
-        float corrDepth = sys->contacts[i].depth - kSlop;
+        float corrDepth = sys->contacts[i].depth;// + kSlop;
         if(corrDepth < 0) corrDepth = 0;
         Vector3 corr = Vector3Scale(
             sys->contacts[i].normal,
-            corrDepth / (massAInv + massBInv) * percent
+            (corrDepth * percent + kSlop) / (massAInv + massBInv)
         );
 
-        if(massAInv != .0f) {
-            rbA->vel = Vector3Subtract(rbA->vel, Vector3Scale(imp, massAInv));
+        if(massAInv != .0f && rbA->_idleVelTicks < sys->correction.idleVelTicks) {
+            //rbA->vel = Vector3Subtract(rbA->vel, Vector3Scale(imp, massAInv));
             rbA->pos = Vector3Subtract(rbA->pos, Vector3Scale(corr, massAInv));
         }
-        if(massBInv != .0f) {
-            rbB->vel = Vector3Add(rbB->vel, Vector3Scale(imp, massBInv));
+        if(massBInv != .0f && rbB->_idleVelTicks < sys->correction.idleVelTicks) {
+            //rbB->vel = Vector3Add(rbB->vel, Vector3Scale(imp, massBInv));
             rbB->pos = Vector3Add(rbB->pos, Vector3Scale(corr, massBInv));
         }
 
@@ -473,34 +537,19 @@ void physics_updateBodies(PhysicsSystem *sys, float dt) {
             );
             fImpulse = Vector3Scale(tangent, -j * dynF);
         }
-        if(massAInv != .0f)
-            rbA->vel = Vector3Subtract(rbA->vel, Vector3Scale(fImpulse, massAInv));
-        if(massBInv != .0f)
-            rbB->vel = Vector3Add(rbB->vel, Vector3Scale(fImpulse, massBInv));
 
-        Vector3 angularImp;
-        if(sys->contacts[i].depth > 0.05f) {
-            if(massAInv != .0f) {
-                angularImp = Vector3CrossProduct(
-                    Vector3Subtract(sys->contacts[i].pointA, posA),
-                    Vector3Negate(imp)
-                );
-                angularImp = Vector3Scale(angularImp, dt);
-                physics_applyAngularImpulse(rbA, angularImp);
-            }
-            if(massBInv != .0f) {
-                angularImp = Vector3CrossProduct(
-                    Vector3Subtract(sys->contacts[i].pointB, posB),
-                    imp
-                );
-                angularImp = Vector3Scale(angularImp, dt);
-                physics_applyAngularImpulse(rbB, angularImp);
-            }
-        }
+        //physics_applyImpulseAt(rbA, Vector3Scale(fImpulse, -1.f), relPosA);
+        //physics_applyImpulseAt(rbB, Vector3Scale(fImpulse, 1.f), relPosB);
+        physics_applyImpulse(rbA, Vector3Scale(fImpulse, -1.f));
+        physics_applyImpulse(rbB, Vector3Scale(fImpulse, 1.f));
+
+        imp = Vector3SetLength(imp, Vector3Length(imp) + 0.0f);
+        physics_applyImpulseAt(rbA, Vector3Scale(imp, -1.f), relPosA);
+        physics_applyImpulseAt(rbB, Vector3Scale(imp, 1.f), relPosB);
     }
 
     for(size_t i = 0; i < sys->rigidBodies.nEntries; i++) {
         rbA = (RigidBody*)sys->rigidBodies.entries[i].val.ptr;
-        physics_bodyUpdate(rbA, dt);
+        physics_bodyUpdate(sys, rbA, dt);
     }
 }

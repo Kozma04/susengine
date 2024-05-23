@@ -7,6 +7,7 @@
 #include <raylib.h>
 #include <raymath.h>
 
+#include "engine/mathutils.h"
 #include "engine/logger.h"
 #include "engine/ecs.h"
 #include "engine/engine.h"
@@ -131,6 +132,7 @@ int main(void) {
 
     // Game setup
     player = createPlayer(&engine);
+    player.controller->mode = GAME_PLAYERMODE_PHYSICAL;
     physics_setPosition(player.rb, (Vector3){0, 12, 0});
     engine_entityPostCreate(&engine, player.id);
 
@@ -188,22 +190,29 @@ int main(void) {
     for(int x = -4; x < 4; x++) {
         for(int y = -4; y < 4; y++) {
             Prop prop = createProp(&engine, GAME_MODEL_CUBE);
-            prop.info->typeMask = 0x00000001;
+            //prop.info->typeMask = 0x00000001;
 
             prop.meshRenderer->color = (Vector3){0.7, 1, 0.7};
-            prop.rb->mass = 1.f;
-            prop.rb->bounce = GetRandomValue(1, 20) / 10.f;
-            prop.rb->enableRot = (Vector3){1, 1, 1};
+            prop.rb->mass = 1.5f;
+            prop.rb->bounce = 0.f;//GetRandomValue(1, 20) / 10.f;
+            prop.rb->dynamicFriction = .3f;
+            prop.rb->enableRot = (Vector3){0.5f, 0.5f, 0.5f};
             prop.meshRenderer->castShadow = 1;
-            prop.transform->scale = (Vector3){1.2f, 1.2f, 1.2f};
-            physics_setPosition(prop.rb, (Vector3){x * 2, 15, y * 2});
+            prop.transform->scale = (Vector3){1.f, .5f, 1.f};
+            physics_setPosition(prop.rb, (Vector3){x * 3, 15, y * 3});
             engine_entityPostCreate(&engine, prop.id);
-            prop.rb->inverseInertia = Vector3Scale(prop.rb->inverseInertia, 3.f);
+            //prop.rb->inverseInertia = Vector3Scale(prop.rb->inverseInertia, 3.f);
         }
     }
 
     // Game loop
     logMsg(LOG_LVL_INFO, "Running game loop");
+
+    Camera2D camera2D = { 0 };
+    camera2D.target = (Vector2){0};
+    camera2D.offset = (Vector2){-1280/2, -720/2};
+    camera2D.rotation = 0.0f;
+    camera2D.zoom = 1.0f;
 
     while(!WindowShouldClose()) {
 
@@ -253,14 +262,32 @@ int main(void) {
         ray.direction = Vector3Normalize(Vector3Subtract(player.camera->cam.target, player.camera->cam.position));
         physics_raycast(&engine.phys, ray, 10, cont, &nCont, 8, CAN_EXPLODE);
 
-        logMsg(LOG_LVL_INFO, "raycast: %u contacts", nCont);
+        /*
+        // Draw body centers
+        for(int i = 0; i < engine.ecs.nActiveEnt; i++) {
+            EngineCompInfo *info = engine_getInfo(&engine, engine.ecs.activeEnt[i]);
+            if(info != NULL && (info->typeMask & GAME_ENT_TYPE_PROP)) {
+                EngineCompTransform *trans = engine_getTransform(&engine, engine.ecs.activeEnt[i]);
+                Vector2 prj = GetWorldToScreen(trans->pos, rend.state.mainCam);
+                DrawCircle(prj.x, prj.y, 20.f, RED);
+            }
+        }
 
         BeginMode3D(rend.state.mainCam);
-        for(int i = 0; i < nCont; i++) {
-            Vector3 pos = Vector3Add(ray.position, Vector3Scale(ray.direction, cont[i].dist));
-            //DrawSphere(pos, 0.5f, GREEN);
+        for(int i = 0; i < engine.ecs.nActiveEnt; i++) {
+            EngineCompInfo *info = engine_getInfo(&engine, engine.ecs.activeEnt[i]);
+            if(info != NULL && (info->typeMask & GAME_ENT_TYPE_PROP)) {
+                Collider *coll = engine_getCollider(&engine, engine.ecs.activeEnt[i]);
+                EngineCompTransform *trans = engine_getTransform(&engine, engine.ecs.activeEnt[i]);
+                if(coll != NULL && trans != NULL) {
+                    for(int j = 0; j < coll->nContacts; j++) {
+                        Vector3 pos = coll->contacts[j].pointA;
+                        DrawSphere(pos, 0.2f, GREEN);
+                    }
+                }
+            }
         }
-        EndMode3D();
+        EndMode3D();*/
 
 
         DrawText(

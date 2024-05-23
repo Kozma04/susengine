@@ -293,9 +293,9 @@ static uint8_t update_simplex4(Point *a, Point *b, Point *c, Point *d, int *simp
 
 //Expanding Polytope Algorithm
 //Find minimum translation vector to resolve collision
-#define EPA_TOLERANCE 0.0001
+#define EPA_TOLERANCE 0.001
 #define EPA_MAX_NUM_FACES 64
-#define EPA_MAX_NUM_LOOSE_EDGES 32
+#define EPA_MAX_NUM_LOOSE_EDGES 64
 #define EPA_MAX_NUM_ITERATIONS 64
 
 static void GetFaceNormals(Vector3 *polytope, int *faces, Vector4 *n, int *minFace, int nFaces) {

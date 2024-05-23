@@ -45,6 +45,10 @@ typedef struct RigidBody {
     float bounce;
     float staticFriction;
     float dynamicFriction;
+
+    uint32_t _idleAngularVelTicks;
+    uint32_t _idleVelTicks;
+    float _avgVelLen;
 } RigidBody;
 
 typedef struct ColliderContact {
@@ -111,8 +115,16 @@ typedef struct PhysicsSystem {
     size_t nContactsBroad;
 
     struct {
+        // Impulse resolution
         float penetrationOffset;
         float penetrationScale;
+        // Angular velocity
+        float angularVelDamping;
+        // Idle state (no pos/rot updates) conditions
+        float idleVelThres;
+        float idleAngVelThres;
+        uint32_t idleVelTicks;
+        uint32_t idleAngVelTicks;
     } correction;
 } PhysicsSystem;
 
@@ -131,6 +143,8 @@ void physics_removeRigidBody(PhysicsSystem *sys, uint32_t id);
 void physics_setPosition(RigidBody *rb, Vector3 pos);
 void physics_applyForce(RigidBody *rb, Vector3 force);
 void physics_applyAngularImpulse(RigidBody *rb, Vector3 force);
+void physics_applyImpulse(RigidBody *rb, Vector3 impulse);
+void physics_applyImpulseAt(RigidBody *rb, Vector3 impulse, Vector3 relPos);
 
 void physics_raycast(
     PhysicsSystem *sys, Ray ray, float maxDist, ColliderRayContact *cont,

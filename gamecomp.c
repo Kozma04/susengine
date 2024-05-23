@@ -81,7 +81,7 @@ static void game_cbPlayerControllerOnUpdate(
             Vector3Subtract(deltaPos, actualDeltaPos), 0.1
         ));
 
-        trans->pos = Vector3Add(trans->pos, actualDeltaPos);
+        rb->pos = Vector3Add(trans->pos, actualDeltaPos);
         trans->localUpdate = 1;
     }
     else {
@@ -91,7 +91,7 @@ static void game_cbPlayerControllerOnUpdate(
 
         float velY = rb->vel.y;
         rb->enableDynamics = 1;
-        rb->vel = Vector3Add(rb->vel, Vector3Scale(deltaPos, 1.f));
+        rb->vel = Vector3Scale(deltaPos, 1000.f);
         rb->vel.y = 0;
         if(Vector3Length(rb->vel) > maxVel)
             rb->vel = Vector3Scale(Vector3Normalize(rb->vel), maxVel);
@@ -239,7 +239,7 @@ static void gameCreatePlayerController(Engine *engine, ECSEntityID ent) {
     ctrl->player.camForward = (Vector3){0.f, -.8f, .1f};
     ctrl->player.sensitivity = .004f;
     ctrl->player.moveSpeed = 30.f;
-    ctrl->player.mode = GAME_PLAYERMODE_PHYSICAL;
+    ctrl->player.mode = GAME_PLAYERMODE_NOCLIP;
 
     ecs_registerComp(
         &engine->ecs, ent, GAME_COMP_CONTROLLER, controller
@@ -253,6 +253,7 @@ static void gameCreatePlayerController(Engine *engine, ECSEntityID ent) {
 Player createPlayer(Engine *engine) {
     const static char *const name = "player";
     Player player;
+    GameCompController *ctrl;
     ecs_registerEntity(&engine->ecs, &player.id, name);
     engine_createInfo(engine, player.id, GAME_ENT_TYPE_PLAYER);
     engine_createTransform(engine, player.id, ECS_INVALID_ID);
@@ -266,11 +267,14 @@ Player createPlayer(Engine *engine) {
     player.camera = engine_getCamera(engine, player.id);
     player.rb = engine_getRigidBody(engine, player.id);
     player.coll = engine_getCollider(engine, player.id);
+    ecs_getCompData(&engine->ecs, player.id, GAME_COMP_CONTROLLER, (void**)&ctrl);
+    player.controller = &ctrl->player;
 
-    player.rb->dynamicFriction = .85f;
+    player.rb->staticFriction = 0.f;
+    player.rb->dynamicFriction = 0.f;
     player.rb->mass = 1.f;
     player.rb->enableRot = (Vector3){0, 0, 0};
-    player.rb->bounce = 0.f;
+    player.rb->bounce = 0.6f;
     player.coll->localTransform = MatrixMultiply(
         MatrixScale(1, 1.8, 1), MatrixTranslate(0, -1.8, 0)
     );
@@ -309,7 +313,7 @@ Water createWater(Engine *engine, EngineRenderModelID modelId) {
     const static char *const name = "water";
     Water prop;
     ecs_registerEntity(&engine->ecs, &prop.id, name);
-    engine_createInfo(engine, prop.id, GAME_ENT_TYPE_PROP);
+    engine_createInfo(engine, prop.id, 0);
     engine_createTransform(engine, prop.id, ECS_INVALID_ID);
     engine_createMeshRenderer(
         engine, prop.id, engine_getTransform(engine, prop.id), modelId

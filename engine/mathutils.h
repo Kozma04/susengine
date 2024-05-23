@@ -42,5 +42,7 @@ Plane PlaneFromTri(Vector3 v0, Vector3 v1, Vector3 v2);
 float DistanceFromPlane(Plane plane, Vector3 in);
 Vector3 ProjectPointOntoPlane(Plane plane, Vector3 point);
 
+Vector3 Vector3SetLength(Vector3 vec, float length);
+
 Matrix GetProjectionMatrix(Camera cam, float aspect, uint8_t zInvert);
 Matrix GetViewMatrix(Camera cam);

@@ -70,6 +70,7 @@ typedef struct Player {
     GameCompPlayerController *playerCtrl;
     RigidBody *rb;
     Collider *coll;
+    GameCompPlayerController *controller;
 } Player;
 
 typedef struct Prop {

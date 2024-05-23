@@ -390,9 +390,9 @@ static void engine_cbRigidBodyOnCreate(
     if(rb->mass != 0.0f) {
         // assuming bounidng box shape
         rb->inverseInertia = (Vector3){
-            12.f / (rb->mass * (dimsSqr.y + dimsSqr.z)),
-            12.f / (rb->mass * (dimsSqr.x + dimsSqr.z)),
-            12.f / (rb->mass * (dimsSqr.x + dimsSqr.y))
+            12.f / (dimsSqr.y + dimsSqr.z),
+            12.f / (dimsSqr.x + dimsSqr.z),
+            12.f / (dimsSqr.x + dimsSqr.y)
         };
         /*logMsg(
             LOG_LVL_INFO, "init %s to inv inertia %.2f, %.2f, %.2f",
