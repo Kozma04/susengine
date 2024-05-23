@@ -3,22 +3,20 @@
 #define COLLIDER_MAX_CONTACTS 4
 #define PHYSICS_WORLD_MAX_CONTACTS 128
 
-#include <stdint.h>
+#include <float.h>
 #include <raylib.h>
 #include <raymath.h>
-#include <float.h>
+#include <stdint.h>
 
 #include "./dsa.h"
-#include "./logger.h"
 #include "./gjk.h"
-
+#include "./logger.h"
 
 typedef struct ColliderMesh {
-    float *vertices; // set of (X, Y, Z) coordinates
+    float *vertices;  // set of (X, Y, Z) coordinates
     size_t nVertices; // number of coordinates (vertices size = nVertices * 3)
-    short *indices; // only used in raycasting to define mesh triangles
+    short *indices;   // only used in raycasting to define mesh triangles
 } ColliderMesh;
-
 
 typedef enum ColliderTypeEnum {
     COLLIDER_TYPE_SPHERE,
@@ -98,7 +96,7 @@ typedef struct ColliderEntity {
 
 typedef struct PhysicsSystem {
     // A body's Collider and PhysicsSystemEntity share the same index
-    Hashmap collEnt; // ColliderEntity*
+    Hashmap collEnt;     // ColliderEntity*
     Hashmap rigidBodies; // PhysicsRigidBody*
 
     struct {
@@ -131,12 +129,9 @@ typedef struct PhysicsSystem {
 PhysicsSystem physics_initSystem();
 RigidBody physics_initRigidBody(float mass);
 
-void physics_addCollider(
-    PhysicsSystem *sys, uint32_t id, Collider *coll, Matrix *transform
-);
-void physics_addRigidBody(
-    PhysicsSystem *sys, uint32_t id, RigidBody *rb
-);
+void physics_addCollider(PhysicsSystem *sys, uint32_t id, Collider *coll,
+                         Matrix *transform);
+void physics_addRigidBody(PhysicsSystem *sys, uint32_t id, RigidBody *rb);
 void physics_removeCollider(PhysicsSystem *sys, uint32_t id);
 void physics_removeRigidBody(PhysicsSystem *sys, uint32_t id);
 
@@ -146,9 +141,8 @@ void physics_applyAngularImpulse(RigidBody *rb, Vector3 force);
 void physics_applyImpulse(RigidBody *rb, Vector3 impulse);
 void physics_applyImpulseAt(RigidBody *rb, Vector3 impulse, Vector3 relPos);
 
-void physics_raycast(
-    PhysicsSystem *sys, Ray ray, float maxDist, ColliderRayContact *cont,
-    size_t *nCont, size_t maxCont, uint32_t mask
-);
+void physics_raycast(PhysicsSystem *sys, Ray ray, float maxDist,
+                     ColliderRayContact *cont, size_t *nCont, size_t maxCont,
+                     uint32_t mask);
 void physics_updateCollisions(PhysicsSystem *sys);
 void physics_updateBodies(PhysicsSystem *sys, float dt);

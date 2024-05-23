@@ -1,20 +1,19 @@
 #pragma once
 
-#define ECS_COMPONENT_TYPES          10
-#define ECS_MAX_ENTITIES             256
-#define ECS_MAX_COMPONENTS           1024
-#define ECS_COMPONENT_DATA_SIZE      352
+#define ECS_COMPONENT_TYPES 10
+#define ECS_MAX_ENTITIES 256
+#define ECS_MAX_COMPONENTS 1024
+#define ECS_COMPONENT_DATA_SIZE 352
 #define ECS_COMPONENT_CALLBACK_TYPES 8
 
 #define ECS_INVALID_ID 0xffffffff
 
+#include "./dsa.h"
+#include "./fifo.h"
+#include "./logger.h"
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
-#include "./fifo.h"
-#include "./dsa.h"
-#include "./logger.h"
-
 
 typedef uint32_t ECSEntityID;
 typedef uint32_t ECSComponentID;
@@ -31,14 +30,10 @@ typedef enum ECSStatusEnum {
 } ECSStatus;
 
 typedef struct ECSComponent ECSComponent;
-typedef void (*ECSComponentCallback)(
-    uint32_t cbType,
-    ECSEntityID entId,
-    ECSComponentID compId,
-    uint32_t compType, 
-    struct ECSComponent *comp,
-    void *cbUserData
-);
+typedef void (*ECSComponentCallback)(uint32_t cbType, ECSEntityID entId,
+                                     ECSComponentID compId, uint32_t compType,
+                                     struct ECSComponent *comp,
+                                     void *cbUserData);
 
 typedef struct ECSComponent {
     // User component data
@@ -76,21 +71,23 @@ typedef struct ECS {
     ECSComponent comp[ECS_MAX_COMPONENTS];
 } ECS;
 
-
 void ecs_init(ECS *ecs);
 void ecs_status(const ECS *ecs, uint32_t *nUsedEntities, uint32_t *nUsedComp);
 
 // Register entity to the ECS with optional alias string (can be null) and
 // write its assigned id to id_out.
 // If registration failed, ECS_INVALID_ID is written to id_out.
-ECSStatus ecs_registerEntity(ECS *ecs, ECSEntityID *const idOut, const char *name);
+ECSStatus ecs_registerEntity(ECS *ecs, ECSEntityID *const idOut,
+                             const char *name);
 // Unregister active entity from the ECS.
 ECSStatus ecs_unregisterEntity(ECS *ecs, ECSEntityID id);
 // Get active entity name as C-string address. If it is not found, it's set to 0
-ECSStatus ecs_getEntityNameCstr(const ECS *ecs, ECSEntityID id, const char **out);
+ECSStatus ecs_getEntityNameCstr(const ECS *ecs, ECSEntityID id,
+                                const char **out);
 // ecs_getEntityNameCstr wrapper to get a string pointer directly
 const char *ecs_getEntityNameCstrP(const ECS *ecs, ECSEntityID id);
-// Find active entity by its alias string. If it is not found, 0 is written to out
+// Find active entity by its alias string. If it is not found, 0 is written to
+// out
 ECSStatus ecs_findEntity(const ECS *ecs, const char *name, ECSEntityID *out);
 // Check if entity exists
 ECSStatus ecs_entityExists(const ECS *ecs, ECSEntityID id);
@@ -102,7 +99,8 @@ ECSStatus ecs_registerComp(ECS *ecs, ECSEntityID id, uint32_t compType,
                            const ECSComponent comp);
 // Unregister component from entity
 ECSStatus ecs_unregisterComp(ECS *ecs, ECSEntityID id, uint32_t compType);
-// Get entity's component by its type. If the component is not found, 0 is written to comp
+// Get entity's component by its type. If the component is not found, 0 is
+// written to comp
 ECSStatus ecs_getComp(ECS *ecs, ECSEntityID id, uint32_t compType,
                       ECSComponent **comp);
 // ecs_GetComp wrapper for getting the component data
@@ -112,11 +110,12 @@ ECSStatus ecs_getCompData(ECS *ecs, ECSEntityID id, uint32_t compType,
 ECSStatus ecs_getCompID(const ECS *ecs, ECSEntityID id, uint32_t compType,
                         ECSComponentID *out);
 
-// Set callback to active component selected by its type and active entity it belongs to.
+// Set callback to active component selected by its type and active entity it
+// belongs to.
 ECSStatus ecs_setCallback(ECS *ecs, ECSEntityID id, uint32_t compType,
                           uint32_t cbType, ECSComponentCallback cb);
-// Execute callback selected by its type, active component type and active entity
-// the component belongs to.
+// Execute callback selected by its type, active component type and active
+// entity the component belongs to.
 ECSStatus ecs_execCallback(ECS *ecs, ECSEntityID id, uint32_t compType,
                            uint32_t cbType, void *cbUserData);
 // Execute callback selected by its type, on all active components of the active

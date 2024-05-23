@@ -2,14 +2,12 @@
 
 #pragma once
 
-
+#include "./logger.h"
 #include "raylib.h"
+#include <float.h>
+#include <raymath.h>
 #include <stdint.h>
 #include <stdio.h>
-#include <raymath.h>
-#include <float.h>
-#include "./logger.h"
-
 
 typedef struct Plane {
     float a, b, c, d;
@@ -19,14 +17,10 @@ typedef struct Frustum {
     Plane plane[6];
 } Frustum;
 
-
 void NormalizePlane(Plane *p);
 
-void ExtractFrustumPlanes(
-    Frustum *frustum,
-    const Matrix comboMatrix,
-    bool normalize
-);
+void ExtractFrustumPlanes(Frustum *frustum, const Matrix comboMatrix,
+                          bool normalize);
 
 Frustum GetCameraFrustum(Camera cam, float aspect);
 

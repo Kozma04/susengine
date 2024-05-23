@@ -3,31 +3,27 @@
 #define ENGINE_MAX_PENDING_MESSAGES 128
 #define ENGINE_MESSAGE_DATA_SIZE 64
 
-#include <stdlib.h>
-#include <stdio.h>
 #include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 #include <raylib.h>
-#include "rlgl.h"
+#include <rlgl.h>
 #include <raymath.h>
 
-#include "./logger.h"
-#include "./ecs.h"
 #include "./dsa.h"
+#include "./ecs.h"
+#include "./logger.h"
 #include "./physcoll.h"
-
 
 typedef uint32_t EngineRenderModelID;
 typedef uint32_t EngineShaderID;
 typedef uint32_t EngineEntType;
 
-
 typedef struct Engine Engine;
 
 // Messaging system
-typedef enum EngineMsgTypeEnum {
-    ENGINE_MSG_TYPE_INTERACT
-} EngineMsgType;
+typedef enum EngineMsgTypeEnum { ENGINE_MSG_TYPE_INTERACT } EngineMsgType;
 
 typedef enum RenderDistModeEnum {
     RENDER_DIST_MIN,
@@ -35,10 +31,7 @@ typedef enum RenderDistModeEnum {
     RENDER_DIST_FROM_CAMERA
 } RenderDistMode;
 
-typedef enum RenderPassEnum {
-    RENDER_PASS_SHADOW,
-    RENDER_PASS_BASE
-} RenderPass;
+typedef enum RenderPassEnum { RENDER_PASS_SHADOW, RENDER_PASS_BASE } RenderPass;
 
 typedef struct EngineMsg {
     ECSEntityID srcId;
@@ -48,7 +41,6 @@ typedef struct EngineMsg {
     uint8_t msgData[ENGINE_MESSAGE_DATA_SIZE];
 } EngineMsg;
 
-
 // Components system
 typedef struct EngineCompInfo {
     EngineEntType typeMask;
@@ -56,7 +48,7 @@ typedef struct EngineCompInfo {
 
 typedef struct EngineCompTransform {
     ECSEntityID anchor;
-    
+
     Vector3 pos;
     Vector3 scale;
     Quaternion rot;
@@ -122,7 +114,6 @@ typedef struct EngineCallbackData {
     };
 } EngineCallbackData;
 
-
 // Entity Component system interface
 typedef enum EngineECSCompTypeEnum {
     ENGINE_COMP_INFO,
@@ -157,7 +148,6 @@ typedef union EngineECSCompData {
     Collider coll;
 } EngineECSCompData;
 
-
 typedef struct Engine {
     float timescale;
     size_t nPendingMsg;
@@ -165,14 +155,14 @@ typedef struct Engine {
     ECS ecs;
     PhysicsSystem phys;
     struct {
-        Hashmap models; // Model* values
+        Hashmap models;  // Model* values
         Hashmap shaders; // Shader* values
 
         Array meshRend; // ComponentID (for Mesh Renderer) values
-        //Array meshRendVisible; // Visible Mesh Renderer component IDs
-        //Array meshRendVisibleDist; // distance to each Mesh Renderer
-        
-        Array lightSrc; // ComponentID (for light sources) values
+        // Array meshRendVisible; // Visible Mesh Renderer component IDs
+        // Array meshRendVisibleDist; // distance to each Mesh Renderer
+
+        Array lightSrc;        // ComponentID (for light sources) values
         ECSComponentID camera; // Camera component
     } render;
 } Engine;
@@ -189,7 +179,6 @@ typedef enum EngineStatusEnum {
     ENGINE_STATUS_MSG_SRC_NOT_FOUND,
     ENGINE_STATUS_MSG_DST_NOT_FOUND,
 } EngineStatus;
-
 
 // Initialize engine
 void engine_init(Engine *const engine);
@@ -210,7 +199,7 @@ EngineStatus engine_render_addModel(Engine *engine, EngineRenderModelID id,
 Model *engine_render_getModel(Engine *engine, EngineRenderModelID id);
 // Assign Raylib Model it to a EngineRenderModelID
 EngineStatus engine_render_addShader(Engine *engine, EngineShaderID id,
-                                    const Shader *shader);
+                                     const Shader *shader);
 // Get shader for input id. If id is invalid, it returns the default shader.
 Shader engine_render_getShader(Engine *engine, EngineShaderID id);
 // Register a Mesh Renderer component to the renderer
@@ -224,72 +213,61 @@ EngineStatus engine_render_unregisterMeshRenderer(
 // Register a Light Source component to the renderer
 EngineStatus engine_render_registerLightSrc(Engine *engine, ECSComponentID id);
 // Unregister a Light Source component from the renderer
-EngineStatus engine_render_unregisterLightSrc(Engine *engine, ECSComponentID id);
+EngineStatus engine_render_unregisterLightSrc(Engine *engine,
+                                              ECSComponentID id);
 // Set Camera component which will be used for rendering the scene
 void engine_render_setCamera(Engine *engine, ECSComponentID id);
 // Render scene
 void engine_stepRender(Engine *engine);
 
-
 // Send a message from an entity to another
-EngineStatus engine_entitySendMsg(
-    Engine *engine, ECSEntityID src, ECSEntityID dst,
-    EngineMsgType msgtype, const void *msgData, size_t msgSize
-);
+EngineStatus engine_entitySendMsg(Engine *engine, ECSEntityID src,
+                                  ECSEntityID dst, EngineMsgType msgtype,
+                                  const void *msgData, size_t msgSize);
 // Send a message from an entity across all entities
-EngineStatus engine_entityBroadcastMsg(
-    Engine *engine, ECSEntityID src, EngineEntType filter,
-    EngineMsgType msgtype, const void *msgData, size_t msgSize
-);
-
+EngineStatus engine_entityBroadcastMsg(Engine *engine, ECSEntityID src,
+                                       EngineEntType filter,
+                                       EngineMsgType msgtype,
+                                       const void *msgData, size_t msgSize);
 
 // Create and initialize Info component
-EngineStatus engine_createInfo(
-    Engine *engine, ECSEntityID ent, EngineEntType entTypeMask
-);
+EngineStatus engine_createInfo(Engine *engine, ECSEntityID ent,
+                               EngineEntType entTypeMask);
 // Create and initialize Transform component
-EngineStatus engine_createTransform(
-    Engine *engine, ECSEntityID ent, ECSEntityID transformAnchor
-);
+EngineStatus engine_createTransform(Engine *engine, ECSEntityID ent,
+                                    ECSEntityID transformAnchor);
 // Create and initialize Camera component
-EngineStatus engine_createCamera(
-    Engine *engine, ECSEntityID ent, float fov, int projection
-);
+EngineStatus engine_createCamera(Engine *engine, ECSEntityID ent, float fov,
+                                 int projection);
 // Create and initialize Mesh Renderer component
-EngineStatus engine_createMeshRenderer(
-    Engine *engine, ECSEntityID ent, EngineCompTransform *transformAnchor,
-    EngineRenderModelID modelId
-);
+EngineStatus engine_createMeshRenderer(Engine *engine, ECSEntityID ent,
+                                       EngineCompTransform *transformAnchor,
+                                       EngineRenderModelID modelId);
 // Create and initialize Light Source component of Ambient type
-EngineStatus engine_createAmbientLight(
-    Engine *engine, ECSEntityID ent, Vector3 color
-);
+EngineStatus engine_createAmbientLight(Engine *engine, ECSEntityID ent,
+                                       Vector3 color);
 // Create and initialize Light Source component of Directional type
-EngineStatus engine_createDirLight(
-    Engine *engine, ECSEntityID ent, Vector3 color, Vector3 dir
-);
+EngineStatus engine_createDirLight(Engine *engine, ECSEntityID ent,
+                                   Vector3 color, Vector3 dir);
 // Create and initialize Light Source component of Point type
-EngineStatus engine_createPointLight(
-    Engine *engine, ECSEntityID ent, EngineCompTransform *transformAnchor,
-    Vector3 color, Vector3 pos, float range
-);
+EngineStatus engine_createPointLight(Engine *engine, ECSEntityID ent,
+                                     EngineCompTransform *transformAnchor,
+                                     Vector3 color, Vector3 pos, float range);
 
 // Create and initialize Rigid Body component for physics simulation
-EngineStatus engine_createRigidBody(
-    Engine *engine, ECSEntityID ent, float mass
-);
-// Create and initialize Collider component of Sphere type 
-EngineStatus engine_createSphereCollider(
-    Engine *engine, ECSEntityID ent, float radius
-);
-// Create and initialize Collider component of Convex Hull type 
-EngineStatus engine_createConvexHullCollider(
-    Engine *engine, ECSEntityID ent, short *ind, float *vert, size_t nVert
-);
+EngineStatus engine_createRigidBody(Engine *engine, ECSEntityID ent,
+                                    float mass);
+// Create and initialize Collider component of Sphere type
+EngineStatus engine_createSphereCollider(Engine *engine, ECSEntityID ent,
+                                         float radius);
+// Create and initialize Collider component of Convex Hull type
+EngineStatus engine_createConvexHullCollider(Engine *engine, ECSEntityID ent,
+                                             short *ind, float *vert,
+                                             size_t nVert);
 // Create and initialize Collider component of Convex Hull type from model ID
-EngineStatus engine_createConvexHullColliderModel(
-    Engine *engine, ECSEntityID ent, EngineRenderModelID id
-);
+EngineStatus engine_createConvexHullColliderModel(Engine *engine,
+                                                  ECSEntityID ent,
+                                                  EngineRenderModelID id);
 
 // Get Info component
 EngineCompInfo *engine_getInfo(Engine *engine, ECSEntityID ent);
@@ -306,8 +284,6 @@ EngineCompLightSrc *engine_getLightSrc(Engine *engine, ECSEntityID id);
 RigidBody *engine_getRigidBody(Engine *engine, ECSEntityID id);
 // Get Collider component
 Collider *engine_getCollider(Engine *engine, ECSEntityID id);
-
-
 
 // Returns the center of the bounding box of a Mesh Renderer, also considering
 // its transform

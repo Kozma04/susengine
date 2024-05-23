@@ -1,17 +1,15 @@
 #pragma once
 
-
-#include <stdint.h>
-#include <stdlib.h>
-#include <raylib.h>
-#include <raymath.h>
 #include "engine/dsa.h"
 #include "engine/ecs.h"
 #include "engine/engine.h"
-#include "engine/render.h"
 #include "engine/logger.h"
 #include "engine/physcoll.h"
-
+#include "engine/render.h"
+#include <raylib.h>
+#include <raymath.h>
+#include <stdint.h>
+#include <stdlib.h>
 
 typedef enum GameEntTypeEnum {
     GAME_ENT_TYPE_PLAYER = 1 << 0,
@@ -46,7 +44,6 @@ enum {
     GAME_MODEL_PLAYER_COLL
 };
 
-
 typedef struct GameCompPlayerController {
     float sensitivity;
     float moveSpeed;
@@ -60,7 +57,6 @@ typedef struct GameCompController {
         GameCompPlayerController player;
     };
 } GameCompController;
-
 
 typedef struct Player {
     ECSEntityID id;
@@ -111,10 +107,10 @@ typedef struct Lightbulb {
     EngineCompMeshRenderer *meshRenderer;
 } Lightbulb;
 
-
 Player createPlayer(Engine *engine);
 Prop createProp(Engine *engine, EngineRenderModelID modelId);
 Water createWater(Engine *engine, EngineRenderModelID modelId);
 Weather createWeather(Engine *engine, Vector3 ambientColor);
-Environment createEnvironment(Engine *engine, Vector3 lightColor, Vector3 lightDir);
+Environment createEnvironment(Engine *engine, Vector3 lightColor,
+                              Vector3 lightDir);
 Lightbulb createLightbulb(Engine *engine, Vector3 lightColor, float range);
