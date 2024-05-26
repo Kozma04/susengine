@@ -32,6 +32,7 @@ int FrustumPointIntersect(Frustum frustum, Vector3 point);
 BoundingBox BoxTransform(BoundingBox box, Matrix trans);
 uint8_t BoxIntersect(BoundingBox a, BoundingBox b);
 
+Vector3 TriGetNormal(Vector3 v0, Vector3 v1, Vector3 v2);
 Plane PlaneFromTri(Vector3 v0, Vector3 v1, Vector3 v2);
 float DistanceFromPlane(Plane plane, Vector3 in);
 Vector3 ProjectPointOntoPlane(Plane plane, Vector3 point);

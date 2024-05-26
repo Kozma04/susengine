@@ -1,4 +1,5 @@
 #include "./engine.h"
+#include "physcoll.h"
 
 void engine_init(Engine *const engine) {
     if (sizeof(EngineECSCompData) > ECS_COMPONENT_DATA_SIZE) {
@@ -14,6 +15,8 @@ void engine_init(Engine *const engine) {
     engine->render.lightSrc = array_init();
     engine->render.camera = ECS_INVALID_ID;
     engine->phys = physics_initSystem();
+    engine->physDeltaTime = 1.f / 80.f;
+    engine->physLastUpdate = GetTime();
     ecs_init(&engine->ecs);
 
     logMsg(LOG_LVL_INFO, "whole engine occupies %u bytes", sizeof(Engine));
@@ -141,11 +144,17 @@ void engine_stepUpdate(Engine *const engine, const float deltaTime) {
     const static int physSubsteps = 1;
 
     engine_dispatchMessages(engine);
-    for (int i = 0; i < physSubsteps; i++) {
-        physics_updateCollisions(&engine->phys);
-        physics_updateBodies(&engine->phys, 1.f / 60.f / physSubsteps);
-        engine_updateTransforms(engine);
+
+    if (GetTime() > engine->physLastUpdate + engine->physDeltaTime) {
+        engine->physLastUpdate = GetTime();
+        for (int i = 0; i < physSubsteps; i++) {
+            physics_updateCollisions(&engine->phys);
+            physics_updateBodies(&engine->phys,
+                                 engine->physDeltaTime / physSubsteps);
+            engine_updateTransforms(engine);
+        }
     }
+
     engine_execUpdateCallbacks(engine, deltaTime);
 }
 
@@ -710,9 +719,7 @@ EngineStatus engine_createSphereCollider(Engine *engine, ECSEntityID ent,
     const EngineECSCompType type = ENGINE_COMP_COLLIDER;
     ECSComponent compRaw;
     Collider *const comp = &(((EngineECSCompData *)&compRaw.data)->coll);
-    comp->collMask = 0xffffffff;
-    comp->collTargetMask = 0;
-    comp->nContacts = 0;
+    *comp = initCollider();
     comp->type = COLLIDER_TYPE_SPHERE;
     comp->sphere.radius = radius;
 
@@ -728,11 +735,8 @@ EngineStatus engine_createConvexHullCollider(Engine *engine, ECSEntityID ent,
     ECSComponent compRaw;
     Collider *const comp = &(((EngineECSCompData *)&compRaw.data)->coll);
     Mesh tempMesh;
-    comp->collMask = 0xffffffff;
-    comp->collTargetMask = 0;
-    comp->nContacts = 0;
+    *comp = initCollider();
     comp->type = COLLIDER_TYPE_CONVEX_HULL;
-    comp->localTransform = MatrixIdentity();
     comp->convexHull.indices = ind;
     comp->convexHull.vertices = vert;
     comp->convexHull.nVertices = nVert;

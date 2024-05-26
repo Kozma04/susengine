@@ -215,12 +215,16 @@ uint8_t BoxIntersect(BoundingBox a, BoundingBox b) {
            (a.min.z <= b.max.z && a.max.z >= b.min.z);
 }
 
-Plane PlaneFromTri(Vector3 v0, Vector3 v1, Vector3 v2) {
-    Plane p;
+Vector3 TriGetNormal(Vector3 v0, Vector3 v1, Vector3 v2) {
     Vector3 v1v0 = Vector3Subtract(v1, v0);
     Vector3 v2v0 = Vector3Subtract(v2, v0);
     Vector3 normal = Vector3CrossProduct(v1v0, v2v0);
-    normal = Vector3Normalize(normal);
+    return Vector3Normalize(normal);
+}
+
+Plane PlaneFromTri(Vector3 v0, Vector3 v1, Vector3 v2) {
+    Plane p;
+    Vector3 normal = TriGetNormal(v0, v1, v2);
     p.d = -Vector3DotProduct(v0, normal);
     p.a = normal.x, p.b = normal.y, p.c = normal.z;
     return p;

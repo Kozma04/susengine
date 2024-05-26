@@ -1,8 +1,8 @@
-#include <ctype.h>
+#define USE_VSYNC
+
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 
 #include <raylib.h>
 #include <raymath.h>
@@ -10,9 +10,11 @@
 #include "engine/ecs.h"
 #include "engine/engine.h"
 #include "engine/logger.h"
-#include "engine/mathutils.h"
 #include "engine/render.h"
 #include "gamecomp.h"
+#include "utils/heightmap.h"
+
+#include <lua.h>
 
 void registerModel(Engine *engine, EngineRenderModelID id, char *fname) {
     Model *mdl = malloc(sizeof(*mdl));
@@ -23,7 +25,7 @@ void registerModel(Engine *engine, EngineRenderModelID id, char *fname) {
 void registerModelSkybox(Engine *engine, EngineRenderModelID id,
                          Texture2D tex) {
     Model *mdl = malloc(sizeof(*mdl));
-    Mesh cube = GenMeshCube(200.0f, 200.0f, 200.0f);
+    Mesh cube = GenMeshCube(1.0f, 1.0f, 1.0f);
     *mdl = LoadModelFromMesh(cube);
     // Cubemap
     mdl->materials[0].maps[MATERIAL_MAP_CUBEMAP].texture = tex;
@@ -72,15 +74,19 @@ int main(void) {
     Prop prop;
     Lightbulb light;
 
+#ifdef USE_VSYNC
     SetConfigFlags(FLAG_VSYNC_HINT | FLAG_WINDOW_HIGHDPI);
+    SetTargetFPS(60);
+#else
+    SetConfigFlags(FLAG_WINDOW_HIGHDPI);
+#endif
     InitWindow(1280, 720, "who needs OOP anyway?");
     // ToggleFullscreen();
     // SetWindowPosition((2560 - 2000) / 2, 0);
     DisableCursor();
     log_setHeaderThreshold("engine/ecs.c", LOG_LVL_WARN);
     log_setHeaderThreshold("engine/engine.c", LOG_LVL_INFO);
-    log_setHeaderThreshold("engine/physics.c", LOG_LVL_DEBUG);
-    SetTargetFPS(60);
+    log_setHeaderThreshold("engine/physcoll.c", LOG_LVL_INFO);
 
     engine_init(&engine);
     rend = render_init(16, 4);
@@ -97,8 +103,8 @@ int main(void) {
     registerModel(&engine, GAME_MODEL_CUBE, "assets/cube.obj");
     registerModelCylinder(&engine, GAME_MODEL_CYLINDER, 1.f, 1.f);
     registerModelCylinder(&engine, GAME_MODEL_PLAYER_COLL, 1.f, 1.f);
-    registerModelHeightmap(&engine, 2, (Vector3){16, 8, 16},
-                           "assets/pei_heightmap.png");
+    // registerModelHeightmap(&engine, 10, (Vector3){16, 8, 16},
+    //                        "assets/pei_heightmap.png");
     registerModelSkybox(&engine, GAME_MODEL_SKYBOX, skyboxTex);
 
     Model mdl = LoadModelFromMesh(GenMeshPlane(800, 800, 200, 200));
@@ -128,13 +134,14 @@ int main(void) {
 
     // Game setup
     player = createPlayer(&engine);
-    player.controller->mode = GAME_PLAYERMODE_PHYSICAL;
+    player.controller->mode = GAME_PLAYERMODE_NOCLIP;
     physics_setPosition(player.rb, (Vector3){0, 12, 0});
     engine_entityPostCreate(&engine, player.id);
 
     // light = createLightbulb(&engine, (Vector3){1.3, 0.2, 0.1}, 50);
 
     Weather weather = createWeather(&engine, (Vector3){0.1, 0.12, 0.15});
+    weather.transform->anchor = player.id;
     createEnvironment(&engine, (Vector3){0.6, 0.6, 0.6}, (Vector3){1, -1, 0.8});
 
     Prop playerBarrel = createProp(&engine, GAME_MODEL_CYLINDER);
@@ -186,10 +193,10 @@ int main(void) {
             // prop.info->typeMask = 0x00000001;
 
             prop.meshRenderer->color = (Vector3){0.7, 1, 0.7};
-            prop.rb->mass = 1.5f;
+            prop.rb->mass = 0.5f;
             prop.rb->bounce = 0.f; // GetRandomValue(1, 20) / 10.f;
             prop.rb->dynamicFriction = .3f;
-            prop.rb->enableRot = (Vector3){0.5f, 0.5f, 0.5f};
+            prop.rb->enableRot = (Vector3){0.25f, 0.25f, 0.25f};
             prop.meshRenderer->castShadow = 1;
             prop.transform->scale = (Vector3){1.f, .5f, 1.f};
             physics_setPosition(prop.rb, (Vector3){x * 3, 15, y * 3});
@@ -202,19 +209,47 @@ int main(void) {
     // Game loop
     logMsg(LOG_LVL_INFO, "Running game loop");
 
-    Camera2D camera2D = {0};
-    camera2D.target = (Vector2){0};
-    camera2D.offset = (Vector2){-1280 / 2, -720 / 2};
-    camera2D.rotation = 0.0f;
-    camera2D.zoom = 1.0f;
+    Image img = LoadImage("assets/hmap.png");
+    float *valsHeight = malloc(sizeof(*valsHeight) * 16 * 16);
+    for (int i = 0; i < img.width; i++) {
+        for (int j = 0; j < img.height; j++) {
+            Color col = GetImageColor(img, i, j);
+            float h = powf(col.r / 255.f, 2.f);
+            col.r = h * 255.f;
+            ImageDrawPixel(&img, i, j, col);
+        }
+    }
+    ImageCrop(&img, (Rectangle){0, 0, 16, 16});
+
+    for (int i = 0; i < 16; i++) {
+        for (int j = 0; j < 16; j++) {
+            Color col = GetImageColor(img, i, j);
+            float h = col.r / 255.f;
+            valsHeight[j * 16 + i] = h;
+            ImageDrawPixel(&img, i, j, col);
+        }
+    }
+
+    Mesh hmapMesh = GenMeshHeightmapChunk(img, 0, 0, 16, 16);
+    Model mdlHmap = LoadModelFromMesh(hmapMesh);
+    engine_render_addModel(&engine, 420, &mdlHmap);
+    Prop terrain = createProp(&engine, 420);
+
+    terrain.rb->pos = (Vector3){20, -45, 20};
+    terrain.transform->scale = (Vector3){8, 2000, 8};
+    terrain.transform->localUpdate = 1;
+    terrain.coll->type = COLLIDER_TYPE_HEIGHTMAP;
+    terrain.coll->heightmap.map = valsHeight;
+    terrain.coll->heightmap.sizeX = 16;
+    terrain.coll->heightmap.sizeY = 16;
+    terrain.coll->enabled = 1;
+    terrain.rb->mass = 0.f;
+    // terrain.rb->enableDynamics = 0;
+    engine_entityPostCreate(&engine, terrain.id);
 
     while (!WindowShouldClose()) {
-
-        weather.transform->pos = player.transform->pos;
-        weather.transform->localUpdate = 1;
-
         if (IsMouseButtonDown(MOUSE_BUTTON_LEFT) ||
-            IsMouseButtonDown(MOUSE_BUTTON_RIGHT)) {
+            IsMouseButtonDown(MOUSE_BUTTON_RIGHT) || IsKeyDown(KEY_F)) {
             Vector3 fwd = Vector3Normalize(Vector3Subtract(
                 player.camera->cam.target, player.camera->cam.position));
             fwd = Vector3Scale(fwd, 20);
@@ -245,40 +280,18 @@ int main(void) {
         ClearBackground(DARKGRAY);
         render_drawScene(&engine, &rend);
 
-        ColliderRayContact cont[8];
-        size_t nCont;
-        Ray ray;
-        ray.position = player.camera->cam.position;
-        ray.direction = Vector3Normalize(Vector3Subtract(
-            player.camera->cam.target, player.camera->cam.position));
-        physics_raycast(&engine.phys, ray, 10, cont, &nCont, 8, CAN_EXPLODE);
-
-        /*
-        // Draw body centers
-        for(int i = 0; i < engine.ecs.nActiveEnt; i++) {
-            EngineCompInfo *info = engine_getInfo(&engine,
-        engine.ecs.activeEnt[i]); if(info != NULL && (info->typeMask &
-        GAME_ENT_TYPE_PROP)) { EngineCompTransform *trans =
-        engine_getTransform(&engine, engine.ecs.activeEnt[i]); Vector2 prj =
-        GetWorldToScreen(trans->pos, rend.state.mainCam); DrawCircle(prj.x,
-        prj.y, 20.f, RED);
-            }
-        }
-
         BeginMode3D(rend.state.mainCam);
-        for(int i = 0; i < engine.ecs.nActiveEnt; i++) {
-            EngineCompInfo *info = engine_getInfo(&engine,
-        engine.ecs.activeEnt[i]); if(info != NULL && (info->typeMask &
-        GAME_ENT_TYPE_PROP)) { Collider *coll = engine_getCollider(&engine,
-        engine.ecs.activeEnt[i]); EngineCompTransform *trans =
-        engine_getTransform(&engine, engine.ecs.activeEnt[i]); if(coll != NULL
-        && trans != NULL) { for(int j = 0; j < coll->nContacts; j++) { Vector3
-        pos = coll->contacts[j].pointA; DrawSphere(pos, 0.2f, GREEN);
-                    }
-                }
-            }
-        }
-        EndMode3D();*/
+        BoundingBox terrainBB =
+            BoxTransform(playerBarrel.coll->_boundsTransformed,
+                         MatrixInvert(terrain.transform->globalMatrix));
+        int startX = terrainBB.min.x;
+        int startY = terrainBB.min.y;
+        int endX = ceilf(terrainBB.max.x);
+        int endY = ceilf(terrainBB.max.y);
+
+        DrawBoundingBox(terrainBB, GREEN);
+
+        EndMode3D();
 
         DrawText(
             TextFormat("%u FPS / %.2f ms", GetFPS(), GetFrameTime() * 1000), 0,

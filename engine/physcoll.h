@@ -18,10 +18,22 @@ typedef struct ColliderMesh {
     short *indices;   // only used in raycasting to define mesh triangles
 } ColliderMesh;
 
+typedef struct ColliderSphere {
+    float radius;
+} ColliderSphere;
+
+typedef struct ColliderHeightmap {
+    float *map;
+    uint16_t sizeX;
+    uint16_t sizeY;
+} ColliderHeightmap;
+
 typedef enum ColliderTypeEnum {
     COLLIDER_TYPE_SPHERE,
     COLLIDER_TYPE_AABB,
-    COLLIDER_TYPE_CONVEX_HULL
+    COLLIDER_TYPE_CONVEX_HULL,
+    COLLIDER_TYPE_HEIGHTMAP,
+    COLLIDER_TOTAL_TYPES
 } ColliderType;
 
 typedef struct RigidBody {
@@ -65,8 +77,9 @@ typedef struct ColliderRayContact {
 } ColliderRayContact;
 
 typedef struct Collider {
+    uint8_t enabled;
     ColliderType type;
-    ColliderContact contacts[COLLIDER_MAX_CONTACTS];
+    ColliderContact *contacts;
     size_t nContacts;
     uint32_t collMask;
     uint32_t collTargetMask;
@@ -74,10 +87,9 @@ typedef struct Collider {
     BoundingBox _boundsTransformed;
     Matrix localTransform;
     union {
-        struct {
-            float radius;
-        } sphere;
+        ColliderSphere sphere;
         ColliderMesh convexHull;
+        ColliderHeightmap heightmap;
     };
 } Collider;
 
@@ -126,6 +138,7 @@ typedef struct PhysicsSystem {
     } correction;
 } PhysicsSystem;
 
+Collider initCollider();
 PhysicsSystem physics_initSystem();
 RigidBody physics_initRigidBody(float mass);
 

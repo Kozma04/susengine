@@ -27,6 +27,7 @@
         "thread": "c",
         "raymath.h": "c",
         "mathutils.h": "c",
-        "cstdint": "c"
+        "cstdint": "c",
+        "cmath": "c"
     }
 }

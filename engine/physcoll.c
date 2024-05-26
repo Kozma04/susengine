@@ -1,4 +1,21 @@
 #include "./physcoll.h"
+#include "mathutils.h"
+#include <raymath.h>
+
+typedef uint8_t (*CollSolverFn)(ColliderEntity *entA, ColliderEntity *entB,
+                                Vector3 *nor, Vector3 *locA, Vector3 *locB);
+
+Collider initCollider() {
+    Collider coll;
+    coll.enabled = 1;
+    coll.collMask = 0xffffffff;
+    coll.collTargetMask = 0;
+    coll.contacts = malloc(COLLIDER_MAX_CONTACTS * sizeof(*coll.contacts));
+    coll.nContacts = 0;
+    coll.type = COLLIDER_TOTAL_TYPES;
+    coll.localTransform = MatrixIdentity();
+    return coll;
+}
 
 RigidBody physics_initRigidBody(float mass) {
     RigidBody res;
@@ -32,13 +49,13 @@ PhysicsSystem physics_initSystem() {
     sys.rigidBodies = hashmap_init();
     sys.nContacts = 0;
     // sys.nContactsBroad = 0;
-    sys.correction.penetrationOffset = 0.001f; // 0.0002f;
-    sys.correction.penetrationScale = 0.5f;    // 0.005f;
-    sys.correction.idleAngVelThres = 0.8f;
-    sys.correction.idleAngVelTicks = 60 * 2;
-    sys.correction.idleVelThres = 0.2f;
-    sys.correction.idleVelTicks = 60 * 6;
-    sys.correction.angularVelDamping = 3.6f;
+    sys.correction.penetrationOffset = 0.01f; // 0.0002f;
+    sys.correction.penetrationScale = 0.3f;   // 0.005f;
+    sys.correction.idleAngVelThres = 0.6f;
+    sys.correction.idleAngVelTicks = 60 * 10;
+    sys.correction.idleVelThres = 0.3f;
+    sys.correction.idleVelTicks = 60 * 5;
+    sys.correction.angularVelDamping = 2.8f;
     return sys;
 }
 
@@ -112,7 +129,7 @@ static void physics_bodyUpdate(PhysicsSystem *sys, RigidBody *body, float dt) {
         totalAccel = Vector3Add(totalAccel, body->gravity);
 
     const float waterLevel = -5.f + sin(GetTime()) + 1;
-    if (body->pos.y < waterLevel) {
+    if (body->pos.y < waterLevel && body->mass != 0.f) {
         float depth = waterLevel - body->pos.y + 1 + 3;
         totalAccel = Vector3Add(totalAccel, (Vector3){0, depth * 3, 0});
         body->vel = Vector3Scale(body->vel, 0.98);
@@ -208,6 +225,8 @@ static void physics_collisionBroadPhase(PhysicsSystem *sys) {
             maskA = entA->coll->collTargetMask;
             maskB = entB->coll->collMask;
 
+            if (!entA->coll->enabled || !entB->coll->enabled)
+                continue;
             if ((maskA & maskB) != maskA)
                 continue;
             if (BoxIntersect(bbA, bbB)) {
@@ -240,11 +259,180 @@ static GJKColliderMesh genGJKMesh(ColliderEntity *ent) {
     return gjkMesh;
 }
 
+static uint8_t solveCollNull(ColliderEntity *entA, ColliderEntity *entB,
+                             Vector3 *nor, Vector3 *locA, Vector3 *locB) {
+    logMsg(LOG_LVL_ERR, "only convex hull vs convex hull supported");
+    return 0;
+}
+
+static uint8_t solveCollConvHull(ColliderEntity *entA, ColliderEntity *entB,
+                                 Vector3 *nor, Vector3 *locA, Vector3 *locB) {
+    GJKColliderMesh meshA, meshB;
+    meshA = genGJKMesh(entA);
+    meshB = genGJKMesh(entB);
+    return gjk(&meshA, &meshB, nor, locA, locB);
+}
+
+static uint8_t solveCollConvHullHeightmap(ColliderEntity *entA,
+                                          ColliderEntity *entB, Vector3 *nor,
+                                          Vector3 *locA, Vector3 *locB) {
+    const ColliderType typeA = entA->coll->type;
+    ColliderEntity *entHMap = typeA == COLLIDER_TYPE_CONVEX_HULL ? entB : entA;
+    ColliderEntity *entHull = typeA == COLLIDER_TYPE_CONVEX_HULL ? entA : entB;
+    ColliderEntity entTmpHMap = *entHMap;
+    GJKColliderMesh meshHMap;
+    GJKColliderMesh meshHull = genGJKMesh(entHull);
+    ColliderHeightmap *hMap = &entHMap->coll->heightmap;
+    BoundingBox cellBB;
+
+    // Terrain cell convex hull
+    Vector3 va, vb, vc;
+    Collider tmpColl = *entHMap->coll;
+    float tmpVert[3 * 6];
+
+    // For building terrain cell convex hull
+    uint8_t collide = 0;
+    float maxNorLenSqr = 0;
+    Vector3 tmpNor, tmpLocA, tmpLocB;
+
+    //int statTests = 0;
+
+    // clang-format off
+    static short tmpInd[] = {
+        0, 1, 2,  3, 4, 5,
+        3, 4, 1,  3, 1, 0,
+        5, 3, 0,  5, 0, 2,
+        4, 5, 2,  2, 1, 4
+    };
+    // clang-format on
+
+    tmpColl.type = COLLIDER_TYPE_CONVEX_HULL;
+    tmpColl.convexHull.vertices = tmpVert;
+    tmpColl.convexHull.indices = tmpInd;
+    tmpColl.convexHull.nVertices = 6;
+
+    entTmpHMap.coll = &tmpColl;
+    meshHMap = genGJKMesh(&entTmpHMap);
+
+    if (hMap->sizeX < 2 || hMap->sizeY < 2) {
+        logMsg(LOG_LVL_ERR, "invalid heightmap size: %u x %u", hMap->sizeX,
+               hMap->sizeY);
+        return 0;
+    }
+
+    for (int x = 0; x < hMap->sizeX - 1; x++) {
+        for (int z = 0; z < hMap->sizeY - 1; z++) {
+            float hA = hMap->map[z * hMap->sizeX + x];
+            float hB = hMap->map[z * hMap->sizeX + x + 1];
+            float hC = hMap->map[(z + 1) * hMap->sizeX + x];
+            float hD = hMap->map[(z + 1) * hMap->sizeX + x + 1];
+            float hMax = hA;
+            if (hB > hMax)
+                hMax = hB;
+            if (hC > hMax)
+                hMax = hC;
+            if (hD > hMax)
+                hMax = hD;
+
+            // Generate terrain cell bounding box
+            cellBB.min.x = x;
+            cellBB.min.y = 0;
+            cellBB.min.z = z;
+            cellBB.max.x = x + 1;
+            cellBB.max.y = hMax;
+            cellBB.max.z = z + 1;
+            cellBB = BoxTransform(cellBB, *entHMap->transform);
+
+            // Discard cell if bounding boxes do not intersect
+            if (!BoxIntersect(cellBB, entHull->coll->_boundsTransformed))
+                continue;
+            //statTests++;
+
+            // Check first triangle in cell
+            // Top
+            tmpVert[0 + 0] = x;
+            tmpVert[0 + 1] = hA;
+            tmpVert[0 + 2] = z;
+            tmpVert[3 + 0] = x + 1;
+            tmpVert[3 + 1] = hB;
+            tmpVert[3 + 2] = z;
+            tmpVert[6 + 0] = x;
+            tmpVert[6 + 1] = hC;
+            tmpVert[6 + 2] = z + 1;
+            // Bottom
+            tmpVert[9 + 0] = x;
+            tmpVert[9 + 1] = 0;
+            tmpVert[9 + 2] = z;
+            tmpVert[12 + 0] = x + 1;
+            tmpVert[12 + 1] = 0;
+            tmpVert[12 + 2] = z;
+            tmpVert[15 + 0] = x;
+            tmpVert[15 + 1] = 0;
+            tmpVert[15 + 2] = z + 1;
+            if (gjk(&meshHull, &meshHMap, &tmpNor, &tmpLocA, &tmpLocB)) {
+                float len = Vector3LengthSqr(tmpNor);
+                collide = 1;
+                if (len > maxNorLenSqr) {
+                    maxNorLenSqr = len;
+                    *nor = tmpNor;
+                    *locA = tmpLocA;
+                    *locB = tmpLocB;
+                }
+            }
+
+            // Check second triangle in cell
+            // Top
+            tmpVert[0 + 0] = x + 1;
+            tmpVert[0 + 1] = hB;
+            tmpVert[0 + 2] = z;
+            tmpVert[3 + 0] = x + 1;
+            tmpVert[3 + 1] = hD;
+            tmpVert[3 + 2] = z + 1;
+            tmpVert[6 + 0] = x;
+            tmpVert[6 + 1] = hC;
+            tmpVert[6 + 2] = z + 1;
+            // Bottom
+            tmpVert[9 + 0] = x + 1;
+            tmpVert[9 + 1] = 0;
+            tmpVert[9 + 2] = z;
+            tmpVert[12 + 0] = x + 1;
+            tmpVert[12 + 1] = 0;
+            tmpVert[12 + 2] = z + 1;
+            tmpVert[15 + 0] = x;
+            tmpVert[15 + 1] = 0;
+            tmpVert[15 + 2] = z + 1;
+
+            if (gjk(&meshHull, &meshHMap, &tmpNor, &tmpLocA, &tmpLocB)) {
+                float len = Vector3LengthSqr(tmpNor);
+                collide = 1;
+                if (len > maxNorLenSqr) {
+                    maxNorLenSqr = len;
+                    *nor = tmpNor;
+                    *locA = tmpLocA;
+                    *locB = tmpLocB;
+                }
+            }
+        }
+    }
+
+    //logMsg(LOG_LVL_INFO, "performed %u tests!", statTests);
+
+    return collide;
+}
+
+// clang-format off
+static const CollSolverFn collisionSolvers[COLLIDER_TOTAL_TYPES][COLLIDER_TOTAL_TYPES] = {
+    {solveCollNull, solveCollNull, solveCollNull, solveCollNull},
+    {solveCollNull, solveCollNull, solveCollNull, solveCollNull},
+    {solveCollNull, solveCollNull, solveCollConvHull, solveCollConvHullHeightmap},
+    {solveCollNull, solveCollNull, solveCollConvHullHeightmap, solveCollNull}
+};
+// clang-format on
+
 static void physics_collisionNarrowPhase(PhysicsSystem *sys) {
     ColliderEntity *entA, *entB;
-    // Collider *collA, *collB;
-    GJKColliderMesh gjkMeshA, gjkMeshB;
     ColliderContact cont;
+    Vector3 nor, locA, locB;
     int idxA, idxB;
 
     for (size_t i = 0; i < sys->collEnt.nEntries; i++) {
@@ -261,20 +449,22 @@ static void physics_collisionNarrowPhase(PhysicsSystem *sys) {
         idxB = sys->contactsBroad[i].posB;
         entA = sys->collEnt.entries[idxA].val.ptr;
         entB = sys->collEnt.entries[idxB].val.ptr;
-        // collA = entA->coll;
-        // collB = entB->coll;
 
-        gjkMeshA = genGJKMesh(entA);
-        gjkMeshB = genGJKMesh(entB);
-
-        if (entA->coll->type != COLLIDER_TYPE_CONVEX_HULL ||
-            entB->coll->type != COLLIDER_TYPE_CONVEX_HULL) {
-            logMsg(LOG_LVL_WARN, "only convex hull collision is supported");
+        if (entA->coll->type >= COLLIDER_TOTAL_TYPES) {
+            logMsg(LOG_LVL_ERR, "invalid collider type for id %u: %u",
+                   sys->collEnt.entries[idxA].key, entA->coll->type);
             continue;
         }
+        if (entB->coll->type >= COLLIDER_TOTAL_TYPES) {
+            logMsg(LOG_LVL_ERR, "invalid collider type for id %u: %u",
+                   sys->collEnt.entries[idxB].key, entB->coll->type);
+            continue;
+        }
+        // uint8_t collRes = gjk(&gjkMeshA, &gjkMeshB, &nor, &locA, &locB);
+        CollSolverFn solveCollision =
+            collisionSolvers[entA->coll->type][entB->coll->type];
+        uint8_t collRes = solveCollision(entA, entB, &nor, &locA, &locB);
 
-        Vector3 nor, locA, locB;
-        uint8_t collRes = gjk(&gjkMeshA, &gjkMeshB, &nor, &locA, &locB);
         if (collRes) {
             if (isnan(nor.x) || isnan(nor.y) || isnan(nor.z)) {
                 printf("nor: %g %g %g\n", nor.x, nor.y, nor.z);
@@ -431,38 +621,31 @@ void physics_updateBodies(PhysicsSystem *sys, float dt) {
         Vector3 relPosA = Vector3Subtract(contA, posA);
         Vector3 relPosB = Vector3Subtract(contB, posB);
 
-        /*Vector3 inertiaA = Vector3CrossProduct(
+        Vector3 inertiaA = Vector3CrossProduct(
             Vector3Transform(
-                Vector3CrossProduct(relativeA, sys->contacts[i].normal),
-                rbA->inverseInertiaTensor
-            ),
-            relativeA
-        );
+                Vector3CrossProduct(relPosA, sys->contacts[i].normal),
+                rbA->inverseInertiaTensor),
+            relPosA);
         Vector3 inertiaB = Vector3CrossProduct(
             Vector3Transform(
-                Vector3CrossProduct(relativeB, sys->contacts[i].normal),
-                rbB->inverseInertiaTensor
-            ),
-            relativeB
-        );
-        float angularEffect = Vector3DotProduct(
-            Vector3Add(inertiaA, inertiaB), sys->contacts[i].normal
-        );
-        */
+                Vector3CrossProduct(relPosB, sys->contacts[i].normal),
+                rbB->inverseInertiaTensor),
+            relPosB);
+        float angEffect = Vector3DotProduct(Vector3Add(inertiaA, inertiaB),
+                                            sys->contacts[i].normal);
 
         // Impulse response
-        float j = -(1 + e) * velAlongNormal /
-                  (massAInv + massBInv /*+ angularEffect*/);
+        float j = -(1 + e) * velAlongNormal / (massAInv + massBInv + angEffect);
         Vector3 imp = Vector3Scale(sys->contacts[i].normal, j);
 
         const float percent = sys->correction.penetrationScale;
         const float kSlop = sys->correction.penetrationOffset;
-        float corrDepth = sys->contacts[i].depth; // + kSlop;
+        float corrDepth = sys->contacts[i].depth + kSlop;
         if (corrDepth < 0)
             corrDepth = 0;
         Vector3 corr =
             Vector3Scale(sys->contacts[i].normal,
-                         (corrDepth * percent + kSlop) / (massAInv + massBInv));
+                         (corrDepth * percent) / (massAInv + massBInv));
 
         if (massAInv != .0f &&
             rbA->_idleVelTicks < sys->correction.idleVelTicks) {
@@ -486,10 +669,10 @@ void physics_updateBodies(PhysicsSystem *sys, float dt) {
             fImpulse = Vector3Scale(tangent, -j * dynF);
         }
 
-        // physics_applyImpulseAt(rbA, Vector3Scale(fImpulse, -1.f), relPosA);
-        // physics_applyImpulseAt(rbB, Vector3Scale(fImpulse, 1.f), relPosB);
-        physics_applyImpulse(rbA, Vector3Scale(fImpulse, -1.f));
-        physics_applyImpulse(rbB, Vector3Scale(fImpulse, 1.f));
+        physics_applyImpulseAt(rbA, Vector3Scale(fImpulse, -1.f), relPosA);
+        physics_applyImpulseAt(rbB, Vector3Scale(fImpulse, 1.f), relPosB);
+        // physics_applyImpulse(rbA, Vector3Scale(fImpulse, -1.f));
+        // physics_applyImpulse(rbB, Vector3Scale(fImpulse, 1.f));
 
         imp = Vector3SetLength(imp, Vector3Length(imp) + 0.0f);
         physics_applyImpulseAt(rbA, Vector3Scale(imp, -1.f), relPosA);

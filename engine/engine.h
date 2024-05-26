@@ -8,8 +8,8 @@
 #include <stdlib.h>
 
 #include <raylib.h>
-#include <rlgl.h>
 #include <raymath.h>
+#include <rlgl.h>
 
 #include "./dsa.h"
 #include "./ecs.h"
@@ -159,12 +159,13 @@ typedef struct Engine {
         Hashmap shaders; // Shader* values
 
         Array meshRend; // ComponentID (for Mesh Renderer) values
-        // Array meshRendVisible; // Visible Mesh Renderer component IDs
-        // Array meshRendVisibleDist; // distance to each Mesh Renderer
 
         Array lightSrc;        // ComponentID (for light sources) values
         ECSComponentID camera; // Camera component
     } render;
+
+    float physDeltaTime;
+    float physLastUpdate;
 } Engine;
 
 typedef enum EngineStatusEnum {
