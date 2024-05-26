@@ -134,7 +134,7 @@ int main(void) {
 
     // Game setup
     player = createPlayer(&engine);
-    player.controller->mode = GAME_PLAYERMODE_NOCLIP;
+    player.controller->mode = GAME_PLAYERMODE_PHYSICAL;
     physics_setPosition(player.rb, (Vector3){0, 12, 0});
     engine_entityPostCreate(&engine, player.id);
 
@@ -210,7 +210,8 @@ int main(void) {
     logMsg(LOG_LVL_INFO, "Running game loop");
 
     Image img = LoadImage("assets/hmap.png");
-    float *valsHeight = malloc(sizeof(*valsHeight) * 16 * 16);
+    int terrainW = 64, terrainH = 64;
+    float *valsHeight = malloc(sizeof(*valsHeight) * terrainW * terrainH);
     for (int i = 0; i < img.width; i++) {
         for (int j = 0; j < img.height; j++) {
             Color col = GetImageColor(img, i, j);
@@ -219,29 +220,29 @@ int main(void) {
             ImageDrawPixel(&img, i, j, col);
         }
     }
-    ImageCrop(&img, (Rectangle){0, 0, 16, 16});
+    ImageCrop(&img, (Rectangle){0, 0, terrainW, terrainH});
 
-    for (int i = 0; i < 16; i++) {
-        for (int j = 0; j < 16; j++) {
+    for (int i = 0; i < terrainW; i++) {
+        for (int j = 0; j < terrainH; j++) {
             Color col = GetImageColor(img, i, j);
             float h = col.r / 255.f;
-            valsHeight[j * 16 + i] = h;
+            valsHeight[j * terrainH + i] = h;
             ImageDrawPixel(&img, i, j, col);
         }
     }
 
-    Mesh hmapMesh = GenMeshHeightmapChunk(img, 0, 0, 16, 16);
+    Mesh hmapMesh = GenMeshHeightmapChunk(img, 0, 0, terrainW, terrainH);
     Model mdlHmap = LoadModelFromMesh(hmapMesh);
     engine_render_addModel(&engine, 420, &mdlHmap);
     Prop terrain = createProp(&engine, 420);
 
-    terrain.rb->pos = (Vector3){20, -45, 20};
-    terrain.transform->scale = (Vector3){8, 2000, 8};
+    terrain.rb->pos = (Vector3){16, -10, 16};
+    terrain.transform->scale = (Vector3){2, 500, 2};
     terrain.transform->localUpdate = 1;
     terrain.coll->type = COLLIDER_TYPE_HEIGHTMAP;
     terrain.coll->heightmap.map = valsHeight;
-    terrain.coll->heightmap.sizeX = 16;
-    terrain.coll->heightmap.sizeY = 16;
+    terrain.coll->heightmap.sizeX = terrainW;
+    terrain.coll->heightmap.sizeY = terrainH;
     terrain.coll->enabled = 1;
     terrain.rb->mass = 0.f;
     // terrain.rb->enableDynamics = 0;

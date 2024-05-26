@@ -295,7 +295,7 @@ static uint8_t solveCollConvHullHeightmap(ColliderEntity *entA,
     float maxNorLenSqr = 0;
     Vector3 tmpNor, tmpLocA, tmpLocB;
 
-    //int statTests = 0;
+    // int statTests = 0;
 
     // clang-format off
     static short tmpInd[] = {
@@ -346,7 +346,7 @@ static uint8_t solveCollConvHullHeightmap(ColliderEntity *entA,
             // Discard cell if bounding boxes do not intersect
             if (!BoxIntersect(cellBB, entHull->coll->_boundsTransformed))
                 continue;
-            //statTests++;
+            // statTests++;
 
             // Check first triangle in cell
             // Top
@@ -361,22 +361,25 @@ static uint8_t solveCollConvHullHeightmap(ColliderEntity *entA,
             tmpVert[6 + 2] = z + 1;
             // Bottom
             tmpVert[9 + 0] = x;
-            tmpVert[9 + 1] = 0;
+            tmpVert[9 + 1] = hA - .01f;
             tmpVert[9 + 2] = z;
             tmpVert[12 + 0] = x + 1;
-            tmpVert[12 + 1] = 0;
+            tmpVert[12 + 1] = hB - .01f;
             tmpVert[12 + 2] = z;
             tmpVert[15 + 0] = x;
-            tmpVert[15 + 1] = 0;
+            tmpVert[15 + 1] = hC - .01f;
             tmpVert[15 + 2] = z + 1;
             if (gjk(&meshHull, &meshHMap, &tmpNor, &tmpLocA, &tmpLocB)) {
-                float len = Vector3LengthSqr(tmpNor);
-                collide = 1;
-                if (len > maxNorLenSqr) {
-                    maxNorLenSqr = len;
-                    *nor = tmpNor;
-                    *locA = tmpLocA;
-                    *locB = tmpLocB;
+                Vector3 tmpNorNorm = Vector3Normalize(tmpNor);
+                if (fabsf(tmpNorNorm.y) > 0.01f) {
+                    float len = Vector3LengthSqr(tmpNor);
+                    collide = 1;
+                    if (len > maxNorLenSqr) {
+                        maxNorLenSqr = len;
+                        *nor = tmpNor;
+                        *locA = tmpLocA;
+                        *locB = tmpLocB;
+                    }
                 }
             }
 
@@ -393,29 +396,32 @@ static uint8_t solveCollConvHullHeightmap(ColliderEntity *entA,
             tmpVert[6 + 2] = z + 1;
             // Bottom
             tmpVert[9 + 0] = x + 1;
-            tmpVert[9 + 1] = 0;
+            tmpVert[9 + 1] = hB - .01f;
             tmpVert[9 + 2] = z;
             tmpVert[12 + 0] = x + 1;
-            tmpVert[12 + 1] = 0;
+            tmpVert[12 + 1] = hD - .01f;
             tmpVert[12 + 2] = z + 1;
             tmpVert[15 + 0] = x;
-            tmpVert[15 + 1] = 0;
+            tmpVert[15 + 1] = hC - .01f;
             tmpVert[15 + 2] = z + 1;
 
             if (gjk(&meshHull, &meshHMap, &tmpNor, &tmpLocA, &tmpLocB)) {
-                float len = Vector3LengthSqr(tmpNor);
-                collide = 1;
-                if (len > maxNorLenSqr) {
-                    maxNorLenSqr = len;
-                    *nor = tmpNor;
-                    *locA = tmpLocA;
-                    *locB = tmpLocB;
+                Vector3 tmpNorNorm = Vector3Normalize(tmpNor);
+                if (fabsf(tmpNorNorm.y) > 0.01f) {
+                    float len = Vector3LengthSqr(tmpNor);
+                    collide = 1;
+                    if (len > maxNorLenSqr) {
+                        maxNorLenSqr = len;
+                        *nor = tmpNor;
+                        *locA = tmpLocA;
+                        *locB = tmpLocB;
+                    }
                 }
             }
         }
     }
 
-    //logMsg(LOG_LVL_INFO, "performed %u tests!", statTests);
+    // logMsg(LOG_LVL_INFO, "performed %u tests!", statTests);
 
     return collide;
 }
