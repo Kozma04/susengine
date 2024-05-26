@@ -8,9 +8,17 @@ static inline void putVec(float *vertices, Vector3 vec) {
 
 static inline Vector3 normalAtCell(Image hmap, int x, int y) {
     float ha = GetImageColor(hmap, x, y).r / 255.f;
-    float hb = GetImageColor(hmap, x + 1, y).r / 255.f;
-    float hc = GetImageColor(hmap, x, y + 1).r / 255.f;
-    float hd = GetImageColor(hmap, x + 1, y + 1).r / 255.f;
+    float hb = ha;
+    float hc = ha;
+    float hd = ha;
+
+    if (x + 1 < hmap.width)
+        hb = GetImageColor(hmap, x + 1, y).r / 255.f;
+    if (y + 1 < hmap.height)
+        hc = GetImageColor(hmap, x, y + 1).r / 255.f;
+    if (x + 1 < hmap.width && y + 1 < hmap.height)
+        hd = GetImageColor(hmap, x + 1, y + 1).r / 255.f;
+
     Vector3 va = (Vector3){(float)x, ha, (float)y};
     Vector3 vb = (Vector3){(float)x + 1, hb, (float)y};
     Vector3 vc = (Vector3){(float)x, hc, (float)y + 1};

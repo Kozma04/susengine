@@ -21,7 +21,7 @@ struct DirectionalLight {
 in vec3 fragPosition;
 in vec4 fragPositionShadow[SHADOW_CASCADES];
 in vec2 fragTexCoord;
-flat in vec3 fragNormal;
+in vec3 fragNormal;
 in vec4 fragColor;
 
 uniform sampler2D texture0;

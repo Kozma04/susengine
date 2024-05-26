@@ -134,8 +134,8 @@ int main(void) {
 
     // Game setup
     player = createPlayer(&engine);
-    player.controller->mode = GAME_PLAYERMODE_PHYSICAL;
-    physics_setPosition(player.rb, (Vector3){0, 12, 0});
+    player.controller->mode = GAME_PLAYERMODE_NOCLIP;
+    physics_setPosition(player.rb, (Vector3){30, 22, 30});
     engine_entityPostCreate(&engine, player.id);
 
     // light = createLightbulb(&engine, (Vector3){1.3, 0.2, 0.1}, 50);
@@ -154,14 +154,14 @@ int main(void) {
     physics_setPosition(playerBarrel.rb, (Vector3){0, 10, 7});
     engine_entityPostCreate(&engine, playerBarrel.id);
 
-    Prop plane = createProp(&engine, GAME_MODEL_CUBE);
+    /*Prop plane = createProp(&engine, GAME_MODEL_CUBE);
     plane.meshRenderer->color = (Vector3){1.3f, 0.9f, 0.6f};
     physics_setPosition(plane.rb, (Vector3){0, -5, 0});
     plane.rb->mass = 0;
     plane.rb->enableRot = (Vector3){0, 0, 0};
     plane.transform->scale = (Vector3){30, 1, 30};
     physics_setPosition(plane.rb, (Vector3){0, 0, 0});
-    engine_entityPostCreate(&engine, plane.id);
+    engine_entityPostCreate(&engine, plane.id);*/
 
     Prop heavyProp = createProp(&engine, 5);
     heavyProp.transform->scale = (Vector3){8, 8, 8};
@@ -187,8 +187,8 @@ int main(void) {
     // Pass it to the game engine
     engine_entityPostCreate(&engine, cube.id);
 
-    for (int x = -4; x < 4; x++) {
-        for (int y = -4; y < 4; y++) {
+    for (int x = 0; x < 8; x++) {
+        for (int y = 0; y < 8; y++) {
             Prop prop = createProp(&engine, GAME_MODEL_CUBE);
             // prop.info->typeMask = 0x00000001;
 
@@ -199,7 +199,8 @@ int main(void) {
             prop.rb->enableRot = (Vector3){0.25f, 0.25f, 0.25f};
             prop.meshRenderer->castShadow = 1;
             prop.transform->scale = (Vector3){1.f, .5f, 1.f};
-            physics_setPosition(prop.rb, (Vector3){x * 3, 15, y * 3});
+            physics_setPosition(prop.rb,
+                                (Vector3){30 + x * 30, 100, 30 + y * 30});
             engine_entityPostCreate(&engine, prop.id);
             // prop.rb->inverseInertia =
             // Vector3Scale(prop.rb->inverseInertia, 3.f);
@@ -210,7 +211,7 @@ int main(void) {
     logMsg(LOG_LVL_INFO, "Running game loop");
 
     Image img = LoadImage("assets/hmap.png");
-    int terrainW = 64, terrainH = 64;
+    int terrainW = 32, terrainH = 32;
     float *valsHeight = malloc(sizeof(*valsHeight) * terrainW * terrainH);
     for (int i = 0; i < img.width; i++) {
         for (int j = 0; j < img.height; j++) {
@@ -220,7 +221,8 @@ int main(void) {
             ImageDrawPixel(&img, i, j, col);
         }
     }
-    ImageCrop(&img, (Rectangle){0, 0, terrainW, terrainH});
+    // ImageCrop(&img, (Rectangle){0, 0, terrainW, terrainH});
+    ImageResize(&img, terrainW, terrainH);
 
     for (int i = 0; i < terrainW; i++) {
         for (int j = 0; j < terrainH; j++) {
@@ -233,11 +235,15 @@ int main(void) {
 
     Mesh hmapMesh = GenMeshHeightmapChunk(img, 0, 0, terrainW, terrainH);
     Model mdlHmap = LoadModelFromMesh(hmapMesh);
+    Texture2D hMapTex = LoadTexture("assets/hmapcolor.png");
+    SetTextureFilter(hMapTex, TEXTURE_FILTER_BILINEAR);
+    mdlHmap.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = hMapTex;
+
     engine_render_addModel(&engine, 420, &mdlHmap);
     Prop terrain = createProp(&engine, 420);
 
-    terrain.rb->pos = (Vector3){16, -10, 16};
-    terrain.transform->scale = (Vector3){2, 500, 2};
+    terrain.rb->pos = (Vector3){20, -10, 20};
+    terrain.transform->scale = (Vector3){10, 200, 10};
     terrain.transform->localUpdate = 1;
     terrain.coll->type = COLLIDER_TYPE_HEIGHTMAP;
     terrain.coll->heightmap.map = valsHeight;
@@ -280,19 +286,6 @@ int main(void) {
 
         ClearBackground(DARKGRAY);
         render_drawScene(&engine, &rend);
-
-        BeginMode3D(rend.state.mainCam);
-        BoundingBox terrainBB =
-            BoxTransform(playerBarrel.coll->_boundsTransformed,
-                         MatrixInvert(terrain.transform->globalMatrix));
-        int startX = terrainBB.min.x;
-        int startY = terrainBB.min.y;
-        int endX = ceilf(terrainBB.max.x);
-        int endY = ceilf(terrainBB.max.y);
-
-        DrawBoundingBox(terrainBB, GREEN);
-
-        EndMode3D();
 
         DrawText(
             TextFormat("%u FPS / %.2f ms", GetFPS(), GetFrameTime() * 1000), 0,

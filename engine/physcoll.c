@@ -1,4 +1,5 @@
 #include "./physcoll.h"
+#include "gjk.h"
 #include "mathutils.h"
 #include <raymath.h>
 
@@ -31,10 +32,10 @@ RigidBody physics_initRigidBody(float mass) {
     res.rot = QuaternionIdentity();
 
     res.mass = mass;
-    res.bounce = .0f;
-    res.staticFriction = 0.1f;
-    res.dynamicFriction = 0.5f;
-    res.mediumFriction = 0.001f;
+    res.bounce = 0.2f;
+    res.staticFriction = 0.4f;
+    res.dynamicFriction = 0.6f;
+    res.mediumFriction = 0.1f;
 
     res.enableRot = (Vector3){1, 1, 1};
     res._idleVelTicks = 0;
@@ -136,7 +137,9 @@ static void physics_bodyUpdate(PhysicsSystem *sys, RigidBody *body, float dt) {
     }
 
     body->vel = Vector3Add(body->vel, Vector3Scale(totalAccel, dt));
-    body->vel = Vector3Scale(body->vel, 1.f - body->mediumFriction * dt);
+    // body->vel = Vector3Scale(body->vel, 1.f - body->mediumFriction * dt);
+    body->vel = Vector3Subtract(
+        body->vel, Vector3Scale(body->vel, dt * body->mediumFriction));
 
     idle = 0;
     body->_avgVelLen +=
@@ -294,6 +297,7 @@ static uint8_t solveCollConvHullHeightmap(ColliderEntity *entA,
     uint8_t collide = 0;
     float maxNorLenSqr = 0;
     Vector3 tmpNor, tmpLocA, tmpLocB;
+    *nor = (Vector3){0, 0, 0};
 
     // int statTests = 0;
 
@@ -353,34 +357,45 @@ static uint8_t solveCollConvHullHeightmap(ColliderEntity *entA,
             tmpVert[0 + 0] = x;
             tmpVert[0 + 1] = hA;
             tmpVert[0 + 2] = z;
-            tmpVert[3 + 0] = x + 1;
-            tmpVert[3 + 1] = hB;
-            tmpVert[3 + 2] = z;
-            tmpVert[6 + 0] = x;
-            tmpVert[6 + 1] = hC;
-            tmpVert[6 + 2] = z + 1;
+            tmpVert[3 + 0] = x;
+            tmpVert[3 + 1] = hC;
+            tmpVert[3 + 2] = z + 1;
+            tmpVert[6 + 0] = x + 1;
+            tmpVert[6 + 1] = hB;
+            tmpVert[6 + 2] = z;
             // Bottom
             tmpVert[9 + 0] = x;
-            tmpVert[9 + 1] = hA - .01f;
+            tmpVert[9 + 1] = hA - 1.f;
             tmpVert[9 + 2] = z;
             tmpVert[12 + 0] = x + 1;
-            tmpVert[12 + 1] = hB - .01f;
+            tmpVert[12 + 1] = hC - 1.f;
             tmpVert[12 + 2] = z;
             tmpVert[15 + 0] = x;
-            tmpVert[15 + 1] = hC - .01f;
+            tmpVert[15 + 1] = hB - 1.f;
             tmpVert[15 + 2] = z + 1;
+            va = (Vector3){tmpVert[0], tmpVert[1], tmpVert[2]};
+            vb = (Vector3){tmpVert[3], tmpVert[4], tmpVert[5]};
+            vc = (Vector3){tmpVert[6], tmpVert[7], tmpVert[8]};
+            va = Vector3Transform(va, meshHMap.transform);
+            vb = Vector3Transform(vb, meshHMap.transform);
+            vc = Vector3Transform(vc, meshHMap.transform);
+            va = Vector3Add(va, meshHMap.pos);
+            vb = Vector3Add(vb, meshHMap.pos);
+            vc = Vector3Add(vc, meshHMap.pos);
+
             if (gjk(&meshHull, &meshHMap, &tmpNor, &tmpLocA, &tmpLocB)) {
-                Vector3 tmpNorNorm = Vector3Normalize(tmpNor);
-                if (fabsf(tmpNorNorm.y) > 0.01f) {
-                    float len = Vector3LengthSqr(tmpNor);
-                    collide = 1;
-                    if (len > maxNorLenSqr) {
-                        maxNorLenSqr = len;
-                        *nor = tmpNor;
-                        *locA = tmpLocA;
-                        *locB = tmpLocB;
-                    }
-                }
+                collide = 1;
+                // For some reason, computing the normal by plane dist. instead
+                // of w/ EPA gives better results(bodies don't fall through)
+                Vector3 normal = TriGetNormal(va, vc, vb);
+                Vector3 support = supportVec(&meshHull, normal);
+                float magnitude =
+                    DistanceFromPlane(PlaneFromTri(va, vc, vb), support);
+                tmpNor = Vector3Scale(normal, magnitude);
+                *nor = Vector3Add(*nor, tmpNor);
+
+                *locA = tmpLocA;
+                *locB = tmpLocB;
             }
 
             // Check second triangle in cell
@@ -388,40 +403,47 @@ static uint8_t solveCollConvHullHeightmap(ColliderEntity *entA,
             tmpVert[0 + 0] = x + 1;
             tmpVert[0 + 1] = hB;
             tmpVert[0 + 2] = z;
-            tmpVert[3 + 0] = x + 1;
-            tmpVert[3 + 1] = hD;
+            tmpVert[3 + 0] = x;
+            tmpVert[3 + 1] = hC;
             tmpVert[3 + 2] = z + 1;
-            tmpVert[6 + 0] = x;
-            tmpVert[6 + 1] = hC;
+            tmpVert[6 + 0] = x + 1;
+            tmpVert[6 + 1] = hD;
             tmpVert[6 + 2] = z + 1;
             // Bottom
             tmpVert[9 + 0] = x + 1;
-            tmpVert[9 + 1] = hB - .01f;
+            tmpVert[9 + 1] = hB - 1.f;
             tmpVert[9 + 2] = z;
             tmpVert[12 + 0] = x + 1;
-            tmpVert[12 + 1] = hD - .01f;
+            tmpVert[12 + 1] = hC - 1.f;
             tmpVert[12 + 2] = z + 1;
             tmpVert[15 + 0] = x;
-            tmpVert[15 + 1] = hC - .01f;
+            tmpVert[15 + 1] = hD - 1.f;
             tmpVert[15 + 2] = z + 1;
 
+            va = (Vector3){tmpVert[0], tmpVert[1], tmpVert[2]};
+            vb = (Vector3){tmpVert[3], tmpVert[4], tmpVert[5]};
+            vc = (Vector3){tmpVert[6], tmpVert[7], tmpVert[8]};
+            va = Vector3Transform(va, meshHMap.transform);
+            vb = Vector3Transform(vb, meshHMap.transform);
+            vc = Vector3Transform(vc, meshHMap.transform);
+            va = Vector3Add(va, meshHMap.pos);
+            vb = Vector3Add(vb, meshHMap.pos);
+            vc = Vector3Add(vc, meshHMap.pos);
+
             if (gjk(&meshHull, &meshHMap, &tmpNor, &tmpLocA, &tmpLocB)) {
-                Vector3 tmpNorNorm = Vector3Normalize(tmpNor);
-                if (fabsf(tmpNorNorm.y) > 0.01f) {
-                    float len = Vector3LengthSqr(tmpNor);
-                    collide = 1;
-                    if (len > maxNorLenSqr) {
-                        maxNorLenSqr = len;
-                        *nor = tmpNor;
-                        *locA = tmpLocA;
-                        *locB = tmpLocB;
-                    }
-                }
+                collide = 1;
+                Vector3 normal = TriGetNormal(va, vc, vb);
+                Vector3 support = supportVec(&meshHull, normal);
+                float magnitude =
+                    DistanceFromPlane(PlaneFromTri(va, vc, vb), support);
+                tmpNor = Vector3Scale(normal, magnitude);
+                *nor = Vector3Add(*nor, tmpNor);
+
+                *locA = tmpLocA;
+                *locB = tmpLocB;
             }
         }
     }
-
-    // logMsg(LOG_LVL_INFO, "performed %u tests!", statTests);
 
     return collide;
 }

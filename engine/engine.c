@@ -148,10 +148,10 @@ void engine_stepUpdate(Engine *const engine, const float deltaTime) {
     if (GetTime() > engine->physLastUpdate + engine->physDeltaTime) {
         engine->physLastUpdate = GetTime();
         for (int i = 0; i < physSubsteps; i++) {
+            engine_updateTransforms(engine);
             physics_updateCollisions(&engine->phys);
             physics_updateBodies(&engine->phys,
                                  engine->physDeltaTime / physSubsteps);
-            engine_updateTransforms(engine);
         }
     }
 

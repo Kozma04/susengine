@@ -110,7 +110,7 @@ static void game_cbPlayerControllerOnUpdate(uint32_t cbType, ECSEntityID entId,
     if (IsKeyPressed(KEY_ENTER)) {
         engine_entityBroadcastMsg(cbData->engine, entId, ALL_BOXES, BOOM,
                                   &cam->cam.position,
-                                  sizeof(&cam->cam.position));
+                                  sizeof(cam->cam.position));
     }
 }
 

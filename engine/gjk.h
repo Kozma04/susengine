@@ -341,11 +341,11 @@ static void AddIfUniqueEdge(Edge *edges, int *faces, int *nEdges, int a,
             for (int j = i; j < *nEdges - 1; j++) {
                 edges[j] = edges[j + 1];
             }
-            *nEdges--;
+            (*nEdges)--;
             return;
         }
     }
-    edges[*nEdges++] = (Edge){faces[a], faces[b]};
+    edges[(*nEdges)++] = (Edge){faces[a], faces[b]};
 }
 
 static uint8_t EPA(Point *a, Point *b, Point *c, Point *d,
