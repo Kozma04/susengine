@@ -15,7 +15,7 @@
 typedef struct ColliderMesh {
     float *vertices;  // set of (X, Y, Z) coordinates
     size_t nVertices; // number of coordinates (vertices size = nVertices * 3)
-    short *indices;   // only used in raycasting to define mesh triangles
+    unsigned short *indices; // only used in raycasting to define mesh triangles
 } ColliderMesh;
 
 typedef struct ColliderSphere {
@@ -92,13 +92,6 @@ typedef struct Collider {
         ColliderHeightmap heightmap;
     };
 } Collider;
-
-/*typedef struct PhysicsSystemEntity {
-    PhysicsRigidBody *body;
-    Collider *collider;
-    Matrix *transform;
-    Matrix transformInverse;
-} PhysicsSystemEntity;*/
 
 typedef struct ColliderEntity {
     Collider *coll;

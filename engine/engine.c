@@ -1,4 +1,5 @@
 #include "./engine.h"
+#include "ecs.h"
 #include "physcoll.h"
 
 void engine_init(Engine *const engine) {
@@ -554,7 +555,7 @@ EngineStatus engine_createCamera(Engine *const engine, const ECSEntityID ent,
 
 EngineStatus engine_createMeshRenderer(Engine *const engine,
                                        const ECSEntityID ent,
-                                       EngineCompTransform *transformAnchor,
+                                       const ECSEntityID transformAnchor,
                                        const EngineRenderModelID modelId) {
     const EngineECSCompType type = ENGINE_COMP_MESHRENDERER;
     ECSComponent compRaw;
@@ -579,19 +580,16 @@ EngineStatus engine_createMeshRenderer(Engine *const engine,
     comp->visible = 1;
     comp->shaderId = ECS_INVALID_ID;
     comp->distanceMode = RENDER_DIST_FROM_CAMERA;
+    comp->transform = transformAnchor;
 
-    if (transformAnchor)
-        comp->transform = transformAnchor;
-    else {
-        res = ecs_getCompData(&engine->ecs, ent, ENGINE_COMP_TRANSFORM,
-                              (void **)&transformAnchor);
+    if (transformAnchor == ECS_INVALID_ID) {
+        res = ecs_compExists(&engine->ecs, ent, ENGINE_COMP_TRANSFORM);
         if (res != ECS_RES_OK) {
             logMsg(LOG_LVL_ERR,
                    "trans. anchor null and no trans. in entity id %u, model %u",
                    ent, modelId);
             return ENGINE_STATUS_NO_TRANSFORM_ANCHOR;
         }
-        comp->transform = transformAnchor;
     }
 
     if (ecs_registerComp(&engine->ecs, ent, type, compRaw) == ECS_RES_OK) {
@@ -656,7 +654,7 @@ EngineStatus engine_createDirLight(Engine *const engine, const ECSEntityID ent,
 
 EngineStatus engine_createPointLight(Engine *const engine,
                                      const ECSEntityID ent,
-                                     EngineCompTransform *transformAnchor,
+                                     const ECSEntityID transformAnchor,
                                      const Vector3 color, const Vector3 pos,
                                      const float range) {
     const EngineECSCompType type = ENGINE_COMP_LIGHTSOURCE;
@@ -670,17 +668,17 @@ EngineStatus engine_createPointLight(Engine *const engine,
     comp->color = color;
     comp->pos = pos;
     comp->range = range;
+    comp->transform = transformAnchor;
 
-    if (transformAnchor == NULL) {
-        res = ecs_getCompData(&engine->ecs, ent, ENGINE_COMP_TRANSFORM,
-                              (void **)&transformAnchor);
+    if (transformAnchor == ECS_INVALID_ID) {
+        res = ecs_compExists(&engine->ecs, ent, ENGINE_COMP_TRANSFORM);
         if (res != ECS_RES_OK) {
-            logMsg(LOG_INFO,
+            logMsg(LOG_LVL_INFO,
                    "trans. anchor null and no trans. for light in entity id %u",
                    ent);
+            return ENGINE_STATUS_REGISTER_FAILED;
         }
     }
-    comp->transform = transformAnchor;
 
     if (ecs_registerComp(&engine->ecs, ent, type, compRaw) == ECS_RES_OK) {
         ecs_setCallback(&engine->ecs, ent, type, ENGINE_CB_CREATE,
@@ -729,7 +727,7 @@ EngineStatus engine_createSphereCollider(Engine *engine, ECSEntityID ent,
 }
 
 EngineStatus engine_createConvexHullCollider(Engine *engine, ECSEntityID ent,
-                                             short *ind, float *vert,
+                                             unsigned short *ind, float *vert,
                                              size_t nVert) {
     const EngineECSCompType type = ENGINE_COMP_COLLIDER;
     ECSComponent compRaw;
@@ -834,11 +832,16 @@ Collider *engine_getCollider(Engine *engine, ECSEntityID ent) {
     return &data->coll;
 }
 
-Vector3 engine_meshRendererCenter(const EngineCompMeshRenderer *const mr) {
+Vector3 engine_meshRendererCenter(const ECS *ecs,
+                                  const EngineCompMeshRenderer *const mr) {
     const BoundingBox *meshBB = &mr->boundingBox;
-    Vector3 meshBBCenter = (Vector3){mr->transform->globalMatrix.m12,
-                                     mr->transform->globalMatrix.m13,
-                                     mr->transform->globalMatrix.m14};
+    const ECSComponentID transformId =
+        ecs->entDesc[mr->transform].compIndex[ENGINE_COMP_TRANSFORM];
+    const EngineCompTransform *transform =
+        &((EngineECSCompData *)ecs->comp[transformId].data)->trans;
+    Vector3 meshBBCenter =
+        (Vector3){transform->globalMatrix.m12, transform->globalMatrix.m13,
+                  transform->globalMatrix.m14};
     meshBBCenter = Vector3Add(meshBBCenter,
                               (Vector3){(meshBB->min.x + meshBB->max.x) / 2,
                                         (meshBB->min.y + meshBB->max.y) / 2,

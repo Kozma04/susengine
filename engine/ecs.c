@@ -49,7 +49,7 @@ static inline uint8_t ecs_checkCallbackType(const uint32_t cbType) {
 
 static inline uint8_t ecs_checkEntityExists(const ECS *const ecs,
                                             const ECSEntityID id) {
-    if (!binsearch_s32Inc(ecs->activeEnt, ecs->nActiveEnt, id, 0)) {
+    if (!binsearch_u32Inc(ecs->activeEnt, ecs->nActiveEnt, id, 0)) {
         logMsg(LOG_LVL_ERR, "entity ID %u not found", id);
         return 0;
     }
@@ -275,7 +275,7 @@ ECSStatus ecs_findEntity(const ECS *const ecs, const char *const nameMatch,
 ECSStatus ecs_entityExists(const ECS *const ecs, const ECSEntityID id) {
     if (id == ECS_INVALID_ID)
         return ECS_RES_ENTITY_NOT_FOUND;
-    if (binsearch_s32Inc(ecs->activeEnt, ecs->nActiveEnt, id, 0))
+    if (!binsearch_u32Inc(ecs->activeEnt, ecs->nActiveEnt, id, 0))
         return ECS_RES_ENTITY_NOT_FOUND;
     return ECS_RES_OK;
 }

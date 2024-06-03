@@ -269,8 +269,7 @@ Prop createProp(Engine *engine, EngineRenderModelID modelId) {
     ecs_registerEntity(&engine->ecs, &prop.id, name);
     engine_createInfo(engine, prop.id, GAME_ENT_TYPE_PROP);
     engine_createTransform(engine, prop.id, ECS_INVALID_ID);
-    engine_createMeshRenderer(engine, prop.id,
-                              engine_getTransform(engine, prop.id), modelId);
+    engine_createMeshRenderer(engine, prop.id, prop.id, modelId);
     engine_createConvexHullColliderModel(engine, prop.id, modelId);
     engine_createRigidBody(engine, prop.id, 1.f);
 
@@ -292,8 +291,7 @@ Water createWater(Engine *engine, EngineRenderModelID modelId) {
     ecs_registerEntity(&engine->ecs, &prop.id, name);
     engine_createInfo(engine, prop.id, 0);
     engine_createTransform(engine, prop.id, ECS_INVALID_ID);
-    engine_createMeshRenderer(engine, prop.id,
-                              engine_getTransform(engine, prop.id), modelId);
+    engine_createMeshRenderer(engine, prop.id, prop.id, modelId);
     // engine_createConvexHullColliderModel(engine, prop.id, modelId);
     // engine_createCollisionDbgView(engine, prop.id);
     prop.info = engine_getInfo(engine, prop.id);
@@ -322,8 +320,7 @@ Weather createWeather(Engine *engine, Vector3 ambientColor) {
     weather.ambient = engine_getLightSrc(engine, weather.id);
     weather.transform = engine_getTransform(engine, weather.id);
 
-    engine_createMeshRenderer(engine, weather.id,
-                              engine_getTransform(engine, weather.id),
+    engine_createMeshRenderer(engine, weather.id, weather.id,
                               GAME_MODEL_SKYBOX);
     EngineCompMeshRenderer *mr = engine_getMeshRenderer(engine, weather.id);
     mr->shaderId = SHADER_CUBEMAP_ID;
@@ -359,10 +356,9 @@ Lightbulb createLightbulb(Engine *engine, Vector3 lightColor, float range) {
     ecs_registerEntity(&engine->ecs, &ent.id, name);
     engine_createInfo(engine, ent.id, 0);
     engine_createTransform(engine, ent.id, ECS_INVALID_ID);
-    engine_createPointLight(engine, ent.id, engine_getTransform(engine, ent.id),
-                            lightColor, (Vector3){0, 0, 0}, range);
-    engine_createMeshRenderer(engine, ent.id,
-                              engine_getTransform(engine, ent.id), 1);
+    engine_createPointLight(engine, ent.id, ent.id, lightColor,
+                            (Vector3){0, 0, 0}, range);
+    engine_createMeshRenderer(engine, ent.id, ent.id, 1);
     ent.info = engine_getInfo(engine, ent.id);
     ent.pointLight = engine_getLightSrc(engine, ent.id);
     ent.transform = engine_getTransform(engine, ent.id);

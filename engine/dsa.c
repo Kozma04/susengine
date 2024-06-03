@@ -205,6 +205,16 @@ void array_pushBack(Array *const arr, const ArrayVal value) {
     array_insert(arr, arr->nEntries, value);
 }
 
+ArrayVal array_popBack(Array *arr) {
+    ArrayVal val;
+    if (arr->nEntries == 0)
+        val.u32 = 0;
+    else
+        val = array_get(arr, arr->nEntries - 1);
+    arr->nEntries--;
+    return val;
+}
+
 uint8_t array_del(Array *const arr, const uint32_t pos) {
     if (pos >= arr->nEntries)
         return 0;

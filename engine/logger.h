@@ -9,7 +9,7 @@
 #define XTERM_DARK_YELLOW XTERM_RAW(3)
 #define XTERM_DARK_BLUE XTERM_RAW(4)
 #define XTERM_PURPLE XTERM_RAW(5)
-#define XTERM_TRUQUOISE XTERM_RAW(6)
+#define XTERM_TURQUOISE XTERM_RAW(6)
 #define XTERM_WHITE XTERM_RAW(7)
 #define XTERM_GRAY XTERM_RAW(8)
 #define XTERM_RED XTERM_RAW(9)
@@ -20,13 +20,13 @@
 #define XTERM_CYAN XTERM_RAW(14)
 #define XTERM_BRIGHT_WHITE XTERM_RAW(15)
 
-#define log_setCurrentHeaderThreshold(thres)                                   \
-    log_setHeaderThreshold(__FILE__, thres)
-#define log_levelIsVisibleCurrentHeader(level)                                 \
-    log_levelIsVisibleHeader(__FILE__, level)
+#define logSetCurrentHeaderThreshold(thres)                                    \
+    logSetHeaderThreshold(__FILE__, thres)
+#define logLevelIsVisibleCurrentHeader(level)                                  \
+    logLevelIsVisibleHeader(__FILE__, level)
 #define logMsg(level, fmt, ...)                                                \
     {                                                                          \
-        if (log_levelIsVisibleCurrentHeader(level))                            \
+        if (logLevelIsVisibleCurrentHeader(level))                             \
             _log(level, fmt, __FILE__, __FUNCTION__, __LINE__, ##__VA_ARGS__); \
     }
 
@@ -46,10 +46,13 @@ typedef enum LogLevelEnum {
 
 typedef enum LogStyleEnum { LOG_STYLE_COLOR, LOG_STYLE_NO_COLOR } LogStyle;
 
-void log_setLogStyle(LogStyle style);
-void log_setGlobalThreshold(LogLevel thres);
-void log_setHeaderThreshold(const char *strHeaderFile, LogLevel thres);
-uint8_t log_levelIsVisibleHeader(const char *strHeaderFile, LogLevel level);
+void logSetLogStyle(LogStyle style);
+void logSetGlobalThreshold(LogLevel thres);
+void logSetHeaderThreshold(const char *strHeaderFile, LogLevel thres);
+uint8_t logLevelIsVisibleHeader(const char *strHeaderFile, LogLevel level);
+
+void logPushTag(const char *tag);
+void logPopTag(void);
 
 void _log(LogLevel level, const char *format, const char *strHeaderFile,
           const char *strFun, int line, ...);

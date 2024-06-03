@@ -29,6 +29,15 @@ typedef enum ECSStatusEnum {
     ECS_RES_CALLBACK_NOT_FOUND
 } ECSStatus;
 
+const static char *ECSStatusStr[] = {"ECS_RES_OK",
+                                     "ECS_RES_INVALID_PARAMS",
+                                     "ECS_RES_ENTITY_BUFF_FULL",
+                                     "ECS_RES_COMP_BUFF_FULL",
+                                     "ECS_RES_ENTITY_NOT_FOUND",
+                                     "ECS_RES_COMP_NOT_FOUND",
+                                     "ECS_RES_COMP_DUPLICATE",
+                                     "ECS_RES_CALLBACK_NOT_FOUND"};
+
 typedef struct ECSComponent ECSComponent;
 typedef void (*ECSComponentCallback)(uint32_t cbType, ECSEntityID entId,
                                      ECSComponentID compId, uint32_t compType,

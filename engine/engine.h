@@ -64,7 +64,7 @@ typedef struct EngineCompCamera {
 } EngineCompCamera;
 
 typedef struct EngineCompMeshRenderer {
-    EngineCompTransform *transform; // Must not be null
+    ECSEntityID transform; // Must not be ECS_INVALID_ID
     uint8_t visible;
     uint8_t castShadow;
     float alpha;
@@ -84,8 +84,8 @@ typedef enum EngineLightSrcTypeEnum {
 } EngineLightSrcType;
 
 typedef struct EngineCompLightSrc {
-    // Point light position anchor, can be null
-    EngineCompTransform *transform;
+    // Point light position anchor, can be ECS_INVALID_ID
+    ECSEntityID transform;
     uint8_t visible;
     Vector3 color;
     EngineLightSrcType type;
@@ -99,6 +99,7 @@ typedef struct EngineCompLightSrc {
 
 typedef struct EngineCallbackData {
     Engine *engine;
+    void *userData;
     union {
         struct {
             float deltaTime;
@@ -123,7 +124,8 @@ typedef enum EngineECSCompTypeEnum {
     ENGINE_COMP_MESHRENDERER,
     ENGINE_COMP_LIGHTSOURCE,
     ENGINE_COMP_COLLIDER,
-    ENGINE_COMP_USER
+    ENGINE_COMP_USER,
+    ENGINE_COMP_TYPE_CNT
 } EngineECSCompType;
 
 typedef enum EngineECSCallbackTypeEnum {
@@ -178,8 +180,23 @@ typedef enum EngineStatusEnum {
     ENGINE_STATUS_MSG_PENDING_FULL,
     ENGINE_STATUS_MSG_DATA_SIZE_EXCEEDED,
     ENGINE_STATUS_MSG_SRC_NOT_FOUND,
-    ENGINE_STATUS_MSG_DST_NOT_FOUND,
+    ENGINE_STATUS_MSG_DST_NOT_FOUND
 } EngineStatus;
+
+// clang-format off
+const static char *EngineStatusStr[] = {
+    "ENGINE_STATUS_OK",
+    "ENGINE_STATUS_NO_TRANSFORM_ANCHOR",
+    "ENGINE_STATUS_MODEL_NOT_FOUND",
+    "ENGINE_STATUS_REGISTER_FAILED",
+    "ENGINE_STATUS_RENDER_DUPLICATE_ITEM",
+    "ENGINE_STATUS_RENDER_ITEM_NOT_FOUND",
+    "ENGINE_STATUS_MSG_PENDING_FULL",
+    "ENGINE_STATUS_MSG_DATA_SIZE_EXCEEDED",
+    "ENGINE_STATUS_MSG_SRC_NOT_FOUND",
+    "ENGINE_STATUS_MSG_DST_NOT_FOUND"
+};
+// clang-format on
 
 // Initialize engine
 void engine_init(Engine *const engine);
@@ -242,7 +259,7 @@ EngineStatus engine_createCamera(Engine *engine, ECSEntityID ent, float fov,
                                  int projection);
 // Create and initialize Mesh Renderer component
 EngineStatus engine_createMeshRenderer(Engine *engine, ECSEntityID ent,
-                                       EngineCompTransform *transformAnchor,
+                                       ECSEntityID transformAnchor,
                                        EngineRenderModelID modelId);
 // Create and initialize Light Source component of Ambient type
 EngineStatus engine_createAmbientLight(Engine *engine, ECSEntityID ent,
@@ -252,8 +269,8 @@ EngineStatus engine_createDirLight(Engine *engine, ECSEntityID ent,
                                    Vector3 color, Vector3 dir);
 // Create and initialize Light Source component of Point type
 EngineStatus engine_createPointLight(Engine *engine, ECSEntityID ent,
-                                     EngineCompTransform *transformAnchor,
-                                     Vector3 color, Vector3 pos, float range);
+                                     ECSEntityID transformAnchor, Vector3 color,
+                                     Vector3 pos, float range);
 
 // Create and initialize Rigid Body component for physics simulation
 EngineStatus engine_createRigidBody(Engine *engine, ECSEntityID ent,
@@ -263,7 +280,7 @@ EngineStatus engine_createSphereCollider(Engine *engine, ECSEntityID ent,
                                          float radius);
 // Create and initialize Collider component of Convex Hull type
 EngineStatus engine_createConvexHullCollider(Engine *engine, ECSEntityID ent,
-                                             short *ind, float *vert,
+                                             unsigned short *ind, float *vert,
                                              size_t nVert);
 // Create and initialize Collider component of Convex Hull type from model ID
 EngineStatus engine_createConvexHullColliderModel(Engine *engine,
@@ -288,4 +305,5 @@ Collider *engine_getCollider(Engine *engine, ECSEntityID id);
 
 // Returns the center of the bounding box of a Mesh Renderer, also considering
 // its transform
-Vector3 engine_meshRendererCenter(const EngineCompMeshRenderer *mr);
+Vector3 engine_meshRendererCenter(const ECS *ecs,
+                                  const EngineCompMeshRenderer *mr);

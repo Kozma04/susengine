@@ -1,4 +1,5 @@
 #include "./render.h"
+#include "ecs.h"
 
 Renderer render_init(size_t maxSrcPoint, size_t maxSrcDir) {
     Renderer r;
@@ -49,7 +50,7 @@ void render_setupDirShadow(Renderer *rend, float size, size_t nCascades,
         // unbind framebuffer and also check if it is complete
         if (!rlFramebufferComplete(rt->id)) {
             ok = 0;
-            logMsg(LOG_FATAL, "could not create framebuffer %u", i);
+            logMsg(LOG_LVL_FATAL, "could not create framebuffer %u", i);
         }
         rlDisableFramebuffer();
     }
@@ -85,7 +86,7 @@ static void render_sortMeshRenderers(Engine *const engine, Renderer *const rend,
 
         ecsCompData = (EngineECSCompData *)engine->ecs.comp[compPos].data;
         meshRendComp = &ecsCompData->meshR;
-        meshBBCenter = engine_meshRendererCenter(meshRendComp);
+        meshBBCenter = engine_meshRendererCenter(&engine->ecs, meshRendComp);
 
         if (meshRendComp->distanceMode == RENDER_DIST_MAX)
             dist = FLT_MAX;
@@ -142,12 +143,13 @@ static void render_createMeshRendererDrawList(Engine *const engine,
         meshRendComp = &ecsCompData->meshR;
         if (!meshRendComp->visible)
             continue;
-        if (meshRendComp->transform == NULL) {
+        if (meshRendComp->transform == ECS_INVALID_ID) {
             logMsg(LOG_LVL_ERR, "mesh renderer %u has null transform", compPos);
             continue;
         }
-        transBox = BoxTransform(meshRendComp->boundingBox,
-                                meshRendComp->transform->globalMatrix);
+        transBox = BoxTransform(
+            meshRendComp->boundingBox,
+            engine_getTransform(engine, meshRendComp->transform)->globalMatrix);
         meshRendComp->_boundingBoxTrans = transBox;
 
         Vector3 point = (Vector3){(transBox.min.x + transBox.max.x) / 2,
@@ -293,7 +295,8 @@ static void render_drawVisibleMeshes(Engine *const engine, Renderer *const rend,
         if (inShadowPass && !meshRendComp->castShadow)
             continue;
 
-        model->transform = meshRendComp->transform->globalMatrix;
+        model->transform =
+            engine_getTransform(engine, meshRendComp->transform)->globalMatrix;
         if (forceShader == NULL) {
             if (meshRendComp->shaderId != ECS_INVALID_ID) {
                 res = hashmap_getP(&engine->render.shaders,

@@ -53,6 +53,7 @@ uint8_t array_has(const Array *arr, ArrayVal value);
 void array_swap(Array *arr, uint32_t posA, uint32_t posB);
 void array_insert(Array *arr, uint32_t pos, ArrayVal value);
 void array_pushBack(Array *arr, ArrayVal value);
+ArrayVal array_popBack(Array *arr);
 uint8_t array_del(Array *arr, uint32_t pos);
 void array_clear(Array *arr);
 size_t array_size(const Array *arr);
