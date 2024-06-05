@@ -8,5 +8,7 @@ format:
 build: format
 	gcc $(FILES) -o $(PROGRAM) $(RAYLIB_PARAMS) -D_GLFW_WAYLAND -DUSE_WAYLAND=ON -g -fpermissive -llua -lraylib -lGL -lm -lpthread -ldl -lrt -lc
 
-build_run: build
+run:
 	$(PROGRAM)
+
+build_run: build run

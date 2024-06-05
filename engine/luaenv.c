@@ -1,4 +1,8 @@
 #include "./luaenv.h"
+#include "ecs.h"
+#include "engine.h"
+#include "logger.h"
+#include "render.h"
 
 static const char *metatableVector3 = "Vector3Metatable";
 static const char *metatableMatrix = "Matrix4x4Metatable";
@@ -6,6 +10,14 @@ static const char *metatableQuaternion = "QuaternionMetatable";
 static const char *metatableEngineComponent = "EngineComponentMetatable";
 
 static Engine *engine;
+
+static void *luaAlloc(void *ud, void *ptr, size_t osize, size_t nsize) {
+    if (nsize == 0) {
+        free(ptr);
+        return NULL;
+    } else
+        return realloc(ptr, nsize);
+}
 
 static inline float getTableFloat(lua_State *L, int idx, const char *name) {
     lua_pushstring(L, name);
@@ -749,8 +761,6 @@ static int luaEngineComponentIndex(lua_State *L) {
                           compType, entityId, ECSStatusStr[res]);
     }
 
-    // lua_pop(L, 1);
-
     switch (compType) {
     case ENGINE_COMP_INFO:
         if (strcmp(key, "typeMask") == 0)
@@ -1131,6 +1141,26 @@ static int luaFuncCreateInfo(lua_State *L) {
     return 0;
 }
 
+static int luaFuncCreateScriptFromFile(lua_State *L) {
+    if (lua_gettop(L) != 2)
+        return luaL_error(L, "expected 2 parameters, got %d", lua_gettop(L));
+    if (!lua_istable(L, -2) || !lua_isstring(L, -1))
+        return luaL_error(L, "expected table, string");
+
+    uint32_t entityId = (uint32_t)getTableInteger(L, -3, "id");
+    logPushTag("lua");
+    engine_createScriptFromFile(engine, entityId, lua_tostring(L, -1));
+    logPopTag();
+    /*lua_pushvalue(L, 1);
+    if (!luaCreateComponentTable(L, entityId, ENGINE_COMP_SCRIPT)) {
+        lua_pop(L, 2);
+        return 0;
+    }
+    lua_setfield(L, -2, "script");*/
+    lua_pop(L, 2);
+    return 0;
+}
+
 static int luaFuncCreateRigidbody(lua_State *L) {
     if (lua_gettop(L) != 2)
         return luaL_error(L, "expected 2 parameters, got %d", lua_gettop(L));
@@ -1214,15 +1244,16 @@ static int luaFuncCreateMeshrenderer(lua_State *L) {
     ECSEntityID anchor = lua_tointeger(L, -2);
     ECSEntityID modelId = lua_tointeger(L, -1);
 
-    uint32_t entityId = (uint32_t)getTableInteger(L, -4, "id");
+    uint32_t entId = (uint32_t)getTableInteger(L, -4, "id");
     logPushTag("lua");
-    engine_createMeshRenderer(engine, entityId, anchor, modelId);
+    engine_createMeshRenderer(engine, entId, anchor, modelId);
     logPopTag();
     lua_pushvalue(L, 1);
-    if (!luaCreateComponentTable(L, entityId, ENGINE_COMP_MESHRENDERER)) {
+    if (!luaCreateComponentTable(L, entId, ENGINE_COMP_MESHRENDERER)) {
         lua_pop(L, 2);
         return 0;
     }
+    engine_getMeshRenderer(engine, entId)->shaderId = SHADER_FORWARD_BASIC_ID;
     lua_setfield(L, -2, "meshrenderer");
     lua_pop(L, 2);
     return 0;
@@ -1398,6 +1429,8 @@ static int luaCreateEntityTable(lua_State *L, ECSEntityID id) {
     lua_setfield(L, -2, "createSphereCollider");
     lua_pushcfunction(L, luaFuncCreateMeshCollider);
     lua_setfield(L, -2, "createMeshCollider");
+    lua_pushcfunction(L, luaFuncCreateScriptFromFile);
+    lua_setfield(L, -2, "createScriptFromFile");
 
     return 1;
 }
@@ -1450,6 +1483,35 @@ static int luaFuncDestroyEntity(lua_State *L) {
     return 0;
 }
 
+static int luaFuncPostCreateEntity(lua_State *L) {
+    if (lua_gettop(L) != 1)
+        return luaL_error(L, "expected 1 parameter, got %d", lua_gettop(L));
+    if (!lua_istable(L, -1))
+        return luaL_error(L, "expected table");
+
+    ECSEntityID id = (uint32_t)getTableInteger(L, -2, "id");
+    logPushTag("lua");
+    engine_entityPostCreate(engine, id);
+    logPopTag();
+    return 0;
+}
+
+static int luaFuncSetCamera(lua_State *L) {
+    if (lua_gettop(L) != 1)
+        return luaL_error(L, "expected 1 parameter, got %d", lua_gettop(L));
+    if (!lua_istable(L, -1))
+        return luaL_error(L, "expected entity table");
+
+    ECSEntityID entId = (uint32_t)getTableInteger(L, -2, "entityId");
+    ECSComponentID camId;
+    logPushTag("lua");
+    if (ecs_getCompID(&engine->ecs, entId, ENGINE_COMP_CAMERA, &camId) ==
+        ECS_RES_OK)
+        engine_render_setCamera(engine, camId);
+    logPopTag();
+    return 0;
+}
+
 static void luaOpenEngine(lua_State *L) {
     lua_newtable(L);
     lua_pushcfunction(L, luaFuncGetEntity);
@@ -1458,6 +1520,10 @@ static void luaOpenEngine(lua_State *L) {
     lua_setfield(L, -2, "createEntity");
     lua_pushcfunction(L, luaFuncDestroyEntity);
     lua_setfield(L, -2, "destroyEntity");
+    lua_pushcfunction(L, luaFuncPostCreateEntity);
+    lua_setfield(L, -2, "postCreateEntity");
+    lua_pushcfunction(L, luaFuncSetCamera);
+    lua_setfield(L, -2, "setCamera");
     lua_setglobal(L, "engine");
 
     luaL_newmetatable(L, metatableEngineComponent);
@@ -1582,10 +1648,237 @@ static void luaOpenRaylib(lua_State *L) {
 void luaEnvSetEngine(Engine *eng) { engine = eng; }
 
 void luaEnvSetupBindings(lua_State *L) {
+    if (engine == NULL)
+        logMsg(LOG_LVL_FATAL, "engine is NULL");
+
+    luaL_openlibs(L);
     luaOpenVector3(L);
     luaOpenMatrix(L);
     luaOpenQuaternion(L);
     luaOpenMisc(L);
     luaOpenEngine(L);
     luaOpenRaylib(L);
+
+    luaL_loadstring(
+        L,
+        "function dump(tbl) io.write(\"{\") for "
+        "k, v in pairs(tbl) do "
+        "io.write(k .. \" = \") if type(v) == \"table\" then dump(v) "
+        "else io.write(tostring(v)) end io.write(\", \") end io.write(\"}\\n\")"
+        "end");
+    lua_pcall(L, 0, 0, 0);
+}
+
+static char *loadFileStr(const char *fname) {
+    FILE *file = fopen(fname, "rb");
+    char *buf;
+    size_t fileSize, readSize;
+    if (file == NULL) {
+        logMsg(LOG_LVL_ERR, "cannot open file %s", fname);
+        return NULL;
+    }
+    fseek(file, 0, SEEK_END);
+    fileSize = ftell(file);
+    if (fileSize == 1) {
+        logMsg(LOG_LVL_ERR, "cannot get file size for %s", fname);
+        return NULL;
+    }
+    rewind(file);
+    buf = (char *)malloc(fileSize + 1);
+    if (buf == NULL) {
+        logMsg(LOG_LVL_ERR, "can't allocate buffer for file %s", fname);
+        fclose(file);
+        return NULL;
+    }
+    readSize = fread(buf, 1, fileSize, file);
+    if (readSize != fileSize) {
+        logMsg(LOG_LVL_ERR, "can't read file %s", fname);
+        free(buf);
+        fclose(file);
+        return NULL;
+    }
+    buf[fileSize] = 0;
+    return buf;
+}
+
+lua_State *luaEnvLoadRun(const char *scriptFile) {
+    char *buf;
+    lua_State *L;
+
+    if (engine == NULL)
+        logMsg(LOG_LVL_FATAL, "engine is NULL");
+
+    logPushTag(__FUNCTION__);
+    buf = loadFileStr(scriptFile);
+    logPopTag();
+
+    if (buf == NULL)
+        return NULL;
+
+    L = lua_newstate(luaAlloc, NULL);
+    luaEnvSetupBindings(L);
+    logMsg(LOG_LVL_INFO, "running script from %s", scriptFile);
+    if (luaL_dostring(L, buf) != LUA_OK) {
+        logMsg(LOG_LVL_WARN, "Lua error: %s", lua_tostring(L, -1));
+        lua_pop(L, 1);
+    }
+    free(buf);
+    return L;
+}
+
+static void engineCbScriptOnCreate(uint32_t cbType, ECSEntityID entId,
+                                   ECSComponentID compId, uint32_t compType,
+                                   struct ECSComponent *comp,
+                                   void *cbUserData) {
+    if (engine == NULL)
+        logMsg(LOG_LVL_FATAL, "engine is NULL");
+
+    EngineCallbackData *cbData = cbUserData;
+    EngineCompScript *script = engine_getScript(cbData->engine, entId);
+    lua_State *L = script->state;
+    lua_getglobal(L, "script");
+    if (!lua_istable(L, -1)) {
+        logMsg(LOG_LVL_FATAL, "'script' is not a table");
+        return;
+    }
+    lua_getfield(L, -1, "onCreate");
+    if (!lua_isnil(L, -1) && !lua_isfunction(L, -1)) {
+        logMsg(LOG_LVL_FATAL, "onCreate is neither nil or function");
+        return;
+    }
+    if (lua_isfunction(L, -1)) {
+        lua_pushinteger(L, entId);
+        lua_pushstring(L, ecs_getEntityNameCstrP(&engine->ecs, entId));
+        if (lua_pcall(L, 2, 0, 0) != LUA_OK) {
+            logMsg(LOG_LVL_ERR, "onCreate error: %s", lua_tostring(L, -1));
+            lua_pop(L, 1);
+        }
+    }
+    lua_pop(L, 1);
+}
+
+static void engineCbScriptOnDestroy(uint32_t cbType, ECSEntityID entId,
+                                    ECSComponentID compId, uint32_t compType,
+                                    struct ECSComponent *comp,
+                                    void *cbUserData) {
+    if (engine == NULL)
+        logMsg(LOG_LVL_FATAL, "engine is NULL");
+
+    EngineCallbackData *cbData = cbUserData;
+    EngineCompScript *script = engine_getScript(cbData->engine, entId);
+    lua_State *L = script->state;
+    lua_getglobal(L, "script");
+    if (!lua_istable(L, -1)) {
+        logMsg(LOG_LVL_FATAL, "'script' is not a table");
+        return;
+    }
+    lua_getfield(L, -1, "onDestroy");
+    if (!lua_isnil(L, -1) && !lua_isfunction(L, -1)) {
+        logMsg(LOG_LVL_FATAL, "onDestroy is neither nil or function");
+        return;
+    }
+    if (lua_isfunction(L, -1)) {
+        if (lua_pcall(L, 0, 0, 0) != LUA_OK) {
+            logMsg(LOG_LVL_ERR, "onDestroy error: %s", lua_tostring(L, -1));
+            lua_pop(L, 1);
+        }
+    }
+    lua_pop(L, 1);
+}
+
+static void engineCbScriptOnUpdate(uint32_t cbType, ECSEntityID entId,
+                                   ECSComponentID compId, uint32_t compType,
+                                   struct ECSComponent *comp,
+                                   void *cbUserData) {
+    if (engine == NULL)
+        logMsg(LOG_LVL_FATAL, "engine is NULL");
+
+    EngineCallbackData *cbData = cbUserData;
+    EngineCompScript *script = engine_getScript(cbData->engine, entId);
+    lua_State *L = script->state;
+    lua_getglobal(L, "script");
+    if (!lua_istable(L, -1)) {
+        logMsg(LOG_LVL_FATAL, "'script' is not a table");
+        return;
+    }
+    lua_getfield(L, -1, "onUpdate");
+    if (!lua_isnil(L, -1) && !lua_isfunction(L, -1)) {
+        logMsg(LOG_LVL_FATAL, "onUpdate is neither nil or function");
+        return;
+    }
+    if (lua_isfunction(L, -1)) {
+        lua_pushnumber(L, cbData->update.deltaTime);
+        if (lua_pcall(L, 1, 0, 0) != LUA_OK) {
+            logMsg(LOG_LVL_ERR, "onUpdate error: %s", lua_tostring(L, -1));
+            lua_pop(L, 1);
+        }
+    }
+    lua_pop(L, 1);
+}
+
+EngineStatus engine_createScript(Engine *engine, ECSEntityID ent,
+                                 const char *scriptContent) {
+    if (engine == NULL)
+        logMsg(LOG_LVL_FATAL, "engine is NULL");
+
+    const EngineECSCompType type = ENGINE_COMP_SCRIPT;
+    ECSComponent compRaw;
+    EngineCompScript *const comp =
+        &(((EngineECSCompData *)&compRaw.data)->script);
+
+    lua_State *L = lua_newstate(luaAlloc, NULL);
+    comp->state = L;
+    luaL_openlibs(L);
+    luaEnvSetupBindings(L);
+
+    lua_newtable(L);
+    lua_pushnil(L);
+    lua_setfield(L, -2, "onCreate");
+    lua_pushnil(L);
+    lua_setfield(L, -2, "onDestroy");
+    lua_pushnil(L);
+    lua_setfield(L, -2, "onUpdate");
+    lua_setglobal(L, "script");
+
+    if (luaL_dostring(L, scriptContent) != LUA_OK) {
+        lua_close(L);
+        return ENGINE_STATUS_SCRIPT_ERROR;
+    }
+
+    if (ecs_registerComp(&engine->ecs, ent, type, compRaw) != ECS_RES_OK) {
+        lua_close(L);
+        return ENGINE_STATUS_REGISTER_FAILED;
+    }
+
+    ecs_setCallback(&engine->ecs, ent, type, ENGINE_CB_CREATE,
+                    engineCbScriptOnCreate);
+    ecs_setCallback(&engine->ecs, ent, type, ENGINE_CB_DESTROY,
+                    engineCbScriptOnDestroy);
+    ecs_setCallback(&engine->ecs, ent, type, ENGINE_CB_UPDATE,
+                    engineCbScriptOnUpdate);
+
+    return ENGINE_STATUS_OK;
+}
+
+EngineStatus engine_createScriptFromFile(Engine *engine, ECSEntityID ent,
+                                         const char *scriptFile) {
+    logPushTag(__FUNCTION__);
+    char *buf = loadFileStr(scriptFile);
+    logPopTag();
+    if (buf == NULL)
+        return ENGINE_STATUS_SCRIPT_ERROR;
+
+    EngineStatus res = engine_createScript(engine, ent, buf);
+    free(buf);
+    return res;
+}
+
+EngineCompScript *engine_getScript(Engine *const engine,
+                                   const ECSEntityID ent) {
+    EngineECSCompData *data;
+    const ECSStatus res =
+        ecs_getCompData(&engine->ecs, ent, ENGINE_COMP_SCRIPT, (void **)&data);
+    if (res != ECS_RES_OK)
+        return NULL;
+    return &data->script;
 }

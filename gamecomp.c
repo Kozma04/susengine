@@ -291,18 +291,18 @@ Water createWater(Engine *engine, EngineRenderModelID modelId) {
     ecs_registerEntity(&engine->ecs, &prop.id, name);
     engine_createInfo(engine, prop.id, 0);
     engine_createTransform(engine, prop.id, ECS_INVALID_ID);
-    engine_createMeshRenderer(engine, prop.id, prop.id, modelId);
-    // engine_createConvexHullColliderModel(engine, prop.id, modelId);
-    // engine_createCollisionDbgView(engine, prop.id);
+    // engine_createMeshRenderer(engine, prop.id, prop.id, modelId);
+    //  engine_createConvexHullColliderModel(engine, prop.id, modelId);
+    //  engine_createCollisionDbgView(engine, prop.id);
     prop.info = engine_getInfo(engine, prop.id);
     prop.transform = engine_getTransform(engine, prop.id);
-    prop.meshRenderer = engine_getMeshRenderer(engine, prop.id);
+    /*prop.meshRenderer = engine_getMeshRenderer(engine, prop.id);
     prop.meshRenderer->shaderId = SHADER_WATERPLANE_ID;
     prop.meshRenderer->castShadow = 0;
     prop.meshRenderer->alpha = .4f;
     prop.meshRenderer->distanceMode = RENDER_DIST_MIN;
     ecs_setCallback(&engine->ecs, prop.id, ENGINE_COMP_MESHRENDERER,
-                    ENGINE_CB_PRERENDER, waterCbPreRender);
+                    ENGINE_CB_PRERENDER, waterCbPreRender);*/
     // ecs_setCallback(&engine->ecs, prop.id,
     // ENGINE_ECS_COMP_TYPE_MESH_RENDERER,
     //                 ENGINE_ECS_CB_TYPE_POST_RENDER, waterCbPostRender);

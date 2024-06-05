@@ -1,5 +1,6 @@
 #pragma once
 
+#include <lua.h>
 #define ENGINE_MAX_PENDING_MESSAGES 128
 #define ENGINE_MESSAGE_DATA_SIZE 64
 
@@ -97,6 +98,10 @@ typedef struct EngineCompLightSrc {
     uint8_t castShadow;
 } EngineCompLightSrc;
 
+typedef struct EngineCompScript {
+    lua_State *state;
+} EngineCompScript;
+
 typedef struct EngineCallbackData {
     Engine *engine;
     void *userData;
@@ -116,6 +121,7 @@ typedef struct EngineCallbackData {
 } EngineCallbackData;
 
 // Entity Component system interface
+// Component callback order is defined by EngineECSCompType (0 = first).
 typedef enum EngineECSCompTypeEnum {
     ENGINE_COMP_INFO,
     ENGINE_COMP_RIGIDBODY,
@@ -125,7 +131,8 @@ typedef enum EngineECSCompTypeEnum {
     ENGINE_COMP_LIGHTSOURCE,
     ENGINE_COMP_COLLIDER,
     ENGINE_COMP_USER,
-    ENGINE_COMP_TYPE_CNT
+    ENGINE_COMP_SCRIPT,
+    ENGINE_COMP_TYPE_CNT,
 } EngineECSCompType;
 
 typedef enum EngineECSCallbackTypeEnum {
@@ -146,6 +153,7 @@ typedef union EngineECSCompData {
     EngineCompCamera cam;
     EngineCompMeshRenderer meshR;
     EngineCompLightSrc light;
+    EngineCompScript script;
     RigidBody rigidBody;
     Collider coll;
 } EngineECSCompData;
@@ -180,7 +188,8 @@ typedef enum EngineStatusEnum {
     ENGINE_STATUS_MSG_PENDING_FULL,
     ENGINE_STATUS_MSG_DATA_SIZE_EXCEEDED,
     ENGINE_STATUS_MSG_SRC_NOT_FOUND,
-    ENGINE_STATUS_MSG_DST_NOT_FOUND
+    ENGINE_STATUS_MSG_DST_NOT_FOUND,
+    ENGINE_STATUS_SCRIPT_ERROR
 } EngineStatus;
 
 // clang-format off

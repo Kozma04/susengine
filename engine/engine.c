@@ -7,6 +7,10 @@ void engine_init(Engine *const engine) {
         logMsg(LOG_LVL_FATAL, "can't fit all components in max size: %u vs %u",
                sizeof(EngineECSCompData), ECS_COMPONENT_DATA_SIZE);
     }
+    if (ECS_COMPONENT_TYPES < ENGINE_COMP_TYPE_CNT) {
+        logMsg(LOG_LVL_FATAL, "not enough component types in ECS: %u vs %u",
+               ECS_COMPONENT_TYPES, ENGINE_COMP_TYPE_CNT);
+    }
 
     engine->timescale = 1;
     engine->nPendingMsg = 0;
@@ -510,7 +514,9 @@ EngineStatus engine_createInfo(Engine *const engine, const ECSEntityID ent,
     ECSComponent compRaw;
     EngineCompInfo *const comp = &(((EngineECSCompData *)&compRaw.data)->info);
     comp->typeMask = entTypeMask;
-    return ecs_registerComp(&engine->ecs, ent, type, compRaw) == ECS_RES_OK;
+    if (ecs_registerComp(&engine->ecs, ent, type, compRaw) == ECS_RES_OK)
+        return ENGINE_STATUS_OK;
+    return ENGINE_STATUS_REGISTER_FAILED;
 }
 
 EngineStatus engine_createTransform(Engine *const engine, const ECSEntityID ent,

@@ -166,7 +166,6 @@ static void render_createMeshRendererDrawList(Engine *const engine,
 void render_setShaderLightSrcUniforms(Engine *const engine,
                                       Renderer *const rend,
                                       const Shader shader) {
-
     uint32_t i, compId;
     uint32_t nSrcPoint = 0, nSrcDir = 0;
     uint32_t lightVec, lightColor, lightRange;
