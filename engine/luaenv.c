@@ -3,6 +3,7 @@
 #include "engine.h"
 #include "logger.h"
 #include "render.h"
+#include <lua.h>
 
 static const char *metatableVector3 = "Vector3Metatable";
 static const char *metatableMatrix = "Matrix4x4Metatable";
@@ -124,6 +125,7 @@ static int luaFuncVector3Add(lua_State *L) {
 }
 
 static int luaFuncVector3Negate(lua_State *L) {
+    printf("VECTOR3 NEGATE\n");
     if (lua_gettop(L) != 1)
         return luaL_error(L, "1 parameter expected, got %d", lua_gettop(L));
     if (!lua_istable(L, -1))
@@ -131,6 +133,7 @@ static int luaFuncVector3Negate(lua_State *L) {
 
     Vector3 vec = luaGetVector3(L, -1);
     luaPushVector3Vals(L, Vector3Negate(vec));
+    printf("VETOR3 NEGATE OK\n");
     return 1;
 }
 
@@ -171,12 +174,15 @@ static int luaFuncVector3Multiply(lua_State *L) {
         return luaL_error(L, "2 parameters expected, got %d", lua_gettop(L));
     if (!lua_istable(L, -2))
         return luaL_error(L, "lvalue must be table");
-    if (!lua_istable(L, -1))
-        return luaL_error(L, "rvalue must be table");
+    if (!lua_istable(L, -1) && !lua_isnumber(L, -1))
+        return luaL_error(L, "rvalue must be table or number");
 
     Vector3 left = luaGetVector3(L, -2);
-    Vector3 right = luaGetVector3(L, -1);
-    luaPushVector3Vals(L, Vector3Multiply(left, right));
+    if (lua_istable(L, -1)) {
+        Vector3 right = luaGetVector3(L, -1);
+        luaPushVector3Vals(L, Vector3Multiply(left, right));
+    } else
+        luaPushVector3Vals(L, Vector3Scale(left, lua_tonumber(L, -1)));
     return 1;
 }
 
@@ -208,6 +214,19 @@ static int luaFuncVector3Cross(lua_State *L) {
     return 1;
 }
 
+static int luaFuncVector3RotateByAxisAngle(lua_State *L) {
+    if (lua_gettop(L) != 3)
+        return luaL_error(L, "3 parameters expected, got %d", lua_gettop(L));
+    if (!lua_istable(L, -3) || !lua_istable(L, -2) || !lua_isnumber(L, -1))
+        return luaL_error(L, "expected table, table, number");
+
+    Vector3 vec = luaGetVector3(L, -3);
+    Vector3 axis = luaGetVector3(L, -2);
+    float angle = lua_tonumber(L, -1);
+    luaPushVector3Vals(L, Vector3RotateByAxisAngle(vec, axis, angle));
+    return 1;
+}
+
 static void luaOpenVector3(lua_State *L) {
     lua_pushcfunction(L, luaFuncVector3Create);
     lua_setglobal(L, "Vector3Create");
@@ -220,13 +239,15 @@ static void luaOpenVector3(lua_State *L) {
     lua_pushcfunction(L, luaFuncVector3Negate);
     lua_setglobal(L, "Vector3Negate");
     lua_pushcfunction(L, luaFuncVector3Dot);
-    lua_setglobal(L, "Vector3Length");
+    lua_setglobal(L, "Vector3Dot");
     lua_pushcfunction(L, luaFuncVector3Length);
-    lua_setglobal(L, "Vector3Normalize");
+    lua_setglobal(L, "Vector3Length");
     lua_pushcfunction(L, luaFuncVector3Normalize);
-    lua_setglobal(L, "Vector3DotProduct");
+    lua_setglobal(L, "Vector3Normalize");
     lua_pushcfunction(L, luaFuncVector3Cross);
     lua_setglobal(L, "Vector3CrossProduct");
+    lua_pushcfunction(L, luaFuncVector3RotateByAxisAngle);
+    lua_setglobal(L, "Vector3RotateByAxisAngle");
 
     luaL_newmetatable(L, metatableVector3);
     lua_pushcfunction(L, luaFuncVector3ToString);
@@ -237,6 +258,8 @@ static void luaOpenVector3(lua_State *L) {
     lua_setfield(L, -2, "__sub");
     lua_pushcfunction(L, luaFuncVector3Multiply);
     lua_setfield(L, -2, "__mul");
+    lua_pushcfunction(L, luaFuncVector3Negate);
+    lua_setfield(L, -2, "__unm");
 }
 
 // Matrix implementation
@@ -1570,11 +1593,12 @@ static int luaFuncGetMouseDelta(lua_State *L) {
         return luaL_error(L, "expected 0 parameters, got %d", lua_gettop(L));
 
     Vector2 delta = GetMouseDelta();
-    lua_createtable(L, 0, 2);
+    /*lua_createtable(L, 0, 2);
     lua_pushnumber(L, delta.x);
     lua_setfield(L, -2, "x");
     lua_pushnumber(L, delta.y);
-    lua_setfield(L, -2, "y");
+    lua_setfield(L, -2, "y");*/
+    luaPushVector3Vals(L, (Vector3){delta.x, delta.y, 0});
     return 1;
 }
 
@@ -1736,6 +1760,11 @@ static void engineCbScriptOnCreate(uint32_t cbType, ECSEntityID entId,
     EngineCallbackData *cbData = cbUserData;
     EngineCompScript *script = engine_getScript(cbData->engine, entId);
     lua_State *L = script->state;
+
+    if (L == NULL) {
+        logMsg(LOG_LVL_ERR, "lua script is null");
+        return;
+    }
     lua_getglobal(L, "script");
     if (!lua_istable(L, -1)) {
         logMsg(LOG_LVL_FATAL, "'script' is not a table");
@@ -1753,8 +1782,9 @@ static void engineCbScriptOnCreate(uint32_t cbType, ECSEntityID entId,
             logMsg(LOG_LVL_ERR, "onCreate error: %s", lua_tostring(L, -1));
             lua_pop(L, 1);
         }
-    }
-    lua_pop(L, 1);
+        lua_pop(L, 1);
+    } else
+        lua_pop(L, 2);
 }
 
 static void engineCbScriptOnDestroy(uint32_t cbType, ECSEntityID entId,
@@ -1782,8 +1812,8 @@ static void engineCbScriptOnDestroy(uint32_t cbType, ECSEntityID entId,
             logMsg(LOG_LVL_ERR, "onDestroy error: %s", lua_tostring(L, -1));
             lua_pop(L, 1);
         }
-    }
-    lua_pop(L, 1);
+    } else
+        lua_pop(L, 2);
 }
 
 static void engineCbScriptOnUpdate(uint32_t cbType, ECSEntityID entId,
@@ -1812,8 +1842,9 @@ static void engineCbScriptOnUpdate(uint32_t cbType, ECSEntityID entId,
             logMsg(LOG_LVL_ERR, "onUpdate error: %s", lua_tostring(L, -1));
             lua_pop(L, 1);
         }
-    }
-    lua_pop(L, 1);
+        lua_pop(L, 1);
+    } else
+        lua_pop(L, 2);
 }
 
 EngineStatus engine_createScript(Engine *engine, ECSEntityID ent,
@@ -1841,6 +1872,8 @@ EngineStatus engine_createScript(Engine *engine, ECSEntityID ent,
     lua_setglobal(L, "script");
 
     if (luaL_dostring(L, scriptContent) != LUA_OK) {
+        logMsg(LOG_LVL_WARN, "Lua error: %s", lua_tostring(L, -1));
+        lua_pop(L, 1);
         lua_close(L);
         return ENGINE_STATUS_SCRIPT_ERROR;
     }

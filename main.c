@@ -155,13 +155,13 @@ int main(void) {
     water.transform->pos = (Vector3){0, -5, 0};
     engine_entityPostCreate(&engine, water.id);
 
-    Player player = createPlayer(&engine);
+    /*Player player = createPlayer(&engine);
     player.controller->mode = GAME_PLAYERMODE_PHYSICAL;
     physics_setPosition(player.rb, (Vector3){20, 0, 20});
-    engine_entityPostCreate(&engine, player.id);
+    engine_entityPostCreate(&engine, player.id);*/
 
     Weather weather = createWeather(&engine, (Vector3){0.1, 0.12, 0.15});
-    weather.transform->anchor = player.id;
+    // weather.transform->anchor = player.id;
     createEnvironment(&engine, (Vector3){0.6, 0.6, 0.6}, (Vector3){1, -1, 0.8});
 
     Prop playerBarrel = createProp(&engine, GAME_MODEL_CYLINDER);
@@ -172,9 +172,9 @@ int main(void) {
     physics_setPosition(playerBarrel.rb, (Vector3){0, 10, 7});
     engine_entityPostCreate(&engine, playerBarrel.id);
 
-    ECSComponentID cameraId;
-    ecs_getCompID(&engine.ecs, player.id, ENGINE_COMP_CAMERA, &cameraId);
-    engine_render_setCamera(&engine, cameraId);
+    // ECSComponentID cameraId;
+    // ecs_getCompID(&engine.ecs, player.id, ENGINE_COMP_CAMERA, &cameraId);
+    // engine_render_setCamera(&engine, cameraId);
 
     luaEnvLoadRun("assets/scripts/game.lua");
 
