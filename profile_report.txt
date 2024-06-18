@@ -1,0 +1,2461 @@
+Flat profile:
+
+Each sample counts as 0.01 seconds.
+  %   cumulative   self              self     total           
+ time   seconds   seconds    calls  us/call  us/call  name    
+ 16.67      0.01     0.01    22247     0.45     0.45  binsearch_u32Inc
+ 16.67      0.02     0.01     4040     2.48     2.48  FrustumBoxIntersect
+ 16.67      0.03     0.01     3853     2.60     2.60  engine_meshRendererCenter
+ 16.67      0.04     0.01     3563     2.81     2.81  nk_memset
+ 16.67      0.05     0.01      505    19.80    22.61  DrawNuklear
+ 16.67      0.06     0.01                             _init
+  0.00      0.06     0.00    34236     0.00     0.00  cmp_code
+  0.00      0.06     0.00    27272     0.00     0.00  array_size
+  0.00      0.06     0.00    23623     0.00     0.00  cmp_str
+  0.00      0.06     0.00    22728     0.00     0.00  getTableFloat
+  0.00      0.06     0.00    22278     0.00     0.00  ecs_checkEntityID
+  0.00      0.06     0.00    22219     0.00     0.45  ecs_checkEntityExists
+  0.00      0.06     0.00    22211     0.00     0.00  ecs_checkCompType
+  0.00      0.06     0.00    21640     0.00     0.00  array_get
+  0.00      0.06     0.00    17489     0.00     0.00  ecs_checkComponentID
+  0.00      0.06     0.00    17488     0.00     0.45  ecs_getComp
+  0.00      0.06     0.00    17478     0.00     0.45  ecs_getCompData
+  0.00      0.06     0.00    13130     0.00     0.00  nk_input_key
+  0.00      0.06     0.00    12120     0.00     0.00  PlaneFromPoints
+  0.00      0.06     0.00    11268     0.00     0.00  array_insert
+  0.00      0.06     0.00    11268     0.00     0.00  array_pushBack
+  0.00      0.06     0.00     8407     0.00     0.45  engine_getTransform
+  0.00      0.06     0.00     8080     0.00     0.00  nk__next
+  0.00      0.06     0.00     8080     0.00     0.00  nk_buffer_align
+  0.00      0.06     0.00     8080     0.00     0.00  nk_buffer_alloc
+  0.00      0.06     0.00     8080     0.00     0.00  nk_command_buffer_push
+  0.00      0.06     0.00     7576     0.00     0.00  luaGetVector3
+  0.00      0.06     0.00     7082     0.00     0.00  getTableInteger
+  0.00      0.06     0.00     7072     0.00     0.00  luaPushVector3Vals
+  0.00      0.06     0.00     6060     0.00     0.00  ColorFromNuklear
+  0.00      0.06     0.00     5958     0.00     0.00  hashmap_get
+  0.00      0.06     0.00     5708     0.00     0.00  binsearch_hashmapInc
+  0.00      0.06     0.00     5688     0.00     0.00  hashmap_getP
+  0.00      0.06     0.00     5218     0.00     0.00  ecs_checkCallbackType
+  0.00      0.06     0.00     5050     0.00     0.00  nk_raylib_font_get_text_width
+  0.00      0.06     0.00     4676     0.00     0.45  ecs_execCallback
+  0.00      0.06     0.00     4541     0.00     0.00  BoxTransform
+  0.00      0.06     0.00     4040     0.00     0.00  array_clear
+  0.00      0.06     0.00     4040     0.00     0.00  nk_panel_is_sub
+  0.00      0.06     0.00     3558     0.00     0.00  array_popBack
+  0.00      0.06     0.00     3558     0.00     0.00  logPopTag
+  0.00      0.06     0.00     3558     0.00     0.00  logPushTag
+  0.00      0.06     0.00     3350     0.00     0.00  luaAlloc
+  0.00      0.06     0.00     3058     0.00     2.81  nk_zero
+  0.00      0.06     0.00     3030     0.00     0.00  nk_fill_rect
+  0.00      0.06     0.00     3030     0.00     0.00  nk_rgb_factor
+  0.00      0.06     0.00     3028     0.00     0.00  nk_strlen
+  0.00      0.06     0.00     2584     0.00     0.00  nk_vec2
+  0.00      0.06     0.00     2524     0.00     0.00  nk_input_is_mouse_hovering_rect
+  0.00      0.06     0.00     2469     0.00     0.00  GetProjectionMatrix
+  0.00      0.06     0.00     2469     0.00     0.00  GetViewMatrix
+  0.00      0.06     0.00     2022     0.00     0.00  nk_memcopy
+  0.00      0.06     0.00     2020     0.00     0.00  GetCameraFrustum
+  0.00      0.06     0.00     2020     0.00     0.00  moonnuklear_checkxxx
+  0.00      0.06     0.00     2020     0.00     0.00  moonnuklear_udata_test
+  0.00      0.06     0.00     2020     0.00     0.00  nk_draw_text
+  0.00      0.06     0.00     2020     0.00     0.00  nk_panel_get_padding
+  0.00      0.06     0.00     2020     0.00     0.00  nk_push_scissor
+  0.00      0.06     0.00     2020     0.00     0.00  nk_stroke_rect
+  0.00      0.06     0.00     2020     0.00     0.00  nk_widget_text
+  0.00      0.06     0.00     2020     0.00     5.85  render_createMeshRendererDrawList
+  0.00      0.06     0.00     2020     0.00     1.56  render_drawVisibleMeshes
+  0.00      0.06     0.00     2020     0.00     4.95  render_sortMeshRenderers
+  0.00      0.06     0.00     1676     0.00     0.00  Malloc_
+  0.00      0.06     0.00     1676     0.00     0.00  moonnuklear_Malloc
+  0.00      0.06     0.00     1674     0.00     0.00  CodeTree_RB_FIND
+  0.00      0.06     0.00     1674     0.00     0.00  Free_
+  0.00      0.06     0.00     1674     0.00     0.00  StringTree_RB_FIND
+  0.00      0.06     0.00     1674     0.00     0.00  code_search
+  0.00      0.06     0.00     1674     0.00     0.00  moonnuklear_Free
+  0.00      0.06     0.00     1674     0.00     0.00  str_search
+  0.00      0.06     0.00     1516     0.00     0.00  nk_input_has_mouse_click_down_in_rect
+  0.00      0.06     0.00     1516     0.00     0.00  nk_input_has_mouse_click_in_rect
+  0.00      0.06     0.00     1516     0.00     0.00  nk_panel_has_header
+  0.00      0.06     0.00     1515     0.00     0.00  nk_input_button
+  0.00      0.06     0.00     1515     0.00     0.00  renderGetLightSrcShadowCam
+  0.00      0.06     0.00     1507     0.00     0.15  engine_updateTransform
+  0.00      0.06     0.00     1301     0.00     0.00  fifo_write
+  0.00      0.06     0.00     1014     0.00     0.45  engine_getScript
+  0.00      0.06     0.00     1012     0.00     0.00  array_capacity
+  0.00      0.06     0.00     1012     0.00     2.81  nk_create_page_element
+  0.00      0.06     0.00     1010     0.00     0.00  GetNuklearScaling
+  0.00      0.06     0.00     1010     0.00     0.45  engineCbScriptOnUpdate
+  0.00      0.06     0.00     1010     0.00     0.45  engine_cbLightSourceOnUpdate
+  0.00      0.06     0.00     1010     0.00     0.00  moonnuklear_echeckrect
+  0.00      0.06     0.00     1010     0.00     8.43  nk_begin
+  0.00      0.06     0.00     1010     0.00     8.43  nk_begin_titled
+  0.00      0.06     0.00     1010     0.00     0.00  nk_button_behavior
+  0.00      0.06     0.00     1010     0.00     5.61  nk_create_panel
+  0.00      0.06     0.00     1010     0.00     0.00  nk_do_button
+  0.00      0.06     0.00     1010     0.00     0.00  nk_do_button_symbol
+  0.00      0.06     0.00     1010     0.00     0.00  nk_do_scrollbarh
+  0.00      0.06     0.00     1010     0.00     0.00  nk_do_scrollbarv
+  0.00      0.06     0.00     1010     0.00     0.00  nk_draw_button
+  0.00      0.06     0.00     1010     0.00     0.00  nk_draw_button_symbol
+  0.00      0.06     0.00     1010     0.00     0.00  nk_draw_symbol
+  0.00      0.06     0.00     1010     0.00     0.00  nk_end
+  0.00      0.06     0.00     1010     0.00     0.00  nk_find_window
+  0.00      0.06     0.00     1010     0.00     0.00  nk_finish
+  0.00      0.06     0.00     1010     0.00     0.00  nk_finish_buffer
+  0.00      0.06     0.00     1010     0.00     0.00  nk_free_page_element
+  0.00      0.06     0.00     1010     0.00     0.00  nk_free_panel
+  0.00      0.06     0.00     1010     0.00     0.00  nk_input_is_mouse_prev_hovering_rect
+  0.00      0.06     0.00     1010     0.00     0.00  nk_layout_reset_min_row_height
+  0.00      0.06     0.00     1010     0.00     0.00  nk_link_page_element_into_freelist
+  0.00      0.06     0.00     1010     0.00     0.00  nk_murmur_hash
+  0.00      0.06     0.00     1010     0.00     2.81  nk_panel_begin
+  0.00      0.06     0.00     1010     0.00     0.00  nk_panel_end
+  0.00      0.06     0.00     1010     0.00     0.00  nk_panel_get_border
+  0.00      0.06     0.00     1010     0.00     0.00  nk_panel_get_border_color
+  0.00      0.06     0.00     1010     0.00     0.00  nk_panel_is_nonblock
+  0.00      0.06     0.00     1010     0.00     0.00  nk_shrink_rect
+  0.00      0.06     0.00     1010     0.00     0.00  nk_start
+  0.00      0.06     0.00     1010     0.00     0.00  nk_start_buffer
+  0.00      0.06     0.00     1010     0.00     0.00  nk_unify
+  0.00      0.06     0.00     1008     0.00     0.00  nk_stricmpn
+  0.00      0.06     0.00      838     0.00     0.00  CodeTree_RB_NFIND
+  0.00      0.06     0.00      838     0.00     0.00  code_first
+  0.00      0.06     0.00      837     0.00     0.00  CodeTree_RB_INSERT
+  0.00      0.06     0.00      837     0.00     0.00  CodeTree_RB_INSERT_COLOR
+  0.00      0.06     0.00      837     0.00     0.00  CodeTree_RB_REMOVE
+  0.00      0.06     0.00      837     0.00     0.00  CodeTree_RB_REMOVE_COLOR
+  0.00      0.06     0.00      837     0.00     0.00  StringTree_RB_INSERT
+  0.00      0.06     0.00      837     0.00     0.00  StringTree_RB_INSERT_COLOR
+  0.00      0.06     0.00      837     0.00     0.00  StringTree_RB_REMOVE
+  0.00      0.06     0.00      837     0.00     0.00  code_insert
+  0.00      0.06     0.00      837     0.00     0.00  code_remove
+  0.00      0.06     0.00      837     0.00     0.00  enums_free
+  0.00      0.06     0.00      837     0.00     0.00  enums_new
+  0.00      0.06     0.00      837     0.00     0.00  moonnuklear_Strdup
+  0.00      0.06     0.00      837     0.00     0.00  str_insert
+  0.00      0.06     0.00      837     0.00     0.00  str_remove
+  0.00      0.06     0.00      823     0.00     0.00  render_setMeshRendererUniforms
+  0.00      0.06     0.00      823     0.00     0.00  render_setShaderLightSrcUniforms
+  0.00      0.06     0.00      702     0.00     0.00  StringTree_RB_REMOVE_COLOR
+  0.00      0.06     0.00      506     0.00     0.00  engine_render_getModel
+  0.00      0.06     0.00      505     0.00     0.00  UpdateNuklear
+  0.00      0.06     0.00      505     0.00     2.70  ecs_execCallbackAllEnt
+  0.00      0.06     0.00      505     0.00     0.45  engine_cbCameraOnUpdate
+  0.00      0.06     0.00      505     0.00     0.45  engine_cbRigidBodyOnUpdate
+  0.00      0.06     0.00      505     0.00     0.00  engine_dispatchMessages
+  0.00      0.06     0.00      505     0.00     2.70  engine_execUpdateCallbacks
+  0.00      0.06     0.00      505     0.00     6.71  engine_stepUpdate
+  0.00      0.06     0.00      505     0.00     0.00  nk__begin
+  0.00      0.06     0.00      505     0.00     0.00  nk_buffer_clear
+  0.00      0.06     0.00      505     0.00     0.00  nk_build
+  0.00      0.06     0.00      505     0.00     2.81  nk_clear
+  0.00      0.06     0.00      505     0.00     0.00  nk_input_begin
+  0.00      0.06     0.00      505     0.00     0.00  nk_input_end
+  0.00      0.06     0.00      505     0.00     0.00  nk_input_motion
+  0.00      0.06     0.00      505     0.00     0.00  nk_raylib_input_keyboard
+  0.00      0.06     0.00      505     0.00     0.00  nk_raylib_input_mouse
+  0.00      0.06     0.00      505     0.00    49.44  render_drawScene
+  0.00      0.06     0.00      505     0.00    37.08  render_drawShadowMaps
+  0.00      0.06     0.00      505     0.00     0.00  render_updateShadowMaps
+  0.00      0.06     0.00      505     0.00     0.00  render_updateState
+  0.00      0.06     0.00      505     0.00     0.00  weatherCbPostRender
+  0.00      0.06     0.00      505     0.00     0.00  weatherCbPreRender
+  0.00      0.06     0.00      501     0.00     4.04  engine_updateTransforms
+  0.00      0.06     0.00      501     0.00     0.00  physics_bodyUpdate
+  0.00      0.06     0.00      501     0.00     0.00  physics_collisionBroadPhase
+  0.00      0.06     0.00      501     0.00     0.00  physics_collisionNarrowPhase
+  0.00      0.06     0.00      501     0.00     0.00  physics_updateBodies
+  0.00      0.06     0.00      501     0.00     0.00  physics_updateCollisions
+  0.00      0.06     0.00      258     0.00     0.00  hashmap_getU32
+  0.00      0.06     0.00      258     0.00     0.00  str_hash
+  0.00      0.06     0.00      172     0.00     0.00  logLevelIsVisibleHeader
+  0.00      0.06     0.00       86     0.00     0.00  _log
+  0.00      0.06     0.00       83     0.00     0.00  nk_style_item_color
+  0.00      0.06     0.00       59     0.00     0.00  binsearch_s32Inc
+  0.00      0.06     0.00       55     0.00     0.00  ecs_getEntityNameCstr
+  0.00      0.06     0.00       55     0.00     0.00  ecs_getEntityNameCstrP
+  0.00      0.06     0.00       29     0.00     0.45  ecs_setCallback
+  0.00      0.06     0.00       24     0.00     0.45  ecs_entityExists
+  0.00      0.06     0.00       21     0.00     0.45  ecs_compExists
+  0.00      0.06     0.00       21     0.00     0.00  fifo_av_read
+  0.00      0.06     0.00       21     0.00     0.00  fifo_read
+  0.00      0.06     0.00       20     0.00     0.00  nk_handle_ptr
+  0.00      0.06     0.00       17     0.00     0.45  ecs_registerComp
+  0.00      0.06     0.00       16     0.00     0.00  nk_rgb
+  0.00      0.06     0.00       14     0.00     0.00  nk_rgba
+  0.00      0.06     0.00       12     0.00     0.00  hashmap_set
+  0.00      0.06     0.00       10     0.00     0.45  luaCreateComponentTable
+  0.00      0.06     0.00       10     0.00     0.00  moonnuklear_udata_define
+  0.00      0.06     0.00        8     0.00     0.00  array_at
+  0.00      0.06     0.00        8     0.00     0.00  array_resize
+  0.00      0.06     0.00        8     0.00     1.14  ecs_execCallbackAllComp
+  0.00      0.06     0.00        8     0.00     0.00  hashmap_resize
+  0.00      0.06     0.00        6     0.00     0.00  engine_render_addModel
+  0.00      0.06     0.00        4     0.00     0.00  array_del
+  0.00      0.06     0.00        4     0.00     0.00  array_has
+  0.00      0.06     0.00        4     0.00     0.00  array_init
+  0.00      0.06     0.00        4     0.00     0.45  ecs_registerEntity
+  0.00      0.06     0.00        4     0.00     0.00  ecs_unregisterEntity
+  0.00      0.06     0.00        4     0.00     0.60  engine_cbTransformOnCreate
+  0.00      0.06     0.00        4     0.00     0.45  engine_createInfo
+  0.00      0.06     0.00        4     0.00     0.90  engine_createTransform
+  0.00      0.06     0.00        4     0.00     1.14  engine_entityDestroy
+  0.00      0.06     0.00        4     0.00     1.14  engine_entityPostCreate
+  0.00      0.06     0.00        4     0.00     0.00  engine_render_addShader
+  0.00      0.06     0.00        4     0.00     0.00  hashmap_init
+  0.00      0.06     0.00        4     0.00     0.45  insertsort_u32Inc
+  0.00      0.06     0.00        4     0.00     0.00  registerShader
+  0.00      0.06     0.00        3     0.00     0.00  cmp
+  0.00      0.06     0.00        3     0.00     0.45  engine_getInfo
+  0.00      0.06     0.00        3     0.00     4.64  luaCreateEntityTable
+  0.00      0.06     0.00        3     0.00     0.00  nk_pool_alloc
+  0.00      0.06     0.00        3     0.00     0.00  nk_style_item_hide
+  0.00      0.06     0.00        3     0.00     0.00  udata_search
+  0.00      0.06     0.00        3     0.00     0.00  udatatree_s_RB_FIND
+  0.00      0.06     0.00        2     0.00     0.45  engineCbScriptOnCreate
+  0.00      0.06     0.00        2     0.00     0.45  engineCbScriptOnDestroy
+  0.00      0.06     0.00        2     0.00     0.00  engine_cbLightSourceOnCreate
+  0.00      0.06     0.00        2     0.00     0.00  engine_cbLightSourceOnDestroy
+  0.00      0.06     0.00        2     0.00     0.00  engine_cbMeshRendererOnCreate
+  0.00      0.06     0.00        2     0.00     0.00  engine_cbMeshRendererOnDestroy
+  0.00      0.06     0.00        2     0.00     1.35  engine_createMeshRenderer
+  0.00      0.06     0.00        2     0.00     1.80  engine_createScriptFromFile
+  0.00      0.06     0.00        2     0.00     0.45  engine_getCollider
+  0.00      0.06     0.00        2     0.00     0.45  engine_getLightSrc
+  0.00      0.06     0.00        2     0.00     0.45  engine_getMeshRenderer
+  0.00      0.06     0.00        2     0.00     0.00  engine_render_registerLightSrc
+  0.00      0.06     0.00        2     0.00     0.00  engine_render_registerMeshRenderer
+  0.00      0.06     0.00        2     0.00     0.00  engine_render_unregisterLightSrc
+  0.00      0.06     0.00        2     0.00     0.00  engine_render_unregisterMeshRenderer
+  0.00      0.06     0.00        2     0.00     0.00  fifo_init
+  0.00      0.06     0.00        2     0.00     0.00  hashmap_del
+  0.00      0.06     0.00        2     0.00     0.00  hashmap_delResize
+  0.00      0.06     0.00        2     0.00     0.00  loadFileStr
+  0.00      0.06     0.00        2     0.00     0.00  luaEnvLoad
+  0.00      0.06     0.00        2     0.00     0.00  moonnuklear_newuserdata
+  0.00      0.06     0.00        2     0.00     0.00  moonnuklear_udata_new
+  0.00      0.06     0.00        2     0.00     0.00  nk_command_buffer_init
+  0.00      0.06     0.00        2     0.00     2.81  nk_create_window
+  0.00      0.06     0.00        2     0.00     0.00  nk_insert_window
+  0.00      0.06     0.00        2     0.00     0.00  nk_malloc
+  0.00      0.06     0.00        2     0.00     0.00  nk_mfree
+  0.00      0.06     0.00        2     0.00     0.00  registerModelCylinder
+  0.00      0.06     0.00        2     0.00     0.00  udata_insert
+  0.00      0.06     0.00        2     0.00     0.00  udatatree_s_RB_INSERT
+  0.00      0.06     0.00        2     0.00     0.00  udatatree_s_RB_INSERT_COLOR
+  0.00      0.06     0.00        1     0.00     0.00  AddConstants
+  0.00      0.06     0.00        1     0.00     0.00  AddVersions
+  0.00      0.06     0.00        1     0.00    64.55  InitNuklear
+  0.00      0.06     0.00        1     0.00    64.55  InitNuklearContext
+  0.00      0.06     0.00        1     0.00     0.00  SetNuklearScaling
+  0.00      0.06     0.00        1     0.00     8.42  UnloadNuklear
+  0.00      0.06     0.00        1     0.00     4.57  cleanup
+  0.00      0.06     0.00        1     0.00     4.94  createEnvironment
+  0.00      0.06     0.00        1     0.00     8.99  createProp
+  0.00      0.06     0.00        1     0.00     8.78  createWeather
+  0.00      0.06     0.00        1     0.00     0.00  ecs_findEntity
+  0.00      0.06     0.00        1     0.00     0.45  ecs_getCompID
+  0.00      0.06     0.00        1     0.00     0.00  ecs_init
+  0.00      0.06     0.00        1     0.00     0.45  engine_cbColliderOnCreate
+  0.00      0.06     0.00        1     0.00     0.00  engine_cbColliderOnDestroy
+  0.00      0.06     0.00        1     0.00     0.90  engine_cbRigidBodyOnCreate
+  0.00      0.06     0.00        1     0.00     0.00  engine_cbRigidBodyOnDestroy
+  0.00      0.06     0.00        1     0.00     1.80  engine_createAmbientLight
+  0.00      0.06     0.00        1     0.00     0.90  engine_createCamera
+  0.00      0.06     0.00        1     0.00     1.35  engine_createConvexHullCollider
+  0.00      0.06     0.00        1     0.00     1.35  engine_createConvexHullColliderModel
+  0.00      0.06     0.00        1     0.00     1.80  engine_createDirLight
+  0.00      0.06     0.00        1     0.00     1.80  engine_createRigidBody
+  0.00      0.06     0.00        1     0.00     0.45  engine_getRigidBody
+  0.00      0.06     0.00        1     0.00     0.00  engine_init
+  0.00      0.06     0.00        1     0.00     0.00  engine_render_setCamera
+  0.00      0.06     0.00        1     0.00     0.00  initCollider
+  0.00      0.06     0.00        1     0.00     0.00  loadAssets
+  0.00      0.06     0.00        1     0.00     0.00  luaEnvCreate
+  0.00      0.06     0.00        1     0.00     0.00  luaEnvSetEngine
+  0.00      0.06     0.00        1     0.00     0.00  luaEnvSetNkContext
+  0.00      0.06     0.00        1     0.00     0.00  luaEnvSetupBindings
+  0.00      0.06     0.00        1     0.00     0.00  luaOpenEngine
+  0.00      0.06     0.00        1     0.00     0.00  luaOpenMatrix
+  0.00      0.06     0.00        1     0.00     0.00  luaOpenMisc
+  0.00      0.06     0.00        1     0.00     0.00  luaOpenQuaternion
+  0.00      0.06     0.00        1     0.00     0.00  luaOpenRaylib
+  0.00      0.06     0.00        1     0.00     0.00  luaOpenVector3
+  0.00      0.06     0.00        1     0.00     0.00  luaopen_moonnuklear
+  0.00      0.06     0.00        1     0.00     0.00  malloc_init
+  0.00      0.06     0.00        1     0.00     0.00  moonnuklear_checklightuserdata
+  0.00      0.06     0.00        1     0.00     0.00  moonnuklear_enums_free_all
+  0.00      0.06     0.00        1     0.00     0.00  moonnuklear_newedit
+  0.00      0.06     0.00        1     0.00     0.00  moonnuklear_open_atlas
+  0.00      0.06     0.00        1     0.00     0.00  moonnuklear_open_buffer
+  0.00      0.06     0.00        1     0.00     0.00  moonnuklear_open_canvas
+  0.00      0.06     0.00        1     0.00     0.00  moonnuklear_open_context
+  0.00      0.06     0.00        1     0.00     0.00  moonnuklear_open_cursor
+  0.00      0.06     0.00        1     0.00     0.00  moonnuklear_open_edit
+  0.00      0.06     0.00        1     0.00     0.00  moonnuklear_open_enums
+  0.00      0.06     0.00        1     0.00     0.00  moonnuklear_open_flags
+  0.00      0.06     0.00        1     0.00     0.00  moonnuklear_open_font
+  0.00      0.06     0.00        1     0.00     0.00  moonnuklear_open_image
+  0.00      0.06     0.00        1     0.00     0.00  moonnuklear_open_input
+  0.00      0.06     0.00        1     0.00     0.00  moonnuklear_open_layout
+  0.00      0.06     0.00        1     0.00     0.00  moonnuklear_open_nine_slice
+  0.00      0.06     0.00        1     0.00     0.00  moonnuklear_open_panel
+  0.00      0.06     0.00        1     0.00     0.00  moonnuklear_open_style
+  0.00      0.06     0.00        1     0.00     0.00  moonnuklear_open_tracing
+  0.00      0.06     0.00        1     0.00     0.00  moonnuklear_open_versions
+  0.00      0.06     0.00        1     0.00     0.00  moonnuklear_open_widgets
+  0.00      0.06     0.00        1     0.00     0.00  moonnuklear_open_window
+  0.00      0.06     0.00        1     0.00     0.00  moonnuklear_udata_addmethods
+  0.00      0.06     0.00        1     0.00     0.00  moonnuklear_udata_mem
+  0.00      0.06     0.00        1     0.00     0.00  moonnuklear_userdata
+  0.00      0.06     0.00        1     0.00     0.00  moonnuklear_utils_init
+  0.00      0.06     0.00        1     0.00     0.00  nk_buffer_free
+  0.00      0.06     0.00        1     0.00     2.81  nk_buffer_init
+  0.00      0.06     0.00        1     0.00     2.81  nk_draw_list_init
+  0.00      0.06     0.00        1     0.00     8.42  nk_free
+  0.00      0.06     0.00        1     0.00    64.55  nk_init
+  0.00      0.06     0.00        1     0.00    64.55  nk_init_default
+  0.00      0.06     0.00        1     0.00     0.00  nk_pool_free
+  0.00      0.06     0.00        1     0.00     2.81  nk_pool_init
+  0.00      0.06     0.00        1     0.00     0.00  nk_set_user_data
+  0.00      0.06     0.00        1     0.00    58.94  nk_setup
+  0.00      0.06     0.00        1     0.00    53.33  nk_style_default
+  0.00      0.06     0.00        1     0.00    53.33  nk_style_from_table
+  0.00      0.06     0.00        1     0.00     0.00  physics_addCollider
+  0.00      0.06     0.00        1     0.00     0.00  physics_addRigidBody
+  0.00      0.06     0.00        1     0.00     0.00  physics_initRigidBody
+  0.00      0.06     0.00        1     0.00     0.00  physics_initSystem
+  0.00      0.06     0.00        1     0.00     0.00  physics_removeCollider
+  0.00      0.06     0.00        1     0.00     0.00  physics_removeRigidBody
+  0.00      0.06     0.00        1     0.00     0.00  physics_setPosition
+  0.00      0.06     0.00        1     0.00     0.00  registerModel
+  0.00      0.06     0.00        1     0.00     0.00  registerModelSkybox
+  0.00      0.06     0.00        1     0.00     0.00  render_init
+  0.00      0.06     0.00        1     0.00     0.00  render_setupDirShadow
+
+ %         the percentage of the total running time of the
+time       program used by this function.
+
+cumulative a running sum of the number of seconds accounted
+ seconds   for by this function and those listed above it.
+
+ self      the number of seconds accounted for by this
+seconds    function alone.  This is the major sort for this
+           listing.
+
+calls      the number of times this function was invoked, if
+           this function is profiled, else blank.
+
+ self      the average number of milliseconds spent in this
+ms/call    function per call, if this function is profiled,
+	   else blank.
+
+ total     the average number of milliseconds spent in this
+ms/call    function and its descendents per call, if this
+	   function is profiled, else blank.
+
+name       the name of the function.  This is the minor sort
+           for this listing. The index shows the location of
+	   the function in the gprof listing. If the index is
+	   in parenthesis it shows where it would appear in
+	   the gprof listing if it were to be printed.
+
+Copyright (C) 2012-2024 Free Software Foundation, Inc.
+
+Copying and distribution of this file, with or without modification,
+are permitted in any medium without royalty provided the copyright
+notice and this notice are preserved.
+
+		     Call graph (explanation follows)
+
+
+granularity: each sample hit covers 2 byte(s) for 16.67% of 0.06 seconds
+
+index % time    self  children    called     name
+                                                 <spontaneous>
+[1]     66.5    0.00    0.04                 main [1]
+                0.00    0.02     505/505         render_drawScene [2]
+                0.01    0.00     505/505         DrawNuklear [5]
+                0.00    0.00     505/505         engine_stepUpdate [21]
+                0.00    0.00       1/1           InitNuklear [38]
+                0.00    0.00       1/1           createProp [51]
+                0.00    0.00       1/1           createWeather [52]
+                0.00    0.00       1/1           UnloadNuklear [53]
+                0.00    0.00       1/1           createEnvironment [58]
+                0.00    0.00       1/1           cleanup [61]
+                0.00    0.00       2/4           engine_entityPostCreate [60]
+                0.00    0.00       1/2           engine_createScriptFromFile [64]
+                0.00    0.00     505/505         render_updateState [218]
+                0.00    0.00     505/505         UpdateNuklear [207]
+                0.00    0.00       1/1           SetNuklearScaling [281]
+                0.00    0.00       1/1           engine_init [286]
+                0.00    0.00       1/1           render_init [340]
+                0.00    0.00       1/1           loadAssets [289]
+                0.00    0.00       1/1           render_setupDirShadow [341]
+                0.00    0.00       1/1           luaEnvSetEngine [291]
+                0.00    0.00       1/1           luaEnvSetNkContext [292]
+                0.00    0.00       1/1           physics_setPosition [337]
+-----------------------------------------------
+                0.00    0.02     505/505         main [1]
+[2]     41.6    0.00    0.02     505         render_drawScene [2]
+                0.00    0.02     505/505         render_drawShadowMaps [3]
+                0.00    0.00     505/2020        render_createMeshRendererDrawList [4]
+                0.00    0.00     505/2020        render_sortMeshRenderers [10]
+                0.00    0.00     505/2020        render_drawVisibleMeshes [22]
+                0.00    0.00    1012/1012        array_capacity [157]
+                0.00    0.00       2/8           array_resize [241]
+-----------------------------------------------
+                0.00    0.02     505/505         render_drawScene [2]
+[3]     31.2    0.00    0.02     505         render_drawShadowMaps [3]
+                0.00    0.01    1515/2020        render_createMeshRendererDrawList [4]
+                0.00    0.01    1515/2020        render_sortMeshRenderers [10]
+                0.00    0.00    1515/2020        render_drawVisibleMeshes [22]
+                0.00    0.00     505/5688        hashmap_getP [117]
+-----------------------------------------------
+                0.00    0.00     505/2020        render_drawScene [2]
+                0.00    0.01    1515/2020        render_drawShadowMaps [3]
+[4]     19.7    0.00    0.01    2020         render_createMeshRendererDrawList [4]
+                0.01    0.00    4040/4040        FrustumBoxIntersect [8]
+                0.00    0.00    4040/8407        engine_getTransform [20]
+                0.00    0.00    6060/27272       array_size [96]
+                0.00    0.00    4040/21640       array_get [101]
+                0.00    0.00    4040/4541        BoxTransform [120]
+                0.00    0.00    3853/11268       array_pushBack [106]
+                0.00    0.00    2020/2020        GetCameraFrustum [135]
+                0.00    0.00    2020/4040        array_clear [121]
+-----------------------------------------------
+                0.01    0.00     505/505         main [1]
+[5]     19.0    0.01    0.00     505         DrawNuklear [5]
+                0.00    0.00     505/505         nk_clear [27]
+                0.00    0.00    8080/8080        nk__next [107]
+                0.00    0.00    6060/6060        ColorFromNuklear [114]
+                0.00    0.00     505/1010        GetNuklearScaling [158]
+                0.00    0.00     505/505         nk__begin [209]
+-----------------------------------------------
+                0.00    0.00       4/22247       insertsort_u32Inc [76]
+                0.00    0.00      24/22247       ecs_entityExists [47]
+                0.01    0.00   22219/22247       ecs_checkEntityExists [12]
+[6]     16.7    0.01    0.00   22247         binsearch_u32Inc [6]
+-----------------------------------------------
+                0.00    0.00     505/3563        nk_clear [27]
+                0.01    0.00    3058/3563        nk_zero [13]
+[7]     16.7    0.01    0.00    3563         nk_memset [7]
+-----------------------------------------------
+                0.01    0.00    4040/4040        render_createMeshRendererDrawList [4]
+[8]     16.7    0.01    0.00    4040         FrustumBoxIntersect [8]
+-----------------------------------------------
+                0.01    0.00    3853/3853        render_sortMeshRenderers [10]
+[9]     16.7    0.01    0.00    3853         engine_meshRendererCenter [9]
+-----------------------------------------------
+                0.00    0.00     505/2020        render_drawScene [2]
+                0.00    0.01    1515/2020        render_drawShadowMaps [3]
+[10]    16.7    0.00    0.01    2020         render_sortMeshRenderers [10]
+                0.01    0.00    3853/3853        engine_meshRendererCenter [9]
+                0.00    0.00   11746/27272       array_size [96]
+                0.00    0.00    7519/21640       array_get [101]
+                0.00    0.00    3853/11268       array_pushBack [106]
+                0.00    0.00    2020/4040        array_clear [121]
+-----------------------------------------------
+                                                 <spontaneous>
+[11]    16.7    0.01    0.00                 _init [11]
+-----------------------------------------------
+                0.00    0.00       1/22219       ecs_getCompID [91]
+                0.00    0.00       8/22219       ecs_execCallbackAllComp [50]
+                0.00    0.00      17/22219       ecs_registerComp [55]
+                0.00    0.00      29/22219       ecs_setCallback [46]
+                0.00    0.00    4676/22219       ecs_execCallback [25]
+                0.00    0.01   17488/22219       ecs_getComp [17]
+[12]    16.6    0.00    0.01   22219         ecs_checkEntityExists [12]
+                0.01    0.00   22219/22247       binsearch_u32Inc [6]
+-----------------------------------------------
+                0.00    0.00       1/3058        nk_buffer_init [65]
+                0.00    0.00       1/3058        nk_draw_list_init [66]
+                0.00    0.00       1/3058        nk_setup [42]
+                0.00    0.00       1/3058        nk_pool_init [67]
+                0.00    0.00       3/3058        nk_free [54]
+                0.00    0.00      19/3058        nk_style_from_table [44]
+                0.00    0.00    1010/3058        nk_create_panel [19]
+                0.00    0.00    1010/3058        nk_panel_begin [24]
+                0.00    0.00    1012/3058        nk_create_page_element [23]
+[13]    14.3    0.00    0.01    3058         nk_zero [13]
+                0.01    0.00    3058/3563        nk_memset [7]
+-----------------------------------------------
+                0.00    0.01    1010/1010        Window_begin [16]
+[14]    14.2    0.00    0.01    1010         nk_begin [14]
+                0.00    0.01    1010/1010        nk_begin_titled [15]
+-----------------------------------------------
+                0.00    0.01    1010/1010        nk_begin [14]
+[15]    14.2    0.00    0.01    1010         nk_begin_titled [15]
+                0.00    0.01    1010/1010        nk_create_panel [19]
+                0.00    0.00    1010/1010        nk_panel_begin [24]
+                0.00    0.00       2/2           nk_create_window [56]
+                0.00    0.00    1010/3028        nk_strlen [129]
+                0.00    0.00    1010/1010        nk_murmur_hash [177]
+                0.00    0.00    1010/1010        nk_find_window [169]
+                0.00    0.00    1010/1010        nk_start [183]
+                0.00    0.00    1010/1516        nk_input_has_mouse_click_down_in_rect [151]
+                0.00    0.00    1010/2524        nk_input_is_mouse_hovering_rect [131]
+                0.00    0.00       2/2           nk_insert_window [272]
+                0.00    0.00       2/2           nk_command_buffer_init [271]
+                0.00    0.00       2/2022        nk_memcopy [134]
+-----------------------------------------------
+                                                 <spontaneous>
+[16]    14.2    0.00    0.01                 Window_begin [16]
+                0.00    0.01    1010/1010        nk_begin [14]
+                0.00    0.00    1010/2020        moonnuklear_checkxxx [136]
+                0.00    0.00    1010/1010        moonnuklear_echeckrect [159]
+-----------------------------------------------
+                0.00    0.00      10/17488       luaCreateComponentTable [62]
+                0.00    0.01   17478/17488       ecs_getCompData [18]
+[17]    13.1    0.00    0.01   17488         ecs_getComp [17]
+                0.00    0.01   17488/22219       ecs_checkEntityExists [12]
+                0.00    0.00   17488/22211       ecs_checkCompType [100]
+                0.00    0.00   17488/22278       ecs_checkEntityID [99]
+                0.00    0.00   17488/17489       ecs_checkComponentID [102]
+-----------------------------------------------
+                0.00    0.00       1/17478       engine_getRigidBody [93]
+                0.00    0.00       2/17478       engine_getMeshRenderer [87]
+                0.00    0.00       2/17478       engine_getLightSrc [86]
+                0.00    0.00       2/17478       engine_getCollider [85]
+                0.00    0.00       3/17478       engine_getInfo [77]
+                0.00    0.00     501/17478       engine_updateTransform [37]
+                0.00    0.00    1014/17478       engine_getScript [32]
+                0.00    0.00    1518/17478       luaEngineComponentNewIndex [31]
+                0.00    0.00    2020/17478       luaEngineComponentIndex [30]
+                0.00    0.00    4008/17478       engine_updateTransforms [26]
+                0.00    0.00    8407/17478       engine_getTransform [20]
+[18]    13.1    0.00    0.01   17478         ecs_getCompData [18]
+                0.00    0.01   17478/17488       ecs_getComp [17]
+-----------------------------------------------
+                0.00    0.01    1010/1010        nk_begin_titled [15]
+[19]     9.4    0.00    0.01    1010         nk_create_panel [19]
+                0.00    0.00    1010/1012        nk_create_page_element [23]
+                0.00    0.00    1010/3058        nk_zero [13]
+-----------------------------------------------
+                0.00    0.00       1/8407        createProp [51]
+                0.00    0.00       1/8407        createWeather [52]
+                0.00    0.00       1/8407        createEnvironment [58]
+                0.00    0.00       1/8407        engine_cbRigidBodyOnCreate [88]
+                0.00    0.00       1/8407        engine_cbColliderOnCreate [92]
+                0.00    0.00       4/8407        engine_cbTransformOnCreate [69]
+                0.00    0.00     505/8407        engine_cbRigidBodyOnUpdate [36]
+                0.00    0.00     505/8407        engine_cbCameraOnUpdate [35]
+                0.00    0.00    1010/8407        engine_cbLightSourceOnUpdate [34]
+                0.00    0.00    2338/8407        render_drawVisibleMeshes [22]
+                0.00    0.00    4040/8407        render_createMeshRendererDrawList [4]
+[20]     6.3    0.00    0.00    8407         engine_getTransform [20]
+                0.00    0.00    8407/17478       ecs_getCompData [18]
+-----------------------------------------------
+                0.00    0.00     505/505         main [1]
+[21]     5.6    0.00    0.00     505         engine_stepUpdate [21]
+                0.00    0.00     501/501         engine_updateTransforms [26]
+                0.00    0.00     505/505         engine_execUpdateCallbacks [29]
+                0.00    0.00     505/505         engine_dispatchMessages [208]
+                0.00    0.00     501/501         physics_updateCollisions [225]
+                0.00    0.00     501/501         physics_updateBodies [224]
+-----------------------------------------------
+                0.00    0.00     505/2020        render_drawScene [2]
+                0.00    0.00    1515/2020        render_drawShadowMaps [3]
+[22]     5.3    0.00    0.00    2020         render_drawVisibleMeshes [22]
+                0.00    0.00    4676/4676        ecs_execCallback [25]
+                0.00    0.00    2338/8407        engine_getTransform [20]
+                0.00    0.00    5873/27272       array_size [96]
+                0.00    0.00    4676/5688        hashmap_getP [117]
+                0.00    0.00    3853/21640       array_get [101]
+                0.00    0.00     823/823         render_setShaderLightSrcUniforms [204]
+                0.00    0.00     823/823         render_setMeshRendererUniforms [203]
+-----------------------------------------------
+                0.00    0.00       2/1012        nk_create_window [56]
+                0.00    0.00    1010/1012        nk_create_panel [19]
+[23]     4.7    0.00    0.00    1012         nk_create_page_element [23]
+                0.00    0.00    1012/3058        nk_zero [13]
+                0.00    0.00       3/3           nk_pool_alloc [252]
+-----------------------------------------------
+                0.00    0.00    1010/1010        nk_begin_titled [15]
+[24]     4.7    0.00    0.00    1010         nk_panel_begin [24]
+                0.00    0.00    1010/3058        nk_zero [13]
+                0.00    0.00    2020/3030        nk_fill_rect [127]
+                0.00    0.00    1516/1516        nk_panel_has_header [153]
+                0.00    0.00    1010/2020        nk_panel_get_padding [139]
+                0.00    0.00    1010/1010        nk_panel_get_border [179]
+                0.00    0.00    1010/1010        nk_shrink_rect [182]
+                0.00    0.00    1010/1010        nk_layout_reset_min_row_height [175]
+                0.00    0.00    1010/1010        nk_panel_is_nonblock [181]
+                0.00    0.00    1010/1010        nk_do_button_symbol [162]
+                0.00    0.00    1010/3028        nk_strlen [129]
+                0.00    0.00    1010/5050        nk_raylib_font_get_text_width [119]
+                0.00    0.00    1010/2584        nk_vec2 [130]
+                0.00    0.00    1010/2020        nk_widget_text [142]
+                0.00    0.00    1010/1010        nk_unify [185]
+                0.00    0.00    1010/2020        nk_push_scissor [140]
+                0.00    0.00     506/1516        nk_input_has_mouse_click_down_in_rect [151]
+                0.00    0.00     504/2524        nk_input_is_mouse_hovering_rect [131]
+-----------------------------------------------
+                0.00    0.00    4676/4676        render_drawVisibleMeshes [22]
+[25]     3.5    0.00    0.00    4676         ecs_execCallback [25]
+                0.00    0.00    4676/22219       ecs_checkEntityExists [12]
+                0.00    0.00    4676/22211       ecs_checkCompType [100]
+                0.00    0.00    4676/22278       ecs_checkEntityID [99]
+                0.00    0.00    4676/5218        ecs_checkCallbackType [118]
+                0.00    0.00     505/505         weatherCbPostRender [219]
+                0.00    0.00     505/505         weatherCbPreRender [220]
+-----------------------------------------------
+                0.00    0.00     501/501         engine_stepUpdate [21]
+[26]     3.4    0.00    0.00     501         engine_updateTransforms [26]
+                0.00    0.00    4008/17478       ecs_getCompData [18]
+                0.00    0.00    1503/1507        engine_updateTransform [37]
+-----------------------------------------------
+                0.00    0.00     505/505         DrawNuklear [5]
+[27]     2.4    0.00    0.00     505         nk_clear [27]
+                0.00    0.00     505/3563        nk_memset [7]
+                0.00    0.00     505/505         nk_buffer_clear [210]
+-----------------------------------------------
+                0.00    0.00     505/505         engine_execUpdateCallbacks [29]
+[28]     2.3    0.00    0.00     505         ecs_execCallbackAllEnt [28]
+                0.00    0.00    1010/1010        engineCbScriptOnUpdate [33]
+                0.00    0.00    1010/1010        engine_cbLightSourceOnUpdate [34]
+                0.00    0.00     505/505         engine_cbRigidBodyOnUpdate [36]
+                0.00    0.00     505/505         engine_cbCameraOnUpdate [35]
+                0.00    0.00     505/5218        ecs_checkCallbackType [118]
+-----------------------------------------------
+                0.00    0.00     505/505         engine_stepUpdate [21]
+[29]     2.3    0.00    0.00     505         engine_execUpdateCallbacks [29]
+                0.00    0.00     505/505         ecs_execCallbackAllEnt [28]
+-----------------------------------------------
+                                                 <spontaneous>
+[30]     1.5    0.00    0.00                 luaEngineComponentIndex [30]
+                0.00    0.00    2020/17478       ecs_getCompData [18]
+                0.00    0.00    4040/7082        getTableInteger [112]
+                0.00    0.00    2020/3558        logPushTag [125]
+                0.00    0.00    2020/3558        logPopTag [124]
+                0.00    0.00    2020/7072        luaPushVector3Vals [113]
+-----------------------------------------------
+                                                 <spontaneous>
+[31]     1.1    0.00    0.00                 luaEngineComponentNewIndex [31]
+                0.00    0.00    1518/17478       ecs_getCompData [18]
+                0.00    0.00    3036/7082        getTableInteger [112]
+                0.00    0.00    1518/3558        logPushTag [125]
+                0.00    0.00    1518/3558        logPopTag [124]
+                0.00    0.00    1011/7576        luaGetVector3 [111]
+-----------------------------------------------
+                0.00    0.00       2/1014        engineCbScriptOnCreate [83]
+                0.00    0.00       2/1014        engineCbScriptOnDestroy [84]
+                0.00    0.00    1010/1014        engineCbScriptOnUpdate [33]
+[32]     0.8    0.00    0.00    1014         engine_getScript [32]
+                0.00    0.00    1014/17478       ecs_getCompData [18]
+-----------------------------------------------
+                0.00    0.00    1010/1010        ecs_execCallbackAllEnt [28]
+[33]     0.8    0.00    0.00    1010         engineCbScriptOnUpdate [33]
+                0.00    0.00    1010/1014        engine_getScript [32]
+-----------------------------------------------
+                0.00    0.00    1010/1010        ecs_execCallbackAllEnt [28]
+[34]     0.8    0.00    0.00    1010         engine_cbLightSourceOnUpdate [34]
+                0.00    0.00    1010/8407        engine_getTransform [20]
+-----------------------------------------------
+                0.00    0.00     505/505         ecs_execCallbackAllEnt [28]
+[35]     0.4    0.00    0.00     505         engine_cbCameraOnUpdate [35]
+                0.00    0.00     505/8407        engine_getTransform [20]
+-----------------------------------------------
+                0.00    0.00     505/505         ecs_execCallbackAllEnt [28]
+[36]     0.4    0.00    0.00     505         engine_cbRigidBodyOnUpdate [36]
+                0.00    0.00     505/8407        engine_getTransform [20]
+-----------------------------------------------
+                                 501             engine_updateTransform [37]
+                0.00    0.00       4/1507        engine_cbTransformOnCreate [69]
+                0.00    0.00    1503/1507        engine_updateTransforms [26]
+[37]     0.4    0.00    0.00    1507+501     engine_updateTransform [37]
+                0.00    0.00     501/17478       ecs_getCompData [18]
+                                 501             engine_updateTransform [37]
+-----------------------------------------------
+                0.00    0.00       1/1           main [1]
+[38]     0.1    0.00    0.00       1         InitNuklear [38]
+                0.00    0.00       1/1           InitNuklearContext [39]
+                0.00    0.00       1/20          nk_handle_ptr [235]
+-----------------------------------------------
+                0.00    0.00       1/1           InitNuklear [38]
+[39]     0.1    0.00    0.00       1         InitNuklearContext [39]
+                0.00    0.00       1/1           nk_init_default [41]
+                0.00    0.00       1/20          nk_handle_ptr [235]
+                0.00    0.00       1/1           nk_set_user_data [330]
+-----------------------------------------------
+                0.00    0.00       1/1           nk_init_default [41]
+[40]     0.1    0.00    0.00       1         nk_init [40]
+                0.00    0.00       1/1           nk_setup [42]
+                0.00    0.00       1/1           nk_buffer_init [65]
+                0.00    0.00       1/1           nk_pool_init [67]
+-----------------------------------------------
+                0.00    0.00       1/1           InitNuklearContext [39]
+[41]     0.1    0.00    0.00       1         nk_init_default [41]
+                0.00    0.00       1/1           nk_init [40]
+-----------------------------------------------
+                0.00    0.00       1/1           nk_init [40]
+[42]     0.1    0.00    0.00       1         nk_setup [42]
+                0.00    0.00       1/1           nk_style_default [43]
+                0.00    0.00       1/3058        nk_zero [13]
+                0.00    0.00       1/1           nk_draw_list_init [66]
+-----------------------------------------------
+                0.00    0.00       1/1           nk_setup [42]
+[43]     0.1    0.00    0.00       1         nk_style_default [43]
+                0.00    0.00       1/1           nk_style_from_table [44]
+-----------------------------------------------
+                0.00    0.00       1/1           nk_style_default [43]
+[44]     0.1    0.00    0.00       1         nk_style_from_table [44]
+                0.00    0.00      19/3058        nk_zero [13]
+                0.00    0.00      83/83          nk_style_item_color [229]
+                0.00    0.00      59/2584        nk_vec2 [130]
+                0.00    0.00      18/20          nk_handle_ptr [235]
+                0.00    0.00      16/16          nk_rgb [236]
+                0.00    0.00      11/14          nk_rgba [237]
+                0.00    0.00       3/3           nk_style_item_hide [253]
+-----------------------------------------------
+                0.00    0.00       1/3           luaFuncCreateEntity [57]
+                0.00    0.00       2/3           luaFuncGetEntity [49]
+[45]     0.0    0.00    0.00       3         luaCreateEntityTable [45]
+                0.00    0.00      21/21          ecs_compExists [48]
+                0.00    0.00       7/10          luaCreateComponentTable [62]
+                0.00    0.00       3/24          ecs_entityExists [47]
+                0.00    0.00       3/55          ecs_getEntityNameCstrP [232]
+-----------------------------------------------
+                0.00    0.00       1/29          createProp [51]
+                0.00    0.00       1/29          engine_createCamera [89]
+                0.00    0.00       2/29          createWeather [52]
+                0.00    0.00       2/29          engine_createConvexHullCollider [80]
+                0.00    0.00       3/29          engine_createAmbientLight [71]
+                0.00    0.00       3/29          engine_createDirLight [72]
+                0.00    0.00       3/29          engine_createRigidBody [73]
+                0.00    0.00       4/29          engine_createTransform [63]
+                0.00    0.00       4/29          engine_createMeshRenderer [68]
+                0.00    0.00       6/29          engine_createScriptFromFile [64]
+[46]     0.0    0.00    0.00      29         ecs_setCallback [46]
+                0.00    0.00      29/22219       ecs_checkEntityExists [12]
+                0.00    0.00      29/22211       ecs_checkCompType [100]
+                0.00    0.00      29/22278       ecs_checkEntityID [99]
+                0.00    0.00      29/5218        ecs_checkCallbackType [118]
+                0.00    0.00      29/172         logLevelIsVisibleHeader [228]
+                0.00    0.00      29/55          ecs_getEntityNameCstrP [232]
+                0.00    0.00      29/86          _log [1901]
+-----------------------------------------------
+                0.00    0.00       3/24          luaCreateEntityTable [45]
+                0.00    0.00      21/24          ecs_compExists [48]
+[47]     0.0    0.00    0.00      24         ecs_entityExists [47]
+                0.00    0.00      24/22247       binsearch_u32Inc [6]
+-----------------------------------------------
+                0.00    0.00      21/21          luaCreateEntityTable [45]
+[48]     0.0    0.00    0.00      21         ecs_compExists [48]
+                0.00    0.00      21/24          ecs_entityExists [47]
+-----------------------------------------------
+                                                 <spontaneous>
+[49]     0.0    0.00    0.00                 luaFuncGetEntity [49]
+                0.00    0.00       2/3           luaCreateEntityTable [45]
+                0.00    0.00       1/3558        logPushTag [125]
+                0.00    0.00       1/3558        logPopTag [124]
+                0.00    0.00       1/1           ecs_findEntity [282]
+-----------------------------------------------
+                0.00    0.00       4/8           engine_entityPostCreate [60]
+                0.00    0.00       4/8           engine_entityDestroy [59]
+[50]     0.0    0.00    0.00       8         ecs_execCallbackAllComp [50]
+                0.00    0.00       8/22219       ecs_checkEntityExists [12]
+                0.00    0.00       4/4           engine_cbTransformOnCreate [69]
+                0.00    0.00       2/2           engineCbScriptOnDestroy [84]
+                0.00    0.00       2/2           engineCbScriptOnCreate [83]
+                0.00    0.00       1/1           engine_cbRigidBodyOnCreate [88]
+                0.00    0.00       1/1           engine_cbColliderOnCreate [92]
+                0.00    0.00       8/22278       ecs_checkEntityID [99]
+                0.00    0.00       8/5218        ecs_checkCallbackType [118]
+                0.00    0.00       2/2           engine_cbLightSourceOnDestroy [257]
+                0.00    0.00       2/2           engine_cbMeshRendererOnDestroy [259]
+                0.00    0.00       2/2           engine_cbMeshRendererOnCreate [258]
+                0.00    0.00       2/2           engine_cbLightSourceOnCreate [256]
+                0.00    0.00       1/1           engine_cbColliderOnDestroy [284]
+                0.00    0.00       1/1           engine_cbRigidBodyOnDestroy [285]
+-----------------------------------------------
+                0.00    0.00       1/1           main [1]
+[51]     0.0    0.00    0.00       1         createProp [51]
+                0.00    0.00       1/1           engine_createRigidBody [73]
+                0.00    0.00       1/2           engine_createMeshRenderer [68]
+                0.00    0.00       1/1           engine_createConvexHullColliderModel [81]
+                0.00    0.00       1/4           engine_createTransform [63]
+                0.00    0.00       1/4           engine_createInfo [70]
+                0.00    0.00       1/29          ecs_setCallback [46]
+                0.00    0.00       1/3           engine_getInfo [77]
+                0.00    0.00       1/8407        engine_getTransform [20]
+                0.00    0.00       1/1           engine_getRigidBody [93]
+                0.00    0.00       1/2           engine_getCollider [85]
+                0.00    0.00       1/2           engine_getMeshRenderer [87]
+                0.00    0.00       1/4           ecs_registerEntity [75]
+-----------------------------------------------
+                0.00    0.00       1/1           main [1]
+[52]     0.0    0.00    0.00       1         createWeather [52]
+                0.00    0.00       1/1           engine_createAmbientLight [71]
+                0.00    0.00       1/2           engine_createMeshRenderer [68]
+                0.00    0.00       1/4           engine_entityPostCreate [60]
+                0.00    0.00       2/29          ecs_setCallback [46]
+                0.00    0.00       1/4           engine_createTransform [63]
+                0.00    0.00       1/4           engine_createInfo [70]
+                0.00    0.00       1/3           engine_getInfo [77]
+                0.00    0.00       1/2           engine_getLightSrc [86]
+                0.00    0.00       1/8407        engine_getTransform [20]
+                0.00    0.00       1/2           engine_getMeshRenderer [87]
+                0.00    0.00       1/4           ecs_registerEntity [75]
+-----------------------------------------------
+                0.00    0.00       1/1           main [1]
+[53]     0.0    0.00    0.00       1         UnloadNuklear [53]
+                0.00    0.00       1/1           nk_free [54]
+-----------------------------------------------
+                0.00    0.00       1/1           UnloadNuklear [53]
+[54]     0.0    0.00    0.00       1         nk_free [54]
+                0.00    0.00       3/3058        nk_zero [13]
+                0.00    0.00       1/1           nk_buffer_free [328]
+                0.00    0.00       1/1           nk_pool_free [329]
+-----------------------------------------------
+                0.00    0.00       1/17          engine_createCamera [89]
+                0.00    0.00       1/17          engine_createAmbientLight [71]
+                0.00    0.00       1/17          engine_createDirLight [72]
+                0.00    0.00       1/17          engine_createRigidBody [73]
+                0.00    0.00       1/17          engine_createConvexHullCollider [80]
+                0.00    0.00       2/17          engine_createMeshRenderer [68]
+                0.00    0.00       2/17          engine_createScriptFromFile [64]
+                0.00    0.00       4/17          engine_createInfo [70]
+                0.00    0.00       4/17          engine_createTransform [63]
+[55]     0.0    0.00    0.00      17         ecs_registerComp [55]
+                0.00    0.00      17/22219       ecs_checkEntityExists [12]
+                0.00    0.00      17/22211       ecs_checkCompType [100]
+                0.00    0.00      17/22278       ecs_checkEntityID [99]
+                0.00    0.00      17/21          fifo_av_read [233]
+                0.00    0.00      17/21          fifo_read [234]
+                0.00    0.00      17/172         logLevelIsVisibleHeader [228]
+                0.00    0.00      17/55          ecs_getEntityNameCstrP [232]
+                0.00    0.00      17/86          _log [1901]
+-----------------------------------------------
+                0.00    0.00       2/2           nk_begin_titled [15]
+[56]     0.0    0.00    0.00       2         nk_create_window [56]
+                0.00    0.00       2/1012        nk_create_page_element [23]
+-----------------------------------------------
+                                                 <spontaneous>
+[57]     0.0    0.00    0.00                 luaFuncCreateEntity [57]
+                0.00    0.00       1/3           luaCreateEntityTable [45]
+                0.00    0.00       1/4           ecs_registerEntity [75]
+                0.00    0.00       1/3558        logPushTag [125]
+                0.00    0.00       1/3558        logPopTag [124]
+-----------------------------------------------
+                0.00    0.00       1/1           main [1]
+[58]     0.0    0.00    0.00       1         createEnvironment [58]
+                0.00    0.00       1/1           engine_createDirLight [72]
+                0.00    0.00       1/4           engine_createTransform [63]
+                0.00    0.00       1/4           engine_createInfo [70]
+                0.00    0.00       1/3           engine_getInfo [77]
+                0.00    0.00       1/2           engine_getLightSrc [86]
+                0.00    0.00       1/8407        engine_getTransform [20]
+                0.00    0.00       1/4           ecs_registerEntity [75]
+-----------------------------------------------
+                0.00    0.00       4/4           cleanup [61]
+[59]     0.0    0.00    0.00       4         engine_entityDestroy [59]
+                0.00    0.00       4/8           ecs_execCallbackAllComp [50]
+                0.00    0.00       4/4           ecs_unregisterEntity [247]
+-----------------------------------------------
+                0.00    0.00       1/4           createWeather [52]
+                0.00    0.00       1/4           luaFuncPostCreateEntity [82]
+                0.00    0.00       2/4           main [1]
+[60]     0.0    0.00    0.00       4         engine_entityPostCreate [60]
+                0.00    0.00       4/8           ecs_execCallbackAllComp [50]
+-----------------------------------------------
+                0.00    0.00       1/1           main [1]
+[61]     0.0    0.00    0.00       1         cleanup [61]
+                0.00    0.00       4/4           engine_entityDestroy [59]
+                0.00    0.00       1/172         logLevelIsVisibleHeader [228]
+                0.00    0.00       1/86          _log [1901]
+-----------------------------------------------
+                0.00    0.00       1/10          luaFuncCreateInfo [90]
+                0.00    0.00       1/10          luaFuncCreateTransform [79]
+                0.00    0.00       1/10          luaFuncCreateCamera [78]
+                0.00    0.00       7/10          luaCreateEntityTable [45]
+[62]     0.0    0.00    0.00      10         luaCreateComponentTable [62]
+                0.00    0.00      10/17488       ecs_getComp [17]
+                0.00    0.00      10/3558        logPushTag [125]
+                0.00    0.00      10/3558        logPopTag [124]
+-----------------------------------------------
+                0.00    0.00       1/4           createProp [51]
+                0.00    0.00       1/4           createWeather [52]
+                0.00    0.00       1/4           createEnvironment [58]
+                0.00    0.00       1/4           luaFuncCreateTransform [79]
+[63]     0.0    0.00    0.00       4         engine_createTransform [63]
+                0.00    0.00       4/17          ecs_registerComp [55]
+                0.00    0.00       4/29          ecs_setCallback [46]
+-----------------------------------------------
+                0.00    0.00       1/2           main [1]
+                0.00    0.00       1/2           luaFuncCreateScriptFromFile [74]
+[64]     0.0    0.00    0.00       2         engine_createScriptFromFile [64]
+                0.00    0.00       6/29          ecs_setCallback [46]
+                0.00    0.00       2/17          ecs_registerComp [55]
+                0.00    0.00       6/172         logLevelIsVisibleHeader [228]
+                0.00    0.00       6/86          _log [1901]
+                0.00    0.00       2/2           luaEnvLoad [268]
+                0.00    0.00       1/1           luaEnvCreate [290]
+-----------------------------------------------
+                0.00    0.00       1/1           nk_init [40]
+[65]     0.0    0.00    0.00       1         nk_buffer_init [65]
+                0.00    0.00       1/3058        nk_zero [13]
+                0.00    0.00       1/2           nk_malloc [273]
+-----------------------------------------------
+                0.00    0.00       1/1           nk_setup [42]
+[66]     0.0    0.00    0.00       1         nk_draw_list_init [66]
+                0.00    0.00       1/3058        nk_zero [13]
+-----------------------------------------------
+                0.00    0.00       1/1           nk_init [40]
+[67]     0.0    0.00    0.00       1         nk_pool_init [67]
+                0.00    0.00       1/3058        nk_zero [13]
+-----------------------------------------------
+                0.00    0.00       1/2           createProp [51]
+                0.00    0.00       1/2           createWeather [52]
+[68]     0.0    0.00    0.00       2         engine_createMeshRenderer [68]
+                0.00    0.00       4/29          ecs_setCallback [46]
+                0.00    0.00       2/17          ecs_registerComp [55]
+                0.00    0.00       2/5958        hashmap_get [115]
+-----------------------------------------------
+                0.00    0.00       4/4           ecs_execCallbackAllComp [50]
+[69]     0.0    0.00    0.00       4         engine_cbTransformOnCreate [69]
+                0.00    0.00       4/8407        engine_getTransform [20]
+                0.00    0.00       4/1507        engine_updateTransform [37]
+-----------------------------------------------
+                0.00    0.00       1/4           createProp [51]
+                0.00    0.00       1/4           createWeather [52]
+                0.00    0.00       1/4           createEnvironment [58]
+                0.00    0.00       1/4           luaFuncCreateInfo [90]
+[70]     0.0    0.00    0.00       4         engine_createInfo [70]
+                0.00    0.00       4/17          ecs_registerComp [55]
+-----------------------------------------------
+                0.00    0.00       1/1           createWeather [52]
+[71]     0.0    0.00    0.00       1         engine_createAmbientLight [71]
+                0.00    0.00       3/29          ecs_setCallback [46]
+                0.00    0.00       1/17          ecs_registerComp [55]
+-----------------------------------------------
+                0.00    0.00       1/1           createEnvironment [58]
+[72]     0.0    0.00    0.00       1         engine_createDirLight [72]
+                0.00    0.00       3/29          ecs_setCallback [46]
+                0.00    0.00       1/17          ecs_registerComp [55]
+-----------------------------------------------
+                0.00    0.00       1/1           createProp [51]
+[73]     0.0    0.00    0.00       1         engine_createRigidBody [73]
+                0.00    0.00       3/29          ecs_setCallback [46]
+                0.00    0.00       1/17          ecs_registerComp [55]
+                0.00    0.00       1/1           physics_initRigidBody [333]
+-----------------------------------------------
+                                                 <spontaneous>
+[74]     0.0    0.00    0.00                 luaFuncCreateScriptFromFile [74]
+                0.00    0.00       1/2           engine_createScriptFromFile [64]
+                0.00    0.00       1/7082        getTableInteger [112]
+                0.00    0.00       1/3558        logPushTag [125]
+                0.00    0.00       1/3558        logPopTag [124]
+-----------------------------------------------
+                0.00    0.00       1/4           createProp [51]
+                0.00    0.00       1/4           createWeather [52]
+                0.00    0.00       1/4           createEnvironment [58]
+                0.00    0.00       1/4           luaFuncCreateEntity [57]
+[75]     0.0    0.00    0.00       4         ecs_registerEntity [75]
+                0.00    0.00       4/4           insertsort_u32Inc [76]
+                0.00    0.00       4/21          fifo_av_read [233]
+                0.00    0.00       4/21          fifo_read [234]
+                0.00    0.00       4/172         logLevelIsVisibleHeader [228]
+                0.00    0.00       4/86          _log [1901]
+-----------------------------------------------
+                0.00    0.00       4/4           ecs_registerEntity [75]
+[76]     0.0    0.00    0.00       4         insertsort_u32Inc [76]
+                0.00    0.00       4/22247       binsearch_u32Inc [6]
+-----------------------------------------------
+                0.00    0.00       1/3           createProp [51]
+                0.00    0.00       1/3           createWeather [52]
+                0.00    0.00       1/3           createEnvironment [58]
+[77]     0.0    0.00    0.00       3         engine_getInfo [77]
+                0.00    0.00       3/17478       ecs_getCompData [18]
+-----------------------------------------------
+                                                 <spontaneous>
+[78]     0.0    0.00    0.00                 luaFuncCreateCamera [78]
+                0.00    0.00       1/1           engine_createCamera [89]
+                0.00    0.00       1/10          luaCreateComponentTable [62]
+                0.00    0.00       1/7082        getTableInteger [112]
+                0.00    0.00       1/3558        logPushTag [125]
+                0.00    0.00       1/3558        logPopTag [124]
+-----------------------------------------------
+                                                 <spontaneous>
+[79]     0.0    0.00    0.00                 luaFuncCreateTransform [79]
+                0.00    0.00       1/4           engine_createTransform [63]
+                0.00    0.00       1/10          luaCreateComponentTable [62]
+                0.00    0.00       1/7082        getTableInteger [112]
+                0.00    0.00       1/3558        logPushTag [125]
+                0.00    0.00       1/3558        logPopTag [124]
+-----------------------------------------------
+                0.00    0.00       1/1           engine_createConvexHullColliderModel [81]
+[80]     0.0    0.00    0.00       1         engine_createConvexHullCollider [80]
+                0.00    0.00       2/29          ecs_setCallback [46]
+                0.00    0.00       1/17          ecs_registerComp [55]
+                0.00    0.00       1/1           initCollider [288]
+-----------------------------------------------
+                0.00    0.00       1/1           createProp [51]
+[81]     0.0    0.00    0.00       1         engine_createConvexHullColliderModel [81]
+                0.00    0.00       1/1           engine_createConvexHullCollider [80]
+                0.00    0.00       1/506         engine_render_getModel [206]
+-----------------------------------------------
+                                                 <spontaneous>
+[82]     0.0    0.00    0.00                 luaFuncPostCreateEntity [82]
+                0.00    0.00       1/4           engine_entityPostCreate [60]
+                0.00    0.00       1/7082        getTableInteger [112]
+                0.00    0.00       1/3558        logPushTag [125]
+                0.00    0.00       1/3558        logPopTag [124]
+-----------------------------------------------
+                0.00    0.00       2/2           ecs_execCallbackAllComp [50]
+[83]     0.0    0.00    0.00       2         engineCbScriptOnCreate [83]
+                0.00    0.00       2/1014        engine_getScript [32]
+                0.00    0.00       2/55          ecs_getEntityNameCstrP [232]
+-----------------------------------------------
+                0.00    0.00       2/2           ecs_execCallbackAllComp [50]
+[84]     0.0    0.00    0.00       2         engineCbScriptOnDestroy [84]
+                0.00    0.00       2/1014        engine_getScript [32]
+-----------------------------------------------
+                0.00    0.00       1/2           createProp [51]
+                0.00    0.00       1/2           engine_cbRigidBodyOnCreate [88]
+[85]     0.0    0.00    0.00       2         engine_getCollider [85]
+                0.00    0.00       2/17478       ecs_getCompData [18]
+-----------------------------------------------
+                0.00    0.00       1/2           createWeather [52]
+                0.00    0.00       1/2           createEnvironment [58]
+[86]     0.0    0.00    0.00       2         engine_getLightSrc [86]
+                0.00    0.00       2/17478       ecs_getCompData [18]
+-----------------------------------------------
+                0.00    0.00       1/2           createProp [51]
+                0.00    0.00       1/2           createWeather [52]
+[87]     0.0    0.00    0.00       2         engine_getMeshRenderer [87]
+                0.00    0.00       2/17478       ecs_getCompData [18]
+-----------------------------------------------
+                0.00    0.00       1/1           ecs_execCallbackAllComp [50]
+[88]     0.0    0.00    0.00       1         engine_cbRigidBodyOnCreate [88]
+                0.00    0.00       1/8407        engine_getTransform [20]
+                0.00    0.00       1/2           engine_getCollider [85]
+                0.00    0.00       1/1           physics_addRigidBody [332]
+-----------------------------------------------
+                0.00    0.00       1/1           luaFuncCreateCamera [78]
+[89]     0.0    0.00    0.00       1         engine_createCamera [89]
+                0.00    0.00       1/17          ecs_registerComp [55]
+                0.00    0.00       1/29          ecs_setCallback [46]
+-----------------------------------------------
+                                                 <spontaneous>
+[90]     0.0    0.00    0.00                 luaFuncCreateInfo [90]
+                0.00    0.00       1/10          luaCreateComponentTable [62]
+                0.00    0.00       1/4           engine_createInfo [70]
+                0.00    0.00       1/7082        getTableInteger [112]
+                0.00    0.00       1/3558        logPushTag [125]
+                0.00    0.00       1/3558        logPopTag [124]
+-----------------------------------------------
+                0.00    0.00       1/1           luaFuncSetCamera [94]
+[91]     0.0    0.00    0.00       1         ecs_getCompID [91]
+                0.00    0.00       1/22219       ecs_checkEntityExists [12]
+                0.00    0.00       1/22211       ecs_checkCompType [100]
+                0.00    0.00       1/22278       ecs_checkEntityID [99]
+                0.00    0.00       1/17489       ecs_checkComponentID [102]
+-----------------------------------------------
+                0.00    0.00       1/1           ecs_execCallbackAllComp [50]
+[92]     0.0    0.00    0.00       1         engine_cbColliderOnCreate [92]
+                0.00    0.00       1/8407        engine_getTransform [20]
+                0.00    0.00       1/1           physics_addCollider [331]
+-----------------------------------------------
+                0.00    0.00       1/1           createProp [51]
+[93]     0.0    0.00    0.00       1         engine_getRigidBody [93]
+                0.00    0.00       1/17478       ecs_getCompData [18]
+-----------------------------------------------
+                                                 <spontaneous>
+[94]     0.0    0.00    0.00                 luaFuncSetCamera [94]
+                0.00    0.00       1/1           ecs_getCompID [91]
+                0.00    0.00       1/7082        getTableInteger [112]
+                0.00    0.00       1/3558        logPushTag [125]
+                0.00    0.00       1/3558        logPopTag [124]
+                0.00    0.00       1/1           engine_render_setCamera [287]
+-----------------------------------------------
+                0.00    0.00    5973/34236       CodeTree_RB_NFIND [187]
+                0.00    0.00   11145/34236       CodeTree_RB_INSERT [189]
+                0.00    0.00   17118/34236       CodeTree_RB_FIND [145]
+[95]     0.0    0.00    0.00   34236         cmp_code [95]
+-----------------------------------------------
+                0.00    0.00     114/27272       _log [1901]
+                0.00    0.00    1010/27272       render_updateState [218]
+                0.00    0.00    2469/27272       render_setShaderLightSrcUniforms [204]
+                0.00    0.00    5873/27272       render_drawVisibleMeshes [22]
+                0.00    0.00    6060/27272       render_createMeshRendererDrawList [4]
+                0.00    0.00   11746/27272       render_sortMeshRenderers [10]
+[96]     0.0    0.00    0.00   27272         array_size [96]
+-----------------------------------------------
+                0.00    0.00    9301/23623       StringTree_RB_INSERT [193]
+                0.00    0.00   14322/23623       StringTree_RB_FIND [147]
+[97]     0.0    0.00    0.00   23623         cmp_str [97]
+-----------------------------------------------
+                0.00    0.00   22728/22728       luaGetVector3 [111]
+[98]     0.0    0.00    0.00   22728         getTableFloat [98]
+-----------------------------------------------
+                0.00    0.00       1/22278       ecs_getCompID [91]
+                0.00    0.00       4/22278       ecs_unregisterEntity [247]
+                0.00    0.00       8/22278       ecs_execCallbackAllComp [50]
+                0.00    0.00      17/22278       ecs_registerComp [55]
+                0.00    0.00      29/22278       ecs_setCallback [46]
+                0.00    0.00      55/22278       ecs_getEntityNameCstr [231]
+                0.00    0.00    4676/22278       ecs_execCallback [25]
+                0.00    0.00   17488/22278       ecs_getComp [17]
+[99]     0.0    0.00    0.00   22278         ecs_checkEntityID [99]
+-----------------------------------------------
+                0.00    0.00       1/22211       ecs_getCompID [91]
+                0.00    0.00      17/22211       ecs_registerComp [55]
+                0.00    0.00      29/22211       ecs_setCallback [46]
+                0.00    0.00    4676/22211       ecs_execCallback [25]
+                0.00    0.00   17488/22211       ecs_getComp [17]
+[100]    0.0    0.00    0.00   22211         ecs_checkCompType [100]
+-----------------------------------------------
+                0.00    0.00      14/21640       _log [1901]
+                0.00    0.00    1010/21640       render_updateState [218]
+                0.00    0.00    1646/21640       render_setShaderLightSrcUniforms [204]
+                0.00    0.00    3558/21640       array_popBack [123]
+                0.00    0.00    3853/21640       render_drawVisibleMeshes [22]
+                0.00    0.00    4040/21640       render_createMeshRendererDrawList [4]
+                0.00    0.00    7519/21640       render_sortMeshRenderers [10]
+[101]    0.0    0.00    0.00   21640         array_get [101]
+-----------------------------------------------
+                0.00    0.00       1/17489       ecs_getCompID [91]
+                0.00    0.00   17488/17489       ecs_getComp [17]
+[102]    0.0    0.00    0.00   17489         ecs_checkComponentID [102]
+-----------------------------------------------
+                0.00    0.00   13130/13130       nk_raylib_input_keyboard [215]
+[103]    0.0    0.00    0.00   13130         nk_input_key [103]
+-----------------------------------------------
+                0.00    0.00   12120/12120       GetCameraFrustum [135]
+[104]    0.0    0.00    0.00   12120         PlaneFromPoints [104]
+-----------------------------------------------
+                0.00    0.00   11268/11268       array_pushBack [106]
+[105]    0.0    0.00    0.00   11268         array_insert [105]
+                0.00    0.00       6/8           array_resize [241]
+-----------------------------------------------
+                0.00    0.00       2/11268       engine_render_registerMeshRenderer [261]
+                0.00    0.00       2/11268       engine_render_registerLightSrc [260]
+                0.00    0.00    3558/11268       logPushTag [125]
+                0.00    0.00    3853/11268       render_sortMeshRenderers [10]
+                0.00    0.00    3853/11268       render_createMeshRendererDrawList [4]
+[106]    0.0    0.00    0.00   11268         array_pushBack [106]
+                0.00    0.00   11268/11268       array_insert [105]
+-----------------------------------------------
+                0.00    0.00    8080/8080        DrawNuklear [5]
+[107]    0.0    0.00    0.00    8080         nk__next [107]
+-----------------------------------------------
+                0.00    0.00    8080/8080        nk_buffer_alloc [109]
+[108]    0.0    0.00    0.00    8080         nk_buffer_align [108]
+-----------------------------------------------
+                0.00    0.00    8080/8080        nk_command_buffer_push [110]
+[109]    0.0    0.00    0.00    8080         nk_buffer_alloc [109]
+                0.00    0.00    8080/8080        nk_buffer_align [108]
+-----------------------------------------------
+                0.00    0.00    1010/8080        nk_stroke_rect [141]
+                0.00    0.00    2020/8080        nk_push_scissor [140]
+                0.00    0.00    2020/8080        nk_draw_text [138]
+                0.00    0.00    3030/8080        nk_fill_rect [127]
+[110]    0.0    0.00    0.00    8080         nk_command_buffer_push [110]
+                0.00    0.00    8080/8080        nk_buffer_alloc [109]
+-----------------------------------------------
+                0.00    0.00    1010/7576        luaFuncVector3Cross [953]
+                0.00    0.00    1011/7576        luaEngineComponentNewIndex [31]
+                0.00    0.00    1515/7576        luaFuncVector3Multiply [956]
+                0.00    0.00    2020/7576        luaFuncVector3Add [951]
+                0.00    0.00    2020/7576        luaFuncVector3RotateByAxisAngle [959]
+[111]    0.0    0.00    0.00    7576         luaGetVector3 [111]
+                0.00    0.00   22728/22728       getTableFloat [98]
+-----------------------------------------------
+                0.00    0.00       1/7082        luaFuncCreateInfo [90]
+                0.00    0.00       1/7082        luaFuncCreateScriptFromFile [74]
+                0.00    0.00       1/7082        luaFuncCreateTransform [79]
+                0.00    0.00       1/7082        luaFuncCreateCamera [78]
+                0.00    0.00       1/7082        luaFuncPostCreateEntity [82]
+                0.00    0.00       1/7082        luaFuncSetCamera [94]
+                0.00    0.00    3036/7082        luaEngineComponentNewIndex [31]
+                0.00    0.00    4040/7082        luaEngineComponentIndex [30]
+[112]    0.0    0.00    0.00    7082         getTableInteger [112]
+-----------------------------------------------
+                0.00    0.00     505/7072        luaFuncVector3Cross [953]
+                0.00    0.00     505/7072        luaFuncGetMouseDelta [919]
+                0.00    0.00     507/7072        luaFuncVector3Create [952]
+                0.00    0.00    1010/7072        luaFuncVector3Add [951]
+                0.00    0.00    1010/7072        luaFuncVector3RotateByAxisAngle [959]
+                0.00    0.00    1515/7072        luaFuncVector3Multiply [956]
+                0.00    0.00    2020/7072        luaEngineComponentIndex [30]
+[113]    0.0    0.00    0.00    7072         luaPushVector3Vals [113]
+-----------------------------------------------
+                0.00    0.00    6060/6060        DrawNuklear [5]
+[114]    0.0    0.00    0.00    6060         ColorFromNuklear [114]
+-----------------------------------------------
+                0.00    0.00       2/5958        engine_createMeshRenderer [68]
+                0.00    0.00       4/5958        engine_render_addShader [248]
+                0.00    0.00       6/5958        engine_render_addModel [243]
+                0.00    0.00     258/5958        hashmap_getU32 [226]
+                0.00    0.00    5688/5958        hashmap_getP [117]
+[115]    0.0    0.00    0.00    5958         hashmap_get [115]
+                0.00    0.00    5698/5708        binsearch_hashmapInc [116]
+-----------------------------------------------
+                0.00    0.00       2/5708        hashmap_delResize [266]
+                0.00    0.00       8/5708        hashmap_set [238]
+                0.00    0.00    5698/5708        hashmap_get [115]
+[116]    0.0    0.00    0.00    5708         binsearch_hashmapInc [116]
+-----------------------------------------------
+                0.00    0.00       1/5688        physics_removeCollider [335]
+                0.00    0.00     505/5688        render_drawShadowMaps [3]
+                0.00    0.00     506/5688        engine_render_getModel [206]
+                0.00    0.00    4676/5688        render_drawVisibleMeshes [22]
+[117]    0.0    0.00    0.00    5688         hashmap_getP [117]
+                0.00    0.00    5688/5958        hashmap_get [115]
+-----------------------------------------------
+                0.00    0.00       8/5218        ecs_execCallbackAllComp [50]
+                0.00    0.00      29/5218        ecs_setCallback [46]
+                0.00    0.00     505/5218        ecs_execCallbackAllEnt [28]
+                0.00    0.00    4676/5218        ecs_execCallback [25]
+[118]    0.0    0.00    0.00    5218         ecs_checkCallbackType [118]
+-----------------------------------------------
+                0.00    0.00    1010/5050        nk_panel_begin [24]
+                0.00    0.00    2020/5050        nk_draw_text [138]
+                0.00    0.00    2020/5050        nk_widget_text [142]
+[119]    0.0    0.00    0.00    5050         nk_raylib_font_get_text_width [119]
+-----------------------------------------------
+                0.00    0.00     501/4541        physics_collisionBroadPhase [222]
+                0.00    0.00    4040/4541        render_createMeshRendererDrawList [4]
+[120]    0.0    0.00    0.00    4541         BoxTransform [120]
+-----------------------------------------------
+                0.00    0.00    2020/4040        render_sortMeshRenderers [10]
+                0.00    0.00    2020/4040        render_createMeshRendererDrawList [4]
+[121]    0.0    0.00    0.00    4040         array_clear [121]
+-----------------------------------------------
+                0.00    0.00    4040/4040        nk_panel_end [178]
+[122]    0.0    0.00    0.00    4040         nk_panel_is_sub [122]
+-----------------------------------------------
+                0.00    0.00    3558/3558        logPopTag [124]
+[123]    0.0    0.00    0.00    3558         array_popBack [123]
+                0.00    0.00    3558/21640       array_get [101]
+-----------------------------------------------
+                0.00    0.00       1/3558        luaFuncCreateInfo [90]
+                0.00    0.00       1/3558        luaFuncCreateScriptFromFile [74]
+                0.00    0.00       1/3558        luaFuncCreateTransform [79]
+                0.00    0.00       1/3558        luaFuncCreateCamera [78]
+                0.00    0.00       1/3558        luaFuncGetEntity [49]
+                0.00    0.00       1/3558        luaFuncCreateEntity [57]
+                0.00    0.00       1/3558        luaFuncPostCreateEntity [82]
+                0.00    0.00       1/3558        luaFuncSetCamera [94]
+                0.00    0.00       2/3558        luaEnvLoad [268]
+                0.00    0.00      10/3558        luaCreateComponentTable [62]
+                0.00    0.00    1518/3558        luaEngineComponentNewIndex [31]
+                0.00    0.00    2020/3558        luaEngineComponentIndex [30]
+[124]    0.0    0.00    0.00    3558         logPopTag [124]
+                0.00    0.00    3558/3558        array_popBack [123]
+-----------------------------------------------
+                0.00    0.00       1/3558        luaFuncCreateInfo [90]
+                0.00    0.00       1/3558        luaFuncCreateScriptFromFile [74]
+                0.00    0.00       1/3558        luaFuncCreateTransform [79]
+                0.00    0.00       1/3558        luaFuncCreateCamera [78]
+                0.00    0.00       1/3558        luaFuncGetEntity [49]
+                0.00    0.00       1/3558        luaFuncCreateEntity [57]
+                0.00    0.00       1/3558        luaFuncPostCreateEntity [82]
+                0.00    0.00       1/3558        luaFuncSetCamera [94]
+                0.00    0.00       2/3558        luaEnvLoad [268]
+                0.00    0.00      10/3558        luaCreateComponentTable [62]
+                0.00    0.00    1518/3558        luaEngineComponentNewIndex [31]
+                0.00    0.00    2020/3558        luaEngineComponentIndex [30]
+[125]    0.0    0.00    0.00    3558         logPushTag [125]
+                0.00    0.00    3558/11268       array_pushBack [106]
+-----------------------------------------------
+                0.00    0.00    1674/3350        Free_ [146]
+                0.00    0.00    1676/3350        Malloc_ [143]
+[126]    0.0    0.00    0.00    3350         luaAlloc [126]
+-----------------------------------------------
+                0.00    0.00    1010/3030        nk_draw_button [165]
+                0.00    0.00    2020/3030        nk_panel_begin [24]
+[127]    0.0    0.00    0.00    3030         nk_fill_rect [127]
+                0.00    0.00    3030/8080        nk_command_buffer_push [110]
+-----------------------------------------------
+                0.00    0.00    1010/3030        nk_draw_button_symbol [166]
+                0.00    0.00    2020/3030        nk_draw_button [165]
+[128]    0.0    0.00    0.00    3030         nk_rgb_factor [128]
+-----------------------------------------------
+                0.00    0.00    1008/3028        nk_find_window [169]
+                0.00    0.00    1010/3028        nk_panel_begin [24]
+                0.00    0.00    1010/3028        nk_begin_titled [15]
+[129]    0.0    0.00    0.00    3028         nk_strlen [129]
+-----------------------------------------------
+                0.00    0.00      59/2584        nk_style_from_table [44]
+                0.00    0.00     505/2584        nk_input_begin [212]
+                0.00    0.00    1010/2584        nk_panel_begin [24]
+                0.00    0.00    1010/2584        nk_draw_symbol [167]
+[130]    0.0    0.00    0.00    2584         nk_vec2 [130]
+-----------------------------------------------
+                0.00    0.00     504/2524        nk_panel_begin [24]
+                0.00    0.00    1010/2524        nk_begin_titled [15]
+                0.00    0.00    1010/2524        nk_button_behavior [160]
+[131]    0.0    0.00    0.00    2524         nk_input_is_mouse_hovering_rect [131]
+-----------------------------------------------
+                0.00    0.00    2469/2469        render_setMeshRendererUniforms [203]
+[132]    0.0    0.00    0.00    2469         GetProjectionMatrix [132]
+-----------------------------------------------
+                0.00    0.00    2469/2469        render_setMeshRendererUniforms [203]
+[133]    0.0    0.00    0.00    2469         GetViewMatrix [133]
+-----------------------------------------------
+                0.00    0.00       2/2022        nk_begin_titled [15]
+                0.00    0.00    2020/2022        nk_draw_text [138]
+[134]    0.0    0.00    0.00    2022         nk_memcopy [134]
+-----------------------------------------------
+                0.00    0.00    2020/2020        render_createMeshRendererDrawList [4]
+[135]    0.0    0.00    0.00    2020         GetCameraFrustum [135]
+                0.00    0.00   12120/12120       PlaneFromPoints [104]
+-----------------------------------------------
+                0.00    0.00    1010/2020        Window_begin [16]
+                0.00    0.00    1010/2020        Window_end [782]
+[136]    0.0    0.00    0.00    2020         moonnuklear_checkxxx [136]
+                0.00    0.00    2020/2020        moonnuklear_udata_test [137]
+-----------------------------------------------
+                0.00    0.00    2020/2020        moonnuklear_checkxxx [136]
+[137]    0.0    0.00    0.00    2020         moonnuklear_udata_test [137]
+-----------------------------------------------
+                0.00    0.00    2020/2020        nk_widget_text [142]
+[138]    0.0    0.00    0.00    2020         nk_draw_text [138]
+                0.00    0.00    2020/5050        nk_raylib_font_get_text_width [119]
+                0.00    0.00    2020/8080        nk_command_buffer_push [110]
+                0.00    0.00    2020/2022        nk_memcopy [134]
+-----------------------------------------------
+                0.00    0.00    1010/2020        nk_panel_begin [24]
+                0.00    0.00    1010/2020        nk_panel_end [178]
+[139]    0.0    0.00    0.00    2020         nk_panel_get_padding [139]
+-----------------------------------------------
+                0.00    0.00    1010/2020        nk_panel_begin [24]
+                0.00    0.00    1010/2020        nk_panel_end [178]
+[140]    0.0    0.00    0.00    2020         nk_push_scissor [140]
+                0.00    0.00    2020/8080        nk_command_buffer_push [110]
+-----------------------------------------------
+                0.00    0.00    1010/2020        nk_panel_end [178]
+                0.00    0.00    1010/2020        nk_draw_button [165]
+[141]    0.0    0.00    0.00    2020         nk_stroke_rect [141]
+                0.00    0.00    1010/8080        nk_command_buffer_push [110]
+-----------------------------------------------
+                0.00    0.00    1010/2020        nk_panel_begin [24]
+                0.00    0.00    1010/2020        nk_draw_symbol [167]
+[142]    0.0    0.00    0.00    2020         nk_widget_text [142]
+                0.00    0.00    2020/5050        nk_raylib_font_get_text_width [119]
+                0.00    0.00    2020/2020        nk_draw_text [138]
+-----------------------------------------------
+                0.00    0.00    1676/1676        moonnuklear_Malloc [144]
+[143]    0.0    0.00    0.00    1676         Malloc_ [143]
+                0.00    0.00    1676/3350        luaAlloc [126]
+-----------------------------------------------
+                0.00    0.00       2/1676        moonnuklear_udata_new [270]
+                0.00    0.00     837/1676        enums_new [199]
+                0.00    0.00     837/1676        moonnuklear_Strdup [200]
+[144]    0.0    0.00    0.00    1676         moonnuklear_Malloc [144]
+                0.00    0.00    1676/1676        Malloc_ [143]
+-----------------------------------------------
+                0.00    0.00    1674/1674        code_search [148]
+[145]    0.0    0.00    0.00    1674         CodeTree_RB_FIND [145]
+                0.00    0.00   17118/34236       cmp_code [95]
+-----------------------------------------------
+                0.00    0.00    1674/1674        moonnuklear_Free [149]
+[146]    0.0    0.00    0.00    1674         Free_ [146]
+                0.00    0.00    1674/3350        luaAlloc [126]
+-----------------------------------------------
+                0.00    0.00    1674/1674        str_search [150]
+[147]    0.0    0.00    0.00    1674         StringTree_RB_FIND [147]
+                0.00    0.00   14322/23623       cmp_str [97]
+-----------------------------------------------
+                0.00    0.00     837/1674        enums_new [199]
+                0.00    0.00     837/1674        enums_free [198]
+[148]    0.0    0.00    0.00    1674         code_search [148]
+                0.00    0.00    1674/1674        CodeTree_RB_FIND [145]
+-----------------------------------------------
+                0.00    0.00    1674/1674        enums_free [198]
+[149]    0.0    0.00    0.00    1674         moonnuklear_Free [149]
+                0.00    0.00    1674/1674        Free_ [146]
+-----------------------------------------------
+                0.00    0.00     837/1674        enums_new [199]
+                0.00    0.00     837/1674        enums_free [198]
+[150]    0.0    0.00    0.00    1674         str_search [150]
+                0.00    0.00    1674/1674        StringTree_RB_FIND [147]
+-----------------------------------------------
+                0.00    0.00     506/1516        nk_panel_begin [24]
+                0.00    0.00    1010/1516        nk_begin_titled [15]
+[151]    0.0    0.00    0.00    1516         nk_input_has_mouse_click_down_in_rect [151]
+                0.00    0.00    1516/1516        nk_input_has_mouse_click_in_rect [152]
+-----------------------------------------------
+                0.00    0.00    1516/1516        nk_input_has_mouse_click_down_in_rect [151]
+[152]    0.0    0.00    0.00    1516         nk_input_has_mouse_click_in_rect [152]
+-----------------------------------------------
+                0.00    0.00    1516/1516        nk_panel_begin [24]
+[153]    0.0    0.00    0.00    1516         nk_panel_has_header [153]
+-----------------------------------------------
+                0.00    0.00    1515/1515        nk_raylib_input_mouse [216]
+[154]    0.0    0.00    0.00    1515         nk_input_button [154]
+-----------------------------------------------
+                0.00    0.00    1515/1515        render_updateShadowMaps [217]
+[155]    0.0    0.00    0.00    1515         renderGetLightSrcShadowCam [155]
+-----------------------------------------------
+                0.00    0.00      21/1301        ecs_unregisterEntity [247]
+                0.00    0.00    1280/1301        ecs_init [283]
+[156]    0.0    0.00    0.00    1301         fifo_write [156]
+-----------------------------------------------
+                0.00    0.00    1012/1012        render_drawScene [2]
+[157]    0.0    0.00    0.00    1012         array_capacity [157]
+-----------------------------------------------
+                0.00    0.00     505/1010        DrawNuklear [5]
+                0.00    0.00     505/1010        nk_raylib_input_mouse [216]
+[158]    0.0    0.00    0.00    1010         GetNuklearScaling [158]
+-----------------------------------------------
+                0.00    0.00    1010/1010        Window_begin [16]
+[159]    0.0    0.00    0.00    1010         moonnuklear_echeckrect [159]
+-----------------------------------------------
+                0.00    0.00    1010/1010        nk_do_button [161]
+[160]    0.0    0.00    0.00    1010         nk_button_behavior [160]
+                0.00    0.00    1010/2524        nk_input_is_mouse_hovering_rect [131]
+                0.00    0.00    1010/1010        nk_input_is_mouse_prev_hovering_rect [174]
+-----------------------------------------------
+                0.00    0.00    1010/1010        nk_do_button_symbol [162]
+[161]    0.0    0.00    0.00    1010         nk_do_button [161]
+                0.00    0.00    1010/1010        nk_button_behavior [160]
+-----------------------------------------------
+                0.00    0.00    1010/1010        nk_panel_begin [24]
+[162]    0.0    0.00    0.00    1010         nk_do_button_symbol [162]
+                0.00    0.00    1010/1010        nk_do_button [161]
+                0.00    0.00    1010/1010        nk_draw_button_symbol [166]
+-----------------------------------------------
+                0.00    0.00    1010/1010        nk_panel_end [178]
+[163]    0.0    0.00    0.00    1010         nk_do_scrollbarh [163]
+-----------------------------------------------
+                0.00    0.00    1010/1010        nk_panel_end [178]
+[164]    0.0    0.00    0.00    1010         nk_do_scrollbarv [164]
+-----------------------------------------------
+                0.00    0.00    1010/1010        nk_draw_button_symbol [166]
+[165]    0.0    0.00    0.00    1010         nk_draw_button [165]
+                0.00    0.00    2020/3030        nk_rgb_factor [128]
+                0.00    0.00    1010/3030        nk_fill_rect [127]
+                0.00    0.00    1010/2020        nk_stroke_rect [141]
+-----------------------------------------------
+                0.00    0.00    1010/1010        nk_do_button_symbol [162]
+[166]    0.0    0.00    0.00    1010         nk_draw_button_symbol [166]
+                0.00    0.00    1010/1010        nk_draw_button [165]
+                0.00    0.00    1010/3030        nk_rgb_factor [128]
+                0.00    0.00    1010/1010        nk_draw_symbol [167]
+-----------------------------------------------
+                0.00    0.00    1010/1010        nk_draw_button_symbol [166]
+[167]    0.0    0.00    0.00    1010         nk_draw_symbol [167]
+                0.00    0.00    1010/2584        nk_vec2 [130]
+                0.00    0.00    1010/2020        nk_widget_text [142]
+-----------------------------------------------
+                0.00    0.00    1010/1010        Window_end [782]
+[168]    0.0    0.00    0.00    1010         nk_end [168]
+                0.00    0.00    1010/1010        nk_panel_end [178]
+                0.00    0.00    1010/1010        nk_free_panel [173]
+-----------------------------------------------
+                0.00    0.00    1010/1010        nk_begin_titled [15]
+[169]    0.0    0.00    0.00    1010         nk_find_window [169]
+                0.00    0.00    1008/3028        nk_strlen [129]
+                0.00    0.00    1008/1008        nk_stricmpn [186]
+-----------------------------------------------
+                0.00    0.00    1010/1010        nk_panel_end [178]
+[170]    0.0    0.00    0.00    1010         nk_finish [170]
+                0.00    0.00    1010/1010        nk_finish_buffer [171]
+-----------------------------------------------
+                0.00    0.00    1010/1010        nk_finish [170]
+[171]    0.0    0.00    0.00    1010         nk_finish_buffer [171]
+-----------------------------------------------
+                0.00    0.00    1010/1010        nk_free_panel [173]
+[172]    0.0    0.00    0.00    1010         nk_free_page_element [172]
+                0.00    0.00    1010/1010        nk_link_page_element_into_freelist [176]
+-----------------------------------------------
+                0.00    0.00    1010/1010        nk_end [168]
+[173]    0.0    0.00    0.00    1010         nk_free_panel [173]
+                0.00    0.00    1010/1010        nk_free_page_element [172]
+-----------------------------------------------
+                0.00    0.00    1010/1010        nk_button_behavior [160]
+[174]    0.0    0.00    0.00    1010         nk_input_is_mouse_prev_hovering_rect [174]
+-----------------------------------------------
+                0.00    0.00    1010/1010        nk_panel_begin [24]
+[175]    0.0    0.00    0.00    1010         nk_layout_reset_min_row_height [175]
+-----------------------------------------------
+                0.00    0.00    1010/1010        nk_free_page_element [172]
+[176]    0.0    0.00    0.00    1010         nk_link_page_element_into_freelist [176]
+-----------------------------------------------
+                0.00    0.00    1010/1010        nk_begin_titled [15]
+[177]    0.0    0.00    0.00    1010         nk_murmur_hash [177]
+-----------------------------------------------
+                0.00    0.00    1010/1010        nk_end [168]
+[178]    0.0    0.00    0.00    1010         nk_panel_end [178]
+                0.00    0.00    4040/4040        nk_panel_is_sub [122]
+                0.00    0.00    1010/2020        nk_push_scissor [140]
+                0.00    0.00    1010/2020        nk_panel_get_padding [139]
+                0.00    0.00    1010/1010        nk_do_scrollbarv [164]
+                0.00    0.00    1010/1010        nk_do_scrollbarh [163]
+                0.00    0.00    1010/1010        nk_panel_get_border_color [180]
+                0.00    0.00    1010/2020        nk_stroke_rect [141]
+                0.00    0.00    1010/1010        nk_finish [170]
+-----------------------------------------------
+                0.00    0.00    1010/1010        nk_panel_begin [24]
+[179]    0.0    0.00    0.00    1010         nk_panel_get_border [179]
+-----------------------------------------------
+                0.00    0.00    1010/1010        nk_panel_end [178]
+[180]    0.0    0.00    0.00    1010         nk_panel_get_border_color [180]
+-----------------------------------------------
+                0.00    0.00    1010/1010        nk_panel_begin [24]
+[181]    0.0    0.00    0.00    1010         nk_panel_is_nonblock [181]
+-----------------------------------------------
+                0.00    0.00    1010/1010        nk_panel_begin [24]
+[182]    0.0    0.00    0.00    1010         nk_shrink_rect [182]
+-----------------------------------------------
+                0.00    0.00    1010/1010        nk_begin_titled [15]
+[183]    0.0    0.00    0.00    1010         nk_start [183]
+                0.00    0.00    1010/1010        nk_start_buffer [184]
+-----------------------------------------------
+                0.00    0.00    1010/1010        nk_start [183]
+[184]    0.0    0.00    0.00    1010         nk_start_buffer [184]
+-----------------------------------------------
+                0.00    0.00    1010/1010        nk_panel_begin [24]
+[185]    0.0    0.00    0.00    1010         nk_unify [185]
+-----------------------------------------------
+                0.00    0.00    1008/1008        nk_find_window [169]
+[186]    0.0    0.00    0.00    1008         nk_stricmpn [186]
+-----------------------------------------------
+                0.00    0.00     838/838         code_first [188]
+[187]    0.0    0.00    0.00     838         CodeTree_RB_NFIND [187]
+                0.00    0.00    5973/34236       cmp_code [95]
+-----------------------------------------------
+                0.00    0.00     838/838         moonnuklear_enums_free_all [303]
+[188]    0.0    0.00    0.00     838         code_first [188]
+                0.00    0.00     838/838         CodeTree_RB_NFIND [187]
+-----------------------------------------------
+                0.00    0.00     837/837         code_insert [196]
+[189]    0.0    0.00    0.00     837         CodeTree_RB_INSERT [189]
+                0.00    0.00   11145/34236       cmp_code [95]
+                0.00    0.00     837/837         CodeTree_RB_INSERT_COLOR [190]
+-----------------------------------------------
+                0.00    0.00     837/837         CodeTree_RB_INSERT [189]
+[190]    0.0    0.00    0.00     837         CodeTree_RB_INSERT_COLOR [190]
+-----------------------------------------------
+                0.00    0.00     837/837         code_remove [197]
+[191]    0.0    0.00    0.00     837         CodeTree_RB_REMOVE [191]
+                0.00    0.00     837/837         CodeTree_RB_REMOVE_COLOR [192]
+-----------------------------------------------
+                0.00    0.00     837/837         CodeTree_RB_REMOVE [191]
+[192]    0.0    0.00    0.00     837         CodeTree_RB_REMOVE_COLOR [192]
+-----------------------------------------------
+                0.00    0.00     837/837         str_insert [201]
+[193]    0.0    0.00    0.00     837         StringTree_RB_INSERT [193]
+                0.00    0.00    9301/23623       cmp_str [97]
+                0.00    0.00     837/837         StringTree_RB_INSERT_COLOR [194]
+-----------------------------------------------
+                0.00    0.00     837/837         StringTree_RB_INSERT [193]
+[194]    0.0    0.00    0.00     837         StringTree_RB_INSERT_COLOR [194]
+-----------------------------------------------
+                0.00    0.00     837/837         str_remove [202]
+[195]    0.0    0.00    0.00     837         StringTree_RB_REMOVE [195]
+                0.00    0.00     702/702         StringTree_RB_REMOVE_COLOR [205]
+-----------------------------------------------
+                0.00    0.00     837/837         enums_new [199]
+[196]    0.0    0.00    0.00     837         code_insert [196]
+                0.00    0.00     837/837         CodeTree_RB_INSERT [189]
+-----------------------------------------------
+                0.00    0.00     837/837         enums_free [198]
+[197]    0.0    0.00    0.00     837         code_remove [197]
+                0.00    0.00     837/837         CodeTree_RB_REMOVE [191]
+-----------------------------------------------
+                0.00    0.00     837/837         moonnuklear_enums_free_all [303]
+[198]    0.0    0.00    0.00     837         enums_free [198]
+                0.00    0.00    1674/1674        moonnuklear_Free [149]
+                0.00    0.00     837/1674        code_search [148]
+                0.00    0.00     837/837         code_remove [197]
+                0.00    0.00     837/1674        str_search [150]
+                0.00    0.00     837/837         str_remove [202]
+-----------------------------------------------
+                0.00    0.00     837/837         moonnuklear_open_enums [311]
+[199]    0.0    0.00    0.00     837         enums_new [199]
+                0.00    0.00     837/1676        moonnuklear_Malloc [144]
+                0.00    0.00     837/837         moonnuklear_Strdup [200]
+                0.00    0.00     837/1674        code_search [148]
+                0.00    0.00     837/1674        str_search [150]
+                0.00    0.00     837/837         code_insert [196]
+                0.00    0.00     837/837         str_insert [201]
+-----------------------------------------------
+                0.00    0.00     837/837         enums_new [199]
+[200]    0.0    0.00    0.00     837         moonnuklear_Strdup [200]
+                0.00    0.00     837/1676        moonnuklear_Malloc [144]
+-----------------------------------------------
+                0.00    0.00     837/837         enums_new [199]
+[201]    0.0    0.00    0.00     837         str_insert [201]
+                0.00    0.00     837/837         StringTree_RB_INSERT [193]
+-----------------------------------------------
+                0.00    0.00     837/837         enums_free [198]
+[202]    0.0    0.00    0.00     837         str_remove [202]
+                0.00    0.00     837/837         StringTree_RB_REMOVE [195]
+-----------------------------------------------
+                0.00    0.00     823/823         render_drawVisibleMeshes [22]
+[203]    0.0    0.00    0.00     823         render_setMeshRendererUniforms [203]
+                0.00    0.00    2469/2469        GetProjectionMatrix [132]
+                0.00    0.00    2469/2469        GetViewMatrix [133]
+-----------------------------------------------
+                0.00    0.00     823/823         render_drawVisibleMeshes [22]
+[204]    0.0    0.00    0.00     823         render_setShaderLightSrcUniforms [204]
+                0.00    0.00    2469/27272       array_size [96]
+                0.00    0.00    1646/21640       array_get [101]
+-----------------------------------------------
+                0.00    0.00     702/702         StringTree_RB_REMOVE [195]
+[205]    0.0    0.00    0.00     702         StringTree_RB_REMOVE_COLOR [205]
+-----------------------------------------------
+                0.00    0.00       1/506         engine_createConvexHullColliderModel [81]
+                0.00    0.00     505/506         weatherCbPreRender [220]
+[206]    0.0    0.00    0.00     506         engine_render_getModel [206]
+                0.00    0.00     506/5688        hashmap_getP [117]
+-----------------------------------------------
+                0.00    0.00     505/505         main [1]
+[207]    0.0    0.00    0.00     505         UpdateNuklear [207]
+                0.00    0.00     505/505         nk_input_begin [212]
+                0.00    0.00     505/505         nk_raylib_input_mouse [216]
+                0.00    0.00     505/505         nk_input_end [213]
+                0.00    0.00     505/505         nk_raylib_input_keyboard [215]
+-----------------------------------------------
+                0.00    0.00     505/505         engine_stepUpdate [21]
+[208]    0.0    0.00    0.00     505         engine_dispatchMessages [208]
+-----------------------------------------------
+                0.00    0.00     505/505         DrawNuklear [5]
+[209]    0.0    0.00    0.00     505         nk__begin [209]
+                0.00    0.00     505/505         nk_build [211]
+-----------------------------------------------
+                0.00    0.00     505/505         nk_clear [27]
+[210]    0.0    0.00    0.00     505         nk_buffer_clear [210]
+-----------------------------------------------
+                0.00    0.00     505/505         nk__begin [209]
+[211]    0.0    0.00    0.00     505         nk_build [211]
+-----------------------------------------------
+                0.00    0.00     505/505         UpdateNuklear [207]
+[212]    0.0    0.00    0.00     505         nk_input_begin [212]
+                0.00    0.00     505/2584        nk_vec2 [130]
+-----------------------------------------------
+                0.00    0.00     505/505         UpdateNuklear [207]
+[213]    0.0    0.00    0.00     505         nk_input_end [213]
+-----------------------------------------------
+                0.00    0.00     505/505         nk_raylib_input_mouse [216]
+[214]    0.0    0.00    0.00     505         nk_input_motion [214]
+-----------------------------------------------
+                0.00    0.00     505/505         UpdateNuklear [207]
+[215]    0.0    0.00    0.00     505         nk_raylib_input_keyboard [215]
+                0.00    0.00   13130/13130       nk_input_key [103]
+-----------------------------------------------
+                0.00    0.00     505/505         UpdateNuklear [207]
+[216]    0.0    0.00    0.00     505         nk_raylib_input_mouse [216]
+                0.00    0.00    1515/1515        nk_input_button [154]
+                0.00    0.00     505/1010        GetNuklearScaling [158]
+                0.00    0.00     505/505         nk_input_motion [214]
+-----------------------------------------------
+                0.00    0.00     505/505         render_updateState [218]
+[217]    0.0    0.00    0.00     505         render_updateShadowMaps [217]
+                0.00    0.00    1515/1515        renderGetLightSrcShadowCam [155]
+-----------------------------------------------
+                0.00    0.00     505/505         main [1]
+[218]    0.0    0.00    0.00     505         render_updateState [218]
+                0.00    0.00    1010/21640       array_get [101]
+                0.00    0.00    1010/27272       array_size [96]
+                0.00    0.00     505/505         render_updateShadowMaps [217]
+-----------------------------------------------
+                0.00    0.00     505/505         ecs_execCallback [25]
+[219]    0.0    0.00    0.00     505         weatherCbPostRender [219]
+-----------------------------------------------
+                0.00    0.00     505/505         ecs_execCallback [25]
+[220]    0.0    0.00    0.00     505         weatherCbPreRender [220]
+                0.00    0.00     505/506         engine_render_getModel [206]
+-----------------------------------------------
+                0.00    0.00     501/501         physics_updateBodies [224]
+[221]    0.0    0.00    0.00     501         physics_bodyUpdate [221]
+-----------------------------------------------
+                0.00    0.00     501/501         physics_updateCollisions [225]
+[222]    0.0    0.00    0.00     501         physics_collisionBroadPhase [222]
+                0.00    0.00     501/4541        BoxTransform [120]
+-----------------------------------------------
+                0.00    0.00     501/501         physics_updateCollisions [225]
+[223]    0.0    0.00    0.00     501         physics_collisionNarrowPhase [223]
+-----------------------------------------------
+                0.00    0.00     501/501         engine_stepUpdate [21]
+[224]    0.0    0.00    0.00     501         physics_updateBodies [224]
+                0.00    0.00     501/501         physics_bodyUpdate [221]
+-----------------------------------------------
+                0.00    0.00     501/501         engine_stepUpdate [21]
+[225]    0.0    0.00    0.00     501         physics_updateCollisions [225]
+                0.00    0.00     501/501         physics_collisionBroadPhase [222]
+                0.00    0.00     501/501         physics_collisionNarrowPhase [223]
+-----------------------------------------------
+                0.00    0.00      86/258         _log [1901]
+                0.00    0.00     172/258         logLevelIsVisibleHeader [228]
+[226]    0.0    0.00    0.00     258         hashmap_getU32 [226]
+                0.00    0.00     258/5958        hashmap_get [115]
+-----------------------------------------------
+                0.00    0.00      86/258         _log [1901]
+                0.00    0.00     172/258         logLevelIsVisibleHeader [228]
+[227]    0.0    0.00    0.00     258         str_hash [227]
+-----------------------------------------------
+                0.00    0.00       1/172         cleanup [61]
+                0.00    0.00       1/172         engine_init [286]
+                0.00    0.00       1/172         physics_addCollider [331]
+                0.00    0.00       1/172         physics_addRigidBody [332]
+                0.00    0.00       1/172         physics_removeCollider [335]
+                0.00    0.00       1/172         render_setupDirShadow [341]
+                0.00    0.00       2/172         engine_render_registerMeshRenderer [261]
+                0.00    0.00       2/172         engine_render_unregisterMeshRenderer [263]
+                0.00    0.00       2/172         engine_render_registerLightSrc [260]
+                0.00    0.00       2/172         engine_render_unregisterLightSrc [262]
+                0.00    0.00       2/172         luaEnvLoad [268]
+                0.00    0.00       4/172         ecs_registerEntity [75]
+                0.00    0.00       4/172         ecs_unregisterEntity [247]
+                0.00    0.00       4/172         engine_render_addShader [248]
+                0.00    0.00       6/172         engine_render_addModel [243]
+                0.00    0.00       6/172         engine_createScriptFromFile [64]
+                0.00    0.00      17/172         ecs_registerComp [55]
+                0.00    0.00      29/172         ecs_setCallback [46]
+                0.00    0.00      86/172         _log [1901]
+[228]    0.0    0.00    0.00     172         logLevelIsVisibleHeader [228]
+                0.00    0.00     172/258         str_hash [227]
+                0.00    0.00     172/258         hashmap_getU32 [226]
+-----------------------------------------------
+                0.00    0.00      83/83          nk_style_from_table [44]
+[229]    0.0    0.00    0.00      83         nk_style_item_color [229]
+-----------------------------------------------
+                0.00    0.00       4/59          ecs_unregisterEntity [247]
+                0.00    0.00      55/59          ecs_getEntityNameCstr [231]
+[230]    0.0    0.00    0.00      59         binsearch_s32Inc [230]
+-----------------------------------------------
+                0.00    0.00      55/55          ecs_getEntityNameCstrP [232]
+[231]    0.0    0.00    0.00      55         ecs_getEntityNameCstr [231]
+                0.00    0.00      55/22278       ecs_checkEntityID [99]
+                0.00    0.00      55/59          binsearch_s32Inc [230]
+-----------------------------------------------
+                0.00    0.00       2/55          engineCbScriptOnCreate [83]
+                0.00    0.00       3/55          luaCreateEntityTable [45]
+                0.00    0.00       4/55          ecs_unregisterEntity [247]
+                0.00    0.00      17/55          ecs_registerComp [55]
+                0.00    0.00      29/55          ecs_setCallback [46]
+[232]    0.0    0.00    0.00      55         ecs_getEntityNameCstrP [232]
+                0.00    0.00      55/55          ecs_getEntityNameCstr [231]
+-----------------------------------------------
+                0.00    0.00       4/21          ecs_registerEntity [75]
+                0.00    0.00      17/21          ecs_registerComp [55]
+[233]    0.0    0.00    0.00      21         fifo_av_read [233]
+-----------------------------------------------
+                0.00    0.00       4/21          ecs_registerEntity [75]
+                0.00    0.00      17/21          ecs_registerComp [55]
+[234]    0.0    0.00    0.00      21         fifo_read [234]
+-----------------------------------------------
+                0.00    0.00       1/20          InitNuklearContext [39]
+                0.00    0.00       1/20          InitNuklear [38]
+                0.00    0.00      18/20          nk_style_from_table [44]
+[235]    0.0    0.00    0.00      20         nk_handle_ptr [235]
+-----------------------------------------------
+                0.00    0.00      16/16          nk_style_from_table [44]
+[236]    0.0    0.00    0.00      16         nk_rgb [236]
+-----------------------------------------------
+                0.00    0.00       3/14          nk_style_item_hide [253]
+                0.00    0.00      11/14          nk_style_from_table [44]
+[237]    0.0    0.00    0.00      14         nk_rgba [237]
+-----------------------------------------------
+                0.00    0.00       1/12          physics_addCollider [331]
+                0.00    0.00       1/12          physics_addRigidBody [332]
+                0.00    0.00       4/12          engine_render_addShader [248]
+                0.00    0.00       6/12          engine_render_addModel [243]
+[238]    0.0    0.00    0.00      12         hashmap_set [238]
+                0.00    0.00       8/5708        binsearch_hashmapInc [116]
+                0.00    0.00       8/8           hashmap_resize [242]
+-----------------------------------------------
+                0.00    0.00       1/10          moonnuklear_open_atlas [305]
+                0.00    0.00       1/10          moonnuklear_open_buffer [306]
+                0.00    0.00       1/10          moonnuklear_open_canvas [307]
+                0.00    0.00       1/10          moonnuklear_open_context [308]
+                0.00    0.00       1/10          moonnuklear_open_cursor [309]
+                0.00    0.00       1/10          moonnuklear_open_edit [310]
+                0.00    0.00       1/10          moonnuklear_open_font [313]
+                0.00    0.00       1/10          moonnuklear_open_image [314]
+                0.00    0.00       1/10          moonnuklear_open_nine_slice [317]
+                0.00    0.00       1/10          moonnuklear_open_panel [318]
+[239]    0.0    0.00    0.00      10         moonnuklear_udata_define [239]
+-----------------------------------------------
+                0.00    0.00       2/8           engine_render_unregisterMeshRenderer [263]
+                0.00    0.00       2/8           engine_render_unregisterLightSrc [262]
+                0.00    0.00       4/8           array_has [245]
+[240]    0.0    0.00    0.00       8         array_at [240]
+-----------------------------------------------
+                0.00    0.00       2/8           render_drawScene [2]
+                0.00    0.00       6/8           array_insert [105]
+[241]    0.0    0.00    0.00       8         array_resize [241]
+-----------------------------------------------
+                0.00    0.00       8/8           hashmap_set [238]
+[242]    0.0    0.00    0.00       8         hashmap_resize [242]
+-----------------------------------------------
+                0.00    0.00       1/6           registerModel [338]
+                0.00    0.00       1/6           registerModelSkybox [339]
+                0.00    0.00       2/6           registerModelCylinder [275]
+                0.00    0.00       2/6           loadAssets [289]
+[243]    0.0    0.00    0.00       6         engine_render_addModel [243]
+                0.00    0.00       6/5958        hashmap_get [115]
+                0.00    0.00       6/12          hashmap_set [238]
+                0.00    0.00       6/172         logLevelIsVisibleHeader [228]
+                0.00    0.00       6/86          _log [1901]
+-----------------------------------------------
+                0.00    0.00       2/4           engine_render_unregisterMeshRenderer [263]
+                0.00    0.00       2/4           engine_render_unregisterLightSrc [262]
+[244]    0.0    0.00    0.00       4         array_del [244]
+-----------------------------------------------
+                0.00    0.00       2/4           engine_render_registerMeshRenderer [261]
+                0.00    0.00       2/4           engine_render_registerLightSrc [260]
+[245]    0.0    0.00    0.00       4         array_has [245]
+                0.00    0.00       4/8           array_at [240]
+-----------------------------------------------
+                0.00    0.00       2/4           engine_init [286]
+                0.00    0.00       2/4           render_init [340]
+[246]    0.0    0.00    0.00       4         array_init [246]
+-----------------------------------------------
+                0.00    0.00       4/4           engine_entityDestroy [59]
+[247]    0.0    0.00    0.00       4         ecs_unregisterEntity [247]
+                0.00    0.00      21/1301        fifo_write [156]
+                0.00    0.00       4/22278       ecs_checkEntityID [99]
+                0.00    0.00       4/59          binsearch_s32Inc [230]
+                0.00    0.00       4/55          ecs_getEntityNameCstrP [232]
+                0.00    0.00       4/172         logLevelIsVisibleHeader [228]
+                0.00    0.00       4/86          _log [1901]
+-----------------------------------------------
+                0.00    0.00       4/4           registerShader [250]
+[248]    0.0    0.00    0.00       4         engine_render_addShader [248]
+                0.00    0.00       4/5958        hashmap_get [115]
+                0.00    0.00       4/12          hashmap_set [238]
+                0.00    0.00       4/172         logLevelIsVisibleHeader [228]
+                0.00    0.00       4/86          _log [1901]
+-----------------------------------------------
+                0.00    0.00       2/4           engine_init [286]
+                0.00    0.00       2/4           physics_initSystem [334]
+[249]    0.0    0.00    0.00       4         hashmap_init [249]
+-----------------------------------------------
+                0.00    0.00       4/4           loadAssets [289]
+[250]    0.0    0.00    0.00       4         registerShader [250]
+                0.00    0.00       4/4           engine_render_addShader [248]
+-----------------------------------------------
+                0.00    0.00       1/3           udatatree_s_RB_INSERT [277]
+                0.00    0.00       2/3           udatatree_s_RB_FIND [255]
+[251]    0.0    0.00    0.00       3         cmp [251]
+-----------------------------------------------
+                0.00    0.00       3/3           nk_create_page_element [23]
+[252]    0.0    0.00    0.00       3         nk_pool_alloc [252]
+                0.00    0.00       1/2           nk_malloc [273]
+-----------------------------------------------
+                0.00    0.00       3/3           nk_style_from_table [44]
+[253]    0.0    0.00    0.00       3         nk_style_item_hide [253]
+                0.00    0.00       3/14          nk_rgba [237]
+-----------------------------------------------
+                0.00    0.00       1/3           moonnuklear_udata_mem [325]
+                0.00    0.00       2/3           moonnuklear_udata_new [270]
+[254]    0.0    0.00    0.00       3         udata_search [254]
+                0.00    0.00       3/3           udatatree_s_RB_FIND [255]
+-----------------------------------------------
+                0.00    0.00       3/3           udata_search [254]
+[255]    0.0    0.00    0.00       3         udatatree_s_RB_FIND [255]
+                0.00    0.00       2/3           cmp [251]
+-----------------------------------------------
+                0.00    0.00       2/2           ecs_execCallbackAllComp [50]
+[256]    0.0    0.00    0.00       2         engine_cbLightSourceOnCreate [256]
+                0.00    0.00       2/2           engine_render_registerLightSrc [260]
+-----------------------------------------------
+                0.00    0.00       2/2           ecs_execCallbackAllComp [50]
+[257]    0.0    0.00    0.00       2         engine_cbLightSourceOnDestroy [257]
+                0.00    0.00       2/2           engine_render_unregisterLightSrc [262]
+-----------------------------------------------
+                0.00    0.00       2/2           ecs_execCallbackAllComp [50]
+[258]    0.0    0.00    0.00       2         engine_cbMeshRendererOnCreate [258]
+                0.00    0.00       2/2           engine_render_registerMeshRenderer [261]
+-----------------------------------------------
+                0.00    0.00       2/2           ecs_execCallbackAllComp [50]
+[259]    0.0    0.00    0.00       2         engine_cbMeshRendererOnDestroy [259]
+                0.00    0.00       2/2           engine_render_unregisterMeshRenderer [263]
+-----------------------------------------------
+                0.00    0.00       2/2           engine_cbLightSourceOnCreate [256]
+[260]    0.0    0.00    0.00       2         engine_render_registerLightSrc [260]
+                0.00    0.00       2/4           array_has [245]
+                0.00    0.00       2/11268       array_pushBack [106]
+                0.00    0.00       2/172         logLevelIsVisibleHeader [228]
+                0.00    0.00       2/86          _log [1901]
+-----------------------------------------------
+                0.00    0.00       2/2           engine_cbMeshRendererOnCreate [258]
+[261]    0.0    0.00    0.00       2         engine_render_registerMeshRenderer [261]
+                0.00    0.00       2/4           array_has [245]
+                0.00    0.00       2/11268       array_pushBack [106]
+                0.00    0.00       2/172         logLevelIsVisibleHeader [228]
+                0.00    0.00       2/86          _log [1901]
+-----------------------------------------------
+                0.00    0.00       2/2           engine_cbLightSourceOnDestroy [257]
+[262]    0.0    0.00    0.00       2         engine_render_unregisterLightSrc [262]
+                0.00    0.00       2/8           array_at [240]
+                0.00    0.00       2/4           array_del [244]
+                0.00    0.00       2/172         logLevelIsVisibleHeader [228]
+                0.00    0.00       2/86          _log [1901]
+-----------------------------------------------
+                0.00    0.00       2/2           engine_cbMeshRendererOnDestroy [259]
+[263]    0.0    0.00    0.00       2         engine_render_unregisterMeshRenderer [263]
+                0.00    0.00       2/8           array_at [240]
+                0.00    0.00       2/4           array_del [244]
+                0.00    0.00       2/172         logLevelIsVisibleHeader [228]
+                0.00    0.00       2/86          _log [1901]
+-----------------------------------------------
+                0.00    0.00       2/2           ecs_init [283]
+[264]    0.0    0.00    0.00       2         fifo_init [264]
+-----------------------------------------------
+                0.00    0.00       1/2           physics_removeCollider [335]
+                0.00    0.00       1/2           physics_removeRigidBody [336]
+[265]    0.0    0.00    0.00       2         hashmap_del [265]
+                0.00    0.00       2/2           hashmap_delResize [266]
+-----------------------------------------------
+                0.00    0.00       2/2           hashmap_del [265]
+[266]    0.0    0.00    0.00       2         hashmap_delResize [266]
+                0.00    0.00       2/5708        binsearch_hashmapInc [116]
+-----------------------------------------------
+                0.00    0.00       2/2           luaEnvLoad [268]
+[267]    0.0    0.00    0.00       2         loadFileStr [267]
+-----------------------------------------------
+                0.00    0.00       2/2           engine_createScriptFromFile [64]
+[268]    0.0    0.00    0.00       2         luaEnvLoad [268]
+                0.00    0.00       2/2           loadFileStr [267]
+                0.00    0.00       2/3558        logPushTag [125]
+                0.00    0.00       2/3558        logPopTag [124]
+                0.00    0.00       2/172         logLevelIsVisibleHeader [228]
+                0.00    0.00       2/86          _log [1901]
+-----------------------------------------------
+                0.00    0.00       1/2           InitFromPtr [573]
+                0.00    0.00       1/2           moonnuklear_newedit [304]
+[269]    0.0    0.00    0.00       2         moonnuklear_newuserdata [269]
+                0.00    0.00       2/2           moonnuklear_udata_new [270]
+-----------------------------------------------
+                0.00    0.00       2/2           moonnuklear_newuserdata [269]
+[270]    0.0    0.00    0.00       2         moonnuklear_udata_new [270]
+                0.00    0.00       2/1676        moonnuklear_Malloc [144]
+                0.00    0.00       2/3           udata_search [254]
+                0.00    0.00       2/2           udata_insert [276]
+-----------------------------------------------
+                0.00    0.00       2/2           nk_begin_titled [15]
+[271]    0.0    0.00    0.00       2         nk_command_buffer_init [271]
+-----------------------------------------------
+                0.00    0.00       2/2           nk_begin_titled [15]
+[272]    0.0    0.00    0.00       2         nk_insert_window [272]
+-----------------------------------------------
+                0.00    0.00       1/2           nk_buffer_init [65]
+                0.00    0.00       1/2           nk_pool_alloc [252]
+[273]    0.0    0.00    0.00       2         nk_malloc [273]
+-----------------------------------------------
+                0.00    0.00       1/2           nk_buffer_free [328]
+                0.00    0.00       1/2           nk_pool_free [329]
+[274]    0.0    0.00    0.00       2         nk_mfree [274]
+-----------------------------------------------
+                0.00    0.00       2/2           loadAssets [289]
+[275]    0.0    0.00    0.00       2         registerModelCylinder [275]
+                0.00    0.00       2/6           engine_render_addModel [243]
+-----------------------------------------------
+                0.00    0.00       2/2           moonnuklear_udata_new [270]
+[276]    0.0    0.00    0.00       2         udata_insert [276]
+                0.00    0.00       2/2           udatatree_s_RB_INSERT [277]
+-----------------------------------------------
+                0.00    0.00       2/2           udata_insert [276]
+[277]    0.0    0.00    0.00       2         udatatree_s_RB_INSERT [277]
+                0.00    0.00       2/2           udatatree_s_RB_INSERT_COLOR [278]
+                0.00    0.00       1/3           cmp [251]
+-----------------------------------------------
+                0.00    0.00       2/2           udatatree_s_RB_INSERT [277]
+[278]    0.0    0.00    0.00       2         udatatree_s_RB_INSERT_COLOR [278]
+-----------------------------------------------
+                0.00    0.00       1/1           moonnuklear_open_flags [312]
+[279]    0.0    0.00    0.00       1         AddConstants [279]
+-----------------------------------------------
+                0.00    0.00       1/1           moonnuklear_open_versions [321]
+[280]    0.0    0.00    0.00       1         AddVersions [280]
+-----------------------------------------------
+                0.00    0.00       1/1           main [1]
+[281]    0.0    0.00    0.00       1         SetNuklearScaling [281]
+-----------------------------------------------
+                0.00    0.00       1/1           luaFuncGetEntity [49]
+[282]    0.0    0.00    0.00       1         ecs_findEntity [282]
+-----------------------------------------------
+                0.00    0.00       1/1           engine_init [286]
+[283]    0.0    0.00    0.00       1         ecs_init [283]
+                0.00    0.00    1280/1301        fifo_write [156]
+                0.00    0.00       2/2           fifo_init [264]
+-----------------------------------------------
+                0.00    0.00       1/1           ecs_execCallbackAllComp [50]
+[284]    0.0    0.00    0.00       1         engine_cbColliderOnDestroy [284]
+                0.00    0.00       1/1           physics_removeCollider [335]
+-----------------------------------------------
+                0.00    0.00       1/1           ecs_execCallbackAllComp [50]
+[285]    0.0    0.00    0.00       1         engine_cbRigidBodyOnDestroy [285]
+                0.00    0.00       1/1           physics_removeRigidBody [336]
+-----------------------------------------------
+                0.00    0.00       1/1           main [1]
+[286]    0.0    0.00    0.00       1         engine_init [286]
+                0.00    0.00       2/4           hashmap_init [249]
+                0.00    0.00       2/4           array_init [246]
+                0.00    0.00       1/1           physics_initSystem [334]
+                0.00    0.00       1/1           ecs_init [283]
+                0.00    0.00       1/172         logLevelIsVisibleHeader [228]
+                0.00    0.00       1/86          _log [1901]
+-----------------------------------------------
+                0.00    0.00       1/1           luaFuncSetCamera [94]
+[287]    0.0    0.00    0.00       1         engine_render_setCamera [287]
+-----------------------------------------------
+                0.00    0.00       1/1           engine_createConvexHullCollider [80]
+[288]    0.0    0.00    0.00       1         initCollider [288]
+-----------------------------------------------
+                0.00    0.00       1/1           main [1]
+[289]    0.0    0.00    0.00       1         loadAssets [289]
+                0.00    0.00       4/4           registerShader [250]
+                0.00    0.00       2/2           registerModelCylinder [275]
+                0.00    0.00       2/6           engine_render_addModel [243]
+                0.00    0.00       1/1           registerModel [338]
+                0.00    0.00       1/1           registerModelSkybox [339]
+-----------------------------------------------
+                0.00    0.00       1/1           engine_createScriptFromFile [64]
+[290]    0.0    0.00    0.00       1         luaEnvCreate [290]
+                0.00    0.00       1/1           luaEnvSetupBindings [293]
+-----------------------------------------------
+                0.00    0.00       1/1           main [1]
+[291]    0.0    0.00    0.00       1         luaEnvSetEngine [291]
+-----------------------------------------------
+                0.00    0.00       1/1           main [1]
+[292]    0.0    0.00    0.00       1         luaEnvSetNkContext [292]
+-----------------------------------------------
+                0.00    0.00       1/1           luaEnvCreate [290]
+[293]    0.0    0.00    0.00       1         luaEnvSetupBindings [293]
+                0.00    0.00       1/1           luaopen_moonnuklear [300]
+                0.00    0.00       1/1           luaOpenMatrix [295]
+                0.00    0.00       1/1           luaOpenVector3 [299]
+                0.00    0.00       1/1           luaOpenQuaternion [297]
+                0.00    0.00       1/1           luaOpenMisc [296]
+                0.00    0.00       1/1           luaOpenRaylib [298]
+                0.00    0.00       1/1           luaOpenEngine [294]
+-----------------------------------------------
+                0.00    0.00       1/1           luaEnvSetupBindings [293]
+[294]    0.0    0.00    0.00       1         luaOpenEngine [294]
+-----------------------------------------------
+                0.00    0.00       1/1           luaEnvSetupBindings [293]
+[295]    0.0    0.00    0.00       1         luaOpenMatrix [295]
+-----------------------------------------------
+                0.00    0.00       1/1           luaEnvSetupBindings [293]
+[296]    0.0    0.00    0.00       1         luaOpenMisc [296]
+-----------------------------------------------
+                0.00    0.00       1/1           luaEnvSetupBindings [293]
+[297]    0.0    0.00    0.00       1         luaOpenQuaternion [297]
+-----------------------------------------------
+                0.00    0.00       1/1           luaEnvSetupBindings [293]
+[298]    0.0    0.00    0.00       1         luaOpenRaylib [298]
+-----------------------------------------------
+                0.00    0.00       1/1           luaEnvSetupBindings [293]
+[299]    0.0    0.00    0.00       1         luaOpenVector3 [299]
+-----------------------------------------------
+                0.00    0.00       1/1           luaEnvSetupBindings [293]
+[300]    0.0    0.00    0.00       1         luaopen_moonnuklear [300]
+                0.00    0.00       1/1           moonnuklear_utils_init [327]
+                0.00    0.00       1/1           moonnuklear_open_versions [321]
+                0.00    0.00       1/1           moonnuklear_open_flags [312]
+                0.00    0.00       1/1           moonnuklear_open_enums [311]
+                0.00    0.00       1/1           moonnuklear_open_tracing [320]
+                0.00    0.00       1/1           moonnuklear_open_window [323]
+                0.00    0.00       1/1           moonnuklear_open_widgets [322]
+                0.00    0.00       1/1           moonnuklear_open_layout [316]
+                0.00    0.00       1/1           moonnuklear_open_style [319]
+                0.00    0.00       1/1           moonnuklear_open_context [308]
+                0.00    0.00       1/1           moonnuklear_open_font [313]
+                0.00    0.00       1/1           moonnuklear_open_atlas [305]
+                0.00    0.00       1/1           moonnuklear_open_buffer [306]
+                0.00    0.00       1/1           moonnuklear_open_image [314]
+                0.00    0.00       1/1           moonnuklear_open_cursor [309]
+                0.00    0.00       1/1           moonnuklear_open_nine_slice [317]
+                0.00    0.00       1/1           moonnuklear_open_edit [310]
+                0.00    0.00       1/1           moonnuklear_open_canvas [307]
+                0.00    0.00       1/1           moonnuklear_open_input [315]
+                0.00    0.00       1/1           moonnuklear_open_panel [318]
+-----------------------------------------------
+                0.00    0.00       1/1           moonnuklear_utils_init [327]
+[301]    0.0    0.00    0.00       1         malloc_init [301]
+-----------------------------------------------
+                0.00    0.00       1/1           InitFromPtr [573]
+[302]    0.0    0.00    0.00       1         moonnuklear_checklightuserdata [302]
+-----------------------------------------------
+                0.00    0.00       1/1           AtExit [351]
+[303]    0.0    0.00    0.00       1         moonnuklear_enums_free_all [303]
+                0.00    0.00     838/838         code_first [188]
+                0.00    0.00     837/837         enums_free [198]
+-----------------------------------------------
+                0.00    0.00       1/1           InitFromPtr [573]
+[304]    0.0    0.00    0.00       1         moonnuklear_newedit [304]
+                0.00    0.00       1/1           moonnuklear_userdata [326]
+                0.00    0.00       1/2           moonnuklear_newuserdata [269]
+-----------------------------------------------
+                0.00    0.00       1/1           luaopen_moonnuklear [300]
+[305]    0.0    0.00    0.00       1         moonnuklear_open_atlas [305]
+                0.00    0.00       1/10          moonnuklear_udata_define [239]
+-----------------------------------------------
+                0.00    0.00       1/1           luaopen_moonnuklear [300]
+[306]    0.0    0.00    0.00       1         moonnuklear_open_buffer [306]
+                0.00    0.00       1/10          moonnuklear_udata_define [239]
+-----------------------------------------------
+                0.00    0.00       1/1           luaopen_moonnuklear [300]
+[307]    0.0    0.00    0.00       1         moonnuklear_open_canvas [307]
+                0.00    0.00       1/10          moonnuklear_udata_define [239]
+-----------------------------------------------
+                0.00    0.00       1/1           luaopen_moonnuklear [300]
+[308]    0.0    0.00    0.00       1         moonnuklear_open_context [308]
+                0.00    0.00       1/10          moonnuklear_udata_define [239]
+-----------------------------------------------
+                0.00    0.00       1/1           luaopen_moonnuklear [300]
+[309]    0.0    0.00    0.00       1         moonnuklear_open_cursor [309]
+                0.00    0.00       1/10          moonnuklear_udata_define [239]
+-----------------------------------------------
+                0.00    0.00       1/1           luaopen_moonnuklear [300]
+[310]    0.0    0.00    0.00       1         moonnuklear_open_edit [310]
+                0.00    0.00       1/10          moonnuklear_udata_define [239]
+-----------------------------------------------
+                0.00    0.00       1/1           luaopen_moonnuklear [300]
+[311]    0.0    0.00    0.00       1         moonnuklear_open_enums [311]
+                0.00    0.00     837/837         enums_new [199]
+-----------------------------------------------
+                0.00    0.00       1/1           luaopen_moonnuklear [300]
+[312]    0.0    0.00    0.00       1         moonnuklear_open_flags [312]
+                0.00    0.00       1/1           AddConstants [279]
+-----------------------------------------------
+                0.00    0.00       1/1           luaopen_moonnuklear [300]
+[313]    0.0    0.00    0.00       1         moonnuklear_open_font [313]
+                0.00    0.00       1/10          moonnuklear_udata_define [239]
+-----------------------------------------------
+                0.00    0.00       1/1           luaopen_moonnuklear [300]
+[314]    0.0    0.00    0.00       1         moonnuklear_open_image [314]
+                0.00    0.00       1/10          moonnuklear_udata_define [239]
+-----------------------------------------------
+                0.00    0.00       1/1           luaopen_moonnuklear [300]
+[315]    0.0    0.00    0.00       1         moonnuklear_open_input [315]
+                0.00    0.00       1/1           moonnuklear_udata_addmethods [324]
+-----------------------------------------------
+                0.00    0.00       1/1           luaopen_moonnuklear [300]
+[316]    0.0    0.00    0.00       1         moonnuklear_open_layout [316]
+-----------------------------------------------
+                0.00    0.00       1/1           luaopen_moonnuklear [300]
+[317]    0.0    0.00    0.00       1         moonnuklear_open_nine_slice [317]
+                0.00    0.00       1/10          moonnuklear_udata_define [239]
+-----------------------------------------------
+                0.00    0.00       1/1           luaopen_moonnuklear [300]
+[318]    0.0    0.00    0.00       1         moonnuklear_open_panel [318]
+                0.00    0.00       1/10          moonnuklear_udata_define [239]
+-----------------------------------------------
+                0.00    0.00       1/1           luaopen_moonnuklear [300]
+[319]    0.0    0.00    0.00       1         moonnuklear_open_style [319]
+-----------------------------------------------
+                0.00    0.00       1/1           luaopen_moonnuklear [300]
+[320]    0.0    0.00    0.00       1         moonnuklear_open_tracing [320]
+-----------------------------------------------
+                0.00    0.00       1/1           luaopen_moonnuklear [300]
+[321]    0.0    0.00    0.00       1         moonnuklear_open_versions [321]
+                0.00    0.00       1/1           AddVersions [280]
+-----------------------------------------------
+                0.00    0.00       1/1           luaopen_moonnuklear [300]
+[322]    0.0    0.00    0.00       1         moonnuklear_open_widgets [322]
+-----------------------------------------------
+                0.00    0.00       1/1           luaopen_moonnuklear [300]
+[323]    0.0    0.00    0.00       1         moonnuklear_open_window [323]
+-----------------------------------------------
+                0.00    0.00       1/1           moonnuklear_open_input [315]
+[324]    0.0    0.00    0.00       1         moonnuklear_udata_addmethods [324]
+-----------------------------------------------
+                0.00    0.00       1/1           moonnuklear_userdata [326]
+[325]    0.0    0.00    0.00       1         moonnuklear_udata_mem [325]
+                0.00    0.00       1/3           udata_search [254]
+-----------------------------------------------
+                0.00    0.00       1/1           moonnuklear_newedit [304]
+[326]    0.0    0.00    0.00       1         moonnuklear_userdata [326]
+                0.00    0.00       1/1           moonnuklear_udata_mem [325]
+-----------------------------------------------
+                0.00    0.00       1/1           luaopen_moonnuklear [300]
+[327]    0.0    0.00    0.00       1         moonnuklear_utils_init [327]
+                0.00    0.00       1/1           malloc_init [301]
+-----------------------------------------------
+                0.00    0.00       1/1           nk_free [54]
+[328]    0.0    0.00    0.00       1         nk_buffer_free [328]
+                0.00    0.00       1/2           nk_mfree [274]
+-----------------------------------------------
+                0.00    0.00       1/1           nk_free [54]
+[329]    0.0    0.00    0.00       1         nk_pool_free [329]
+                0.00    0.00       1/2           nk_mfree [274]
+-----------------------------------------------
+                0.00    0.00       1/1           InitNuklearContext [39]
+[330]    0.0    0.00    0.00       1         nk_set_user_data [330]
+-----------------------------------------------
+                0.00    0.00       1/1           engine_cbColliderOnCreate [92]
+[331]    0.0    0.00    0.00       1         physics_addCollider [331]
+                0.00    0.00       1/12          hashmap_set [238]
+                0.00    0.00       1/172         logLevelIsVisibleHeader [228]
+                0.00    0.00       1/86          _log [1901]
+-----------------------------------------------
+                0.00    0.00       1/1           engine_cbRigidBodyOnCreate [88]
+[332]    0.0    0.00    0.00       1         physics_addRigidBody [332]
+                0.00    0.00       1/12          hashmap_set [238]
+                0.00    0.00       1/172         logLevelIsVisibleHeader [228]
+                0.00    0.00       1/86          _log [1901]
+-----------------------------------------------
+                0.00    0.00       1/1           engine_createRigidBody [73]
+[333]    0.0    0.00    0.00       1         physics_initRigidBody [333]
+-----------------------------------------------
+                0.00    0.00       1/1           engine_init [286]
+[334]    0.0    0.00    0.00       1         physics_initSystem [334]
+                0.00    0.00       2/4           hashmap_init [249]
+-----------------------------------------------
+                0.00    0.00       1/1           engine_cbColliderOnDestroy [284]
+[335]    0.0    0.00    0.00       1         physics_removeCollider [335]
+                0.00    0.00       1/5688        hashmap_getP [117]
+                0.00    0.00       1/2           hashmap_del [265]
+                0.00    0.00       1/172         logLevelIsVisibleHeader [228]
+                0.00    0.00       1/86          _log [1901]
+-----------------------------------------------
+                0.00    0.00       1/1           engine_cbRigidBodyOnDestroy [285]
+[336]    0.0    0.00    0.00       1         physics_removeRigidBody [336]
+                0.00    0.00       1/2           hashmap_del [265]
+-----------------------------------------------
+                0.00    0.00       1/1           main [1]
+[337]    0.0    0.00    0.00       1         physics_setPosition [337]
+-----------------------------------------------
+                0.00    0.00       1/1           loadAssets [289]
+[338]    0.0    0.00    0.00       1         registerModel [338]
+                0.00    0.00       1/6           engine_render_addModel [243]
+-----------------------------------------------
+                0.00    0.00       1/1           loadAssets [289]
+[339]    0.0    0.00    0.00       1         registerModelSkybox [339]
+                0.00    0.00       1/6           engine_render_addModel [243]
+-----------------------------------------------
+                0.00    0.00       1/1           main [1]
+[340]    0.0    0.00    0.00       1         render_init [340]
+                0.00    0.00       2/4           array_init [246]
+-----------------------------------------------
+                0.00    0.00       1/1           main [1]
+[341]    0.0    0.00    0.00       1         render_setupDirShadow [341]
+                0.00    0.00       1/172         logLevelIsVisibleHeader [228]
+                0.00    0.00       1/86          _log [1901]
+-----------------------------------------------
+                0.00    0.00       1/86          cleanup [61]
+                0.00    0.00       1/86          engine_init [286]
+                0.00    0.00       1/86          physics_addCollider [331]
+                0.00    0.00       1/86          physics_addRigidBody [332]
+                0.00    0.00       1/86          physics_removeCollider [335]
+                0.00    0.00       1/86          render_setupDirShadow [341]
+                0.00    0.00       2/86          engine_render_registerMeshRenderer [261]
+                0.00    0.00       2/86          engine_render_unregisterMeshRenderer [263]
+                0.00    0.00       2/86          engine_render_registerLightSrc [260]
+                0.00    0.00       2/86          engine_render_unregisterLightSrc [262]
+                0.00    0.00       2/86          luaEnvLoad [268]
+                0.00    0.00       4/86          ecs_registerEntity [75]
+                0.00    0.00       4/86          ecs_unregisterEntity [247]
+                0.00    0.00       4/86          engine_render_addShader [248]
+                0.00    0.00       6/86          engine_render_addModel [243]
+                0.00    0.00       6/86          engine_createScriptFromFile [64]
+                0.00    0.00      17/86          ecs_registerComp [55]
+                0.00    0.00      29/86          ecs_setCallback [46]
+[1901]   0.0    0.00    0.00      86         _log [1901]
+                0.00    0.00     114/27272       array_size [96]
+                0.00    0.00      86/258         str_hash [227]
+                0.00    0.00      86/258         hashmap_getU32 [226]
+                0.00    0.00      86/172         logLevelIsVisibleHeader [228]
+                0.00    0.00      14/21640       array_get [101]
+-----------------------------------------------
+
+ This table describes the call tree of the program, and was sorted by
+ the total amount of time spent in each function and its children.
+
+ Each entry in this table consists of several lines.  The line with the
+ index number at the left hand margin lists the current function.
+ The lines above it list the functions that called this function,
+ and the lines below it list the functions this one called.
+ This line lists:
+     index	A unique number given to each element of the table.
+		Index numbers are sorted numerically.
+		The index number is printed next to every function name so
+		it is easier to look up where the function is in the table.
+
+     % time	This is the percentage of the `total' time that was spent
+		in this function and its children.  Note that due to
+		different viewpoints, functions excluded by options, etc,
+		these numbers will NOT add up to 100%.
+
+     self	This is the total amount of time spent in this function.
+
+     children	This is the total amount of time propagated into this
+		function by its children.
+
+     called	This is the number of times the function was called.
+		If the function called itself recursively, the number
+		only includes non-recursive calls, and is followed by
+		a `+' and the number of recursive calls.
+
+     name	The name of the current function.  The index number is
+		printed after it.  If the function is a member of a
+		cycle, the cycle number is printed between the
+		function's name and the index number.
+
+
+ For the function's parents, the fields have the following meanings:
+
+     self	This is the amount of time that was propagated directly
+		from the function into this parent.
+
+     children	This is the amount of time that was propagated from
+		the function's children into this parent.
+
+     called	This is the number of times this parent called the
+		function `/' the total number of times the function
+		was called.  Recursive calls to the function are not
+		included in the number after the `/'.
+
+     name	This is the name of the parent.  The parent's index
+		number is printed after it.  If the parent is a
+		member of a cycle, the cycle number is printed between
+		the name and the index number.
+
+ If the parents of the function cannot be determined, the word
+ `<spontaneous>' is printed in the `name' field, and all the other
+ fields are blank.
+
+ For the function's children, the fields have the following meanings:
+
+     self	This is the amount of time that was propagated directly
+		from the child into the function.
+
+     children	This is the amount of time that was propagated from the
+		child's children to the function.
+
+     called	This is the number of times the function called
+		this child `/' the total number of times the child
+		was called.  Recursive calls by the child are not
+		listed in the number after the `/'.
+
+     name	This is the name of the child.  The child's index
+		number is printed after it.  If the child is a
+		member of a cycle, the cycle number is printed
+		between the name and the index number.
+
+ If there are any cycles (circles) in the call graph, there is an
+ entry for the cycle-as-a-whole.  This entry shows who called the
+ cycle (as parents) and the members of the cycle (as children.)
+ The `+' recursive calls entry shows the number of function calls that
+ were internal to the cycle, and the calls entry for each member shows,
+ for that member, how many times it was called from other members of
+ the cycle.
+
+Copyright (C) 2012-2024 Free Software Foundation, Inc.
+
+Copying and distribution of this file, with or without modification,
+are permitted in any medium without royalty provided the copyright
+notice and this notice are preserved.
+
+Index by function name
+
+ [279] AddConstants (flags.c) [87] engine_getMeshRenderer [161] nk_do_button (nuklear.c)
+ [280] AddVersions (versions.c) [93] engine_getRigidBody [162] nk_do_button_symbol (nuklear.c)
+ [120] BoxTransform           [32] engine_getScript      [163] nk_do_scrollbarh (nuklear.c)
+ [145] CodeTree_RB_FIND (enums.c) [20] engine_getTransform [164] nk_do_scrollbarv (nuklear.c)
+ [189] CodeTree_RB_INSERT (enums.c) [286] engine_init    [165] nk_draw_button (nuklear.c)
+ [190] CodeTree_RB_INSERT_COLOR (enums.c) [9] engine_meshRendererCenter [166] nk_draw_button_symbol (nuklear.c)
+ [187] CodeTree_RB_NFIND (enums.c) [243] engine_render_addModel [66] nk_draw_list_init
+ [191] CodeTree_RB_REMOVE (enums.c) [248] engine_render_addShader [167] nk_draw_symbol (nuklear.c)
+ [192] CodeTree_RB_REMOVE_COLOR (enums.c) [206] engine_render_getModel [138] nk_draw_text
+ [114] ColorFromNuklear      [260] engine_render_registerLightSrc [168] nk_end
+   [5] DrawNuklear           [261] engine_render_registerMeshRenderer (engine.c) [127] nk_fill_rect
+ [146] Free_ (utils.c)       [287] engine_render_setCamera [169] nk_find_window (nuklear.c)
+   [8] FrustumBoxIntersect   [262] engine_render_unregisterLightSrc [170] nk_finish (nuklear.c)
+ [135] GetCameraFrustum      [263] engine_render_unregisterMeshRenderer (engine.c) [171] nk_finish_buffer (nuklear.c)
+ [158] GetNuklearScaling      [21] engine_stepUpdate      [54] nk_free
+ [132] GetProjectionMatrix    [37] engine_updateTransform (engine.c) [172] nk_free_page_element (nuklear.c)
+ [133] GetViewMatrix          [26] engine_updateTransforms (engine.c) [173] nk_free_panel (nuklear.c)
+  [38] InitNuklear           [198] enums_free (enums.c)  [235] nk_handle_ptr
+  [39] InitNuklearContext    [199] enums_new (enums.c)    [40] nk_init
+ [143] Malloc_ (utils.c)     [233] fifo_av_read           [41] nk_init_default
+ [104] PlaneFromPoints (mathutils.c) [264] fifo_init     [212] nk_input_begin
+ [281] SetNuklearScaling     [234] fifo_read             [154] nk_input_button
+ [147] StringTree_RB_FIND (enums.c) [156] fifo_write     [213] nk_input_end
+ [193] StringTree_RB_INSERT (enums.c) [98] getTableFloat (luaenv.c) [151] nk_input_has_mouse_click_down_in_rect
+ [194] StringTree_RB_INSERT_COLOR (enums.c) [112] getTableInteger (luaenv.c) [152] nk_input_has_mouse_click_in_rect
+ [195] StringTree_RB_REMOVE (enums.c) [265] hashmap_del  [131] nk_input_is_mouse_hovering_rect
+ [205] StringTree_RB_REMOVE_COLOR (enums.c) [266] hashmap_delResize [174] nk_input_is_mouse_prev_hovering_rect
+  [53] UnloadNuklear         [115] hashmap_get           [103] nk_input_key
+ [207] UpdateNuklear         [117] hashmap_getP          [214] nk_input_motion
+  [11] _init                 [226] hashmap_getU32        [272] nk_insert_window (nuklear.c)
+ [1901] _log                 [249] hashmap_init          [175] nk_layout_reset_min_row_height
+ [240] array_at              [242] hashmap_resize        [176] nk_link_page_element_into_freelist (nuklear.c)
+ [157] array_capacity        [238] hashmap_set           [273] nk_malloc (nuklear.c)
+ [121] array_clear           [288] initCollider          [134] nk_memcopy (nuklear.c)
+ [244] array_del              [76] insertsort_u32Inc       [7] nk_memset (nuklear.c)
+ [101] array_get             [289] loadAssets            [274] nk_mfree (nuklear.c)
+ [245] array_has             [267] loadFileStr (luaenv.c) [177] nk_murmur_hash
+ [246] array_init            [228] logLevelIsVisibleHeader [24] nk_panel_begin (nuklear.c)
+ [105] array_insert          [124] logPopTag             [178] nk_panel_end (nuklear.c)
+ [123] array_popBack         [125] logPushTag            [179] nk_panel_get_border (nuklear.c)
+ [106] array_pushBack        [126] luaAlloc (luaenv.c)   [180] nk_panel_get_border_color (nuklear.c)
+ [241] array_resize           [62] luaCreateComponentTable (luaenv.c) [139] nk_panel_get_padding (nuklear.c)
+  [96] array_size             [45] luaCreateEntityTable (luaenv.c) [153] nk_panel_has_header (nuklear.c)
+ [116] binsearch_hashmapInc  [290] luaEnvCreate          [181] nk_panel_is_nonblock (nuklear.c)
+ [230] binsearch_s32Inc      [268] luaEnvLoad            [122] nk_panel_is_sub (nuklear.c)
+   [6] binsearch_u32Inc      [291] luaEnvSetEngine       [252] nk_pool_alloc (nuklear.c)
+  [61] cleanup               [292] luaEnvSetNkContext    [329] nk_pool_free (nuklear.c)
+ [251] cmp (udata.c)         [293] luaEnvSetupBindings (luaenv.c) [67] nk_pool_init (nuklear.c)
+  [95] cmp_code (enums.c)    [111] luaGetVector3 (luaenv.c) [140] nk_push_scissor
+  [97] cmp_str (enums.c)     [294] luaOpenEngine (luaenv.c) [119] nk_raylib_font_get_text_width
+ [188] code_first (enums.c)  [295] luaOpenMatrix (luaenv.c) [215] nk_raylib_input_keyboard
+ [196] code_insert (enums.c) [296] luaOpenMisc (luaenv.c) [216] nk_raylib_input_mouse
+ [197] code_remove (enums.c) [297] luaOpenQuaternion (luaenv.c) [236] nk_rgb
+ [148] code_search (enums.c) [298] luaOpenRaylib (luaenv.c) [128] nk_rgb_factor
+  [58] createEnvironment     [299] luaOpenVector3 (luaenv.c) [237] nk_rgba
+  [51] createProp            [113] luaPushVector3Vals (luaenv.c) [330] nk_set_user_data
+  [52] createWeather         [300] luaopen_moonnuklear    [42] nk_setup (nuklear.c)
+ [118] ecs_checkCallbackType (ecs.c) [301] malloc_init (utils.c) [182] nk_shrink_rect (nuklear.c)
+ [100] ecs_checkCompType (ecs.c) [149] moonnuklear_Free  [183] nk_start (nuklear.c)
+ [102] ecs_checkComponentID (ecs.c) [144] moonnuklear_Malloc [184] nk_start_buffer (nuklear.c)
+  [12] ecs_checkEntityExists (ecs.c) [200] moonnuklear_Strdup [186] nk_stricmpn
+  [99] ecs_checkEntityID (ecs.c) [302] moonnuklear_checklightuserdata [129] nk_strlen
+  [48] ecs_compExists        [136] moonnuklear_checkxxx  [141] nk_stroke_rect
+  [47] ecs_entityExists      [159] moonnuklear_echeckrect [43] nk_style_default
+  [25] ecs_execCallback      [303] moonnuklear_enums_free_all [44] nk_style_from_table
+  [50] ecs_execCallbackAllComp [304] moonnuklear_newedit [229] nk_style_item_color
+  [28] ecs_execCallbackAllEnt [269] moonnuklear_newuserdata [253] nk_style_item_hide
+ [282] ecs_findEntity        [305] moonnuklear_open_atlas [185] nk_unify (nuklear.c)
+  [17] ecs_getComp           [306] moonnuklear_open_buffer [130] nk_vec2
+  [18] ecs_getCompData       [307] moonnuklear_open_canvas [142] nk_widget_text (nuklear.c)
+  [91] ecs_getCompID         [308] moonnuklear_open_context [13] nk_zero (nuklear.c)
+ [231] ecs_getEntityNameCstr [309] moonnuklear_open_cursor [331] physics_addCollider
+ [232] ecs_getEntityNameCstrP [310] moonnuklear_open_edit [332] physics_addRigidBody
+ [283] ecs_init              [311] moonnuklear_open_enums [221] physics_bodyUpdate (physcoll.c)
+  [55] ecs_registerComp      [312] moonnuklear_open_flags [222] physics_collisionBroadPhase (physcoll.c)
+  [75] ecs_registerEntity    [313] moonnuklear_open_font [223] physics_collisionNarrowPhase (physcoll.c)
+  [46] ecs_setCallback       [314] moonnuklear_open_image [333] physics_initRigidBody
+ [247] ecs_unregisterEntity  [315] moonnuklear_open_input [334] physics_initSystem
+  [83] engineCbScriptOnCreate (luaenv.c) [316] moonnuklear_open_layout [335] physics_removeCollider
+  [84] engineCbScriptOnDestroy (luaenv.c) [317] moonnuklear_open_nine_slice [336] physics_removeRigidBody
+  [33] engineCbScriptOnUpdate (luaenv.c) [318] moonnuklear_open_panel [337] physics_setPosition
+  [35] engine_cbCameraOnUpdate (engine.c) [319] moonnuklear_open_style [224] physics_updateBodies
+  [92] engine_cbColliderOnCreate (engine.c) [320] moonnuklear_open_tracing [225] physics_updateCollisions
+ [284] engine_cbColliderOnDestroy (engine.c) [321] moonnuklear_open_versions [338] registerModel
+ [256] engine_cbLightSourceOnCreate (engine.c) [322] moonnuklear_open_widgets [275] registerModelCylinder
+ [257] engine_cbLightSourceOnDestroy (engine.c) [323] moonnuklear_open_window [339] registerModelSkybox
+  [34] engine_cbLightSourceOnUpdate (engine.c) [324] moonnuklear_udata_addmethods [250] registerShader
+ [258] engine_cbMeshRendererOnCreate (engine.c) [239] moonnuklear_udata_define [155] renderGetLightSrcShadowCam (render.c)
+ [259] engine_cbMeshRendererOnDestroy (engine.c) [325] moonnuklear_udata_mem [4] render_createMeshRendererDrawList (render.c)
+  [88] engine_cbRigidBodyOnCreate (engine.c) [270] moonnuklear_udata_new [2] render_drawScene
+ [285] engine_cbRigidBodyOnDestroy (engine.c) [137] moonnuklear_udata_test [3] render_drawShadowMaps (render.c)
+  [36] engine_cbRigidBodyOnUpdate (engine.c) [326] moonnuklear_userdata [22] render_drawVisibleMeshes (render.c)
+  [69] engine_cbTransformOnCreate (engine.c) [327] moonnuklear_utils_init [340] render_init
+  [71] engine_createAmbientLight [209] nk__begin         [203] render_setMeshRendererUniforms
+  [89] engine_createCamera   [107] nk__next              [204] render_setShaderLightSrcUniforms
+  [80] engine_createConvexHullCollider [14] nk_begin     [341] render_setupDirShadow
+  [81] engine_createConvexHullColliderModel [15] nk_begin_titled [10] render_sortMeshRenderers (render.c)
+  [72] engine_createDirLight [108] nk_buffer_align (nuklear.c) [217] render_updateShadowMaps (render.c)
+  [70] engine_createInfo     [109] nk_buffer_alloc (nuklear.c) [218] render_updateState
+  [68] engine_createMeshRenderer [210] nk_buffer_clear   [227] str_hash
+  [73] engine_createRigidBody [328] nk_buffer_free       [201] str_insert (enums.c)
+  [64] engine_createScriptFromFile [65] nk_buffer_init   [202] str_remove (enums.c)
+  [63] engine_createTransform [211] nk_build (nuklear.c) [150] str_search (enums.c)
+ [208] engine_dispatchMessages (engine.c) [160] nk_button_behavior (nuklear.c) [276] udata_insert (udata.c)
+  [59] engine_entityDestroy   [27] nk_clear              [254] udata_search (udata.c)
+  [60] engine_entityPostCreate [271] nk_command_buffer_init (nuklear.c) [255] udatatree_s_RB_FIND (udata.c)
+  [29] engine_execUpdateCallbacks (engine.c) [110] nk_command_buffer_push (nuklear.c) [277] udatatree_s_RB_INSERT (udata.c)
+  [85] engine_getCollider     [23] nk_create_page_element (nuklear.c) [278] udatatree_s_RB_INSERT_COLOR (udata.c)
+  [77] engine_getInfo         [19] nk_create_panel (nuklear.c) [219] weatherCbPostRender (gamecomp.c)
+  [86] engine_getLightSrc     [56] nk_create_window (nuklear.c) [220] weatherCbPreRender (gamecomp.c)

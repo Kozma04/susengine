@@ -1,5 +1,7 @@
 #include "./physcoll.h"
+#include "ecs.h"
 #include "gjk.h"
+#include "logger.h"
 #include "mathutils.h"
 #include <raymath.h>
 
@@ -9,7 +11,7 @@ typedef uint8_t (*CollSolverFn)(ColliderEntity *entA, ColliderEntity *entB,
 Collider initCollider() {
     Collider coll;
     coll.enabled = 1;
-    coll.collMask = 0xffffffff;
+    coll.collMask = 0;
     coll.collTargetMask = 0;
     coll.contacts = malloc(COLLIDER_MAX_CONTACTS * sizeof(*coll.contacts));
     coll.nContacts = 0;
@@ -32,10 +34,11 @@ RigidBody physics_initRigidBody(float mass) {
     res.rot = QuaternionIdentity();
 
     res.mass = mass;
-    res.bounce = 0.2f;
+    res.bounce = 0.f;
     res.staticFriction = 0.4f;
-    res.dynamicFriction = 0.6f;
+    res.dynamicFriction = 0.0f;
     res.mediumFriction = 0.1f;
+    res.cog = (Vector3){0, 0, 0};
 
     res.enableRot = (Vector3){1, 1, 1};
     res._idleVelTicks = 0;
@@ -50,13 +53,13 @@ PhysicsSystem physics_initSystem() {
     sys.rigidBodies = hashmap_init();
     sys.nContacts = 0;
     // sys.nContactsBroad = 0;
-    sys.correction.penetrationOffset = 0.01f; // 0.0002f;
-    sys.correction.penetrationScale = 0.3f;   // 0.005f;
+    sys.correction.penetrationOffset = 0.005f; // 0.0002f;
+    sys.correction.penetrationScale = 0.3f;    // 0.005f;
     sys.correction.idleAngVelThres = 0.6f;
-    sys.correction.idleAngVelTicks = 60 * 10;
+    sys.correction.idleAngVelTicks = 60 * 10 * 10000;
     sys.correction.idleVelThres = 0.3f;
-    sys.correction.idleVelTicks = 60 * 5;
-    sys.correction.angularVelDamping = 2.8f;
+    sys.correction.idleVelTicks = 60 * 5 * 10000;
+    sys.correction.angularVelDamping = 1.f; // 2.8f;
     return sys;
 }
 
@@ -494,7 +497,7 @@ static void physics_collisionNarrowPhase(PhysicsSystem *sys) {
         uint8_t collRes = solveCollision(entA, entB, &nor, &locA, &locB);
 
         if (collRes) {
-            if (isnan(nor.x) || isnan(nor.y) || isnan(nor.z)) {
+            /*if (isnan(nor.x) || isnan(nor.y) || isnan(nor.z)) {
                 printf("nor: %g %g %g\n", nor.x, nor.y, nor.z);
                 continue;
             }
@@ -505,9 +508,9 @@ static void physics_collisionNarrowPhase(PhysicsSystem *sys) {
             if (isnan(locB.x) || isnan(locB.y) || isnan(locB.z)) {
                 printf("locB: %g %g %g\n", locB.x, locB.y, locB.z);
                 continue;
-            }
+            }*/
 
-            cont.depth = Vector3Length(nor) * .5f;
+            cont.depth = Vector3Length(nor);
             cont.normal = Vector3Normalize(nor);
 
             if (sys->nContacts < PHYSICS_WORLD_MAX_CONTACTS) {
@@ -607,12 +610,14 @@ void physics_updateBodies(PhysicsSystem *sys, float dt) {
         collA = sys->collEnt.entries[sys->contacts[i].posA].val.ptr;
         collB = sys->collEnt.entries[sys->contacts[i].posB].val.ptr;
 
-        Vector3 posA = Vector3Add(
-            rbA->pos, getMatrixTranslation(&collA->coll->localTransform));
-        Vector3 posB = Vector3Add(
-            rbB->pos, getMatrixTranslation(&collB->coll->localTransform));
-        // posA = rbA->pos;
-        // posB = rbB->pos;
+        Vector3 posA =
+            Vector3Add(rbA->pos, Vector3RotateByQuaternion(rbA->cog, rbA->rot));
+        Vector3 posB =
+            Vector3Add(rbB->pos, Vector3RotateByQuaternion(rbB->cog, rbB->rot));
+        posA = rbA->pos;
+        posB = rbB->pos;
+        posA = Vector3Transform(posA, collA->coll->localTransform);
+        posB = Vector3Transform(posB, collB->coll->localTransform);
 
         if (rbA->mass == .0f && rbB->mass == .0f)
             continue;
@@ -620,12 +625,15 @@ void physics_updateBodies(PhysicsSystem *sys, float dt) {
         if (!rbA->enableDynamics || !rbB->enableDynamics)
             continue;
 
-        // Vector3 velAFull = Vector3Add(rbA->vel, rbA->angularVel);
-        // Vector3 velBFull = Vector3Add(rbB->vel, rbB->angularVel);
-        Vector3 velAFull = rbA->vel;
-        Vector3 velBFull = rbB->vel;
+        Vector3 avA =
+            Vector3CrossProduct(rbA->angularVel, sys->contacts[i].normal);
+        Vector3 avB = Vector3CrossProduct(Vector3Negate(rbB->angularVel),
+                                          sys->contacts[i].normal);
+        Vector3 velAFull =
+            Vector3Add(rbA->vel, Vector3Multiply(avA, rbA->enableRot));
+        Vector3 velBFull =
+            Vector3Add(rbB->vel, Vector3Multiply(avB, rbB->enableRot));
 
-        // Vector3 rv = Vector3Subtract(rbB->vel, rbA->vel);
         Vector3 rv = Vector3Subtract(velBFull, velAFull);
         Vector3 tangent = Vector3Subtract(
             rv, Vector3Scale(sys->contacts[i].normal,
@@ -633,8 +641,8 @@ void physics_updateBodies(PhysicsSystem *sys, float dt) {
         tangent = Vector3Normalize(tangent);
         float velAlongNormal = Vector3DotProduct(rv, sys->contacts[i].normal);
 
-        if (velAlongNormal > 0)
-            continue; // velAlongNormal *= -1.f;
+        // if (velAlongNormal > 0)
+        //     continue;
 
         float massAInv = rbA->mass ? 1.f / rbA->mass : 0;
         float massBInv = rbB->mass ? 1.f / rbB->mass : 0;
@@ -668,22 +676,17 @@ void physics_updateBodies(PhysicsSystem *sys, float dt) {
 
         const float percent = sys->correction.penetrationScale;
         const float kSlop = sys->correction.penetrationOffset;
-        float corrDepth = sys->contacts[i].depth + kSlop;
-        if (corrDepth < 0)
-            corrDepth = 0;
-        Vector3 corr =
-            Vector3Scale(sys->contacts[i].normal,
-                         (corrDepth * percent) / (massAInv + massBInv));
+        float corrDepth = sys->contacts[i].depth;
+        float corrFactor =
+            (corrDepth * percent + kSlop) / (massAInv + massBInv);
+        Vector3 corr = Vector3Scale(sys->contacts[i].normal, corrFactor);
 
         if (massAInv != .0f &&
             rbA->_idleVelTicks < sys->correction.idleVelTicks) {
-            // rbA->vel = Vector3Subtract(rbA->vel, Vector3Scale(imp,
-            // massAInv));
             rbA->pos = Vector3Subtract(rbA->pos, Vector3Scale(corr, massAInv));
         }
         if (massBInv != .0f &&
             rbB->_idleVelTicks < sys->correction.idleVelTicks) {
-            // rbB->vel = Vector3Add(rbB->vel, Vector3Scale(imp, massBInv));
             rbB->pos = Vector3Add(rbB->pos, Vector3Scale(corr, massBInv));
         }
 
@@ -697,12 +700,15 @@ void physics_updateBodies(PhysicsSystem *sys, float dt) {
             fImpulse = Vector3Scale(tangent, -j * dynF);
         }
 
+        uint8_t isWheel = 0;
+        uint32_t entA = sys->rigidBodies.entries[sys->contacts[i].posA].key;
+        uint32_t entB = sys->rigidBodies.entries[sys->contacts[i].posB].key;
+
         physics_applyImpulseAt(rbA, Vector3Scale(fImpulse, -1.f), relPosA);
         physics_applyImpulseAt(rbB, Vector3Scale(fImpulse, 1.f), relPosB);
-        // physics_applyImpulse(rbA, Vector3Scale(fImpulse, -1.f));
-        // physics_applyImpulse(rbB, Vector3Scale(fImpulse, 1.f));
+        //   physics_applyImpulse(rbA, Vector3Scale(fImpulse, -1.f));
+        //   physics_applyImpulse(rbB, Vector3Scale(fImpulse, 1.f));
 
-        imp = Vector3SetLength(imp, Vector3Length(imp) + 0.0f);
         physics_applyImpulseAt(rbA, Vector3Scale(imp, -1.f), relPosA);
         physics_applyImpulseAt(rbB, Vector3Scale(imp, 1.f), relPosB);
     }

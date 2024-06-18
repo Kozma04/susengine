@@ -3,7 +3,7 @@
 #define ECS_COMPONENT_TYPES 10
 #define ECS_MAX_ENTITIES 256
 #define ECS_MAX_COMPONENTS 1024
-#define ECS_COMPONENT_DATA_SIZE 200
+#define ECS_COMPONENT_DATA_SIZE 216
 #define ECS_COMPONENT_CALLBACK_TYPES 8
 
 #define ECS_INVALID_ID 0xffffffff
@@ -78,6 +78,9 @@ typedef struct ECS {
     ECSComponentID freeCompIdBuf[ECS_MAX_COMPONENTS + 1];
     // Description for each component ID
     ECSComponent comp[ECS_MAX_COMPONENTS];
+
+    // Component names by type. Only used for logging.
+    const char **compTypeStr;
 } ECS;
 
 void ecs_init(ECS *ecs);

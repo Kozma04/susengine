@@ -22,7 +22,9 @@ void engine_init(Engine *const engine) {
     engine->phys = physics_initSystem();
     engine->physDeltaTime = 1.f / 80.f;
     engine->physLastUpdate = GetTime();
+
     ecs_init(&engine->ecs);
+    engine->ecs.compTypeStr = EngineECSCompTypeStr;
 
     logMsg(LOG_LVL_INFO, "whole engine occupies %u bytes", sizeof(Engine));
 }
@@ -74,7 +76,7 @@ static void engine_dispatchMessage(Engine *const engine, EngineMsg *const msg) {
     }
 }
 
-static void engine_dispatchMessages(Engine *const engine) {
+void engine_dispatchMessages(Engine *const engine) {
     uint32_t i, ent;
     EngineMsg *msg;
     EngineECSCompData *compData;
@@ -147,8 +149,6 @@ static void engine_updateTransforms(Engine *const engine) {
 
 void engine_stepUpdate(Engine *const engine, const float deltaTime) {
     const static int physSubsteps = 1;
-
-    engine_dispatchMessages(engine);
 
     if (GetTime() > engine->physLastUpdate + engine->physDeltaTime) {
         engine->physLastUpdate = GetTime();
@@ -375,11 +375,10 @@ static void engine_cbRigidBodyOnCreate(uint32_t cbType, ECSEntityID entId,
         rb->inverseInertia = (Vector3){12.f / (dimsSqr.y + dimsSqr.z),
                                        12.f / (dimsSqr.x + dimsSqr.z),
                                        12.f / (dimsSqr.x + dimsSqr.y)};
-        /*logMsg(
-            LOG_LVL_INFO, "init %s to inv inertia %.2f, %.2f, %.2f",
-            ecs_getEntityNameCstrP(&cbData->engine->ecs, entId),
-            rb->inverseInertia.x, rb->inverseInertia.y, rb->inverseInertia.z
-        );*/
+        logMsg(LOG_LVL_INFO, "init %s to inv inertia %.2f, %.2f, %.2f",
+               ecs_getEntityNameCstrP(&cbData->engine->ecs, entId),
+               rb->inverseInertia.x, rb->inverseInertia.y,
+               rb->inverseInertia.z);
     }
 
     trans->pos = rb->pos;
@@ -396,7 +395,9 @@ static void engine_cbRigidBodyOnUpdate(uint32_t cbType, ECSEntityID entId,
     EngineCompTransform *trans = engine_getTransform(cbData->engine, entId);
     RigidBody *rb = &((EngineECSCompData *)comp->data)->rigidBody;
 
-    trans->pos = rb->pos;
+    Vector3 cogRotated = Vector3RotateByQuaternion(rb->cog, rb->rot);
+
+    trans->pos = Vector3Subtract(rb->pos, cogRotated);
     trans->rot = rb->rot;
     trans->localUpdate = 1;
 }

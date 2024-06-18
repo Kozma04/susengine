@@ -15,7 +15,7 @@ Renderer render_init(size_t maxSrcPoint, size_t maxSrcDir) {
     r.state.mainCam.position = (Vector3){0, 0, 0};
     r.state.mainCam.target = (Vector3){0, 0, 1};
     r.state.mainCam.up = (Vector3){0, 1, 0};
-    r.state.mainCam.fovy = 60;
+    r.state.mainCam.fovy = 45;
     r.state.mainCam.projection = CAMERA_PERSPECTIVE;
     return r;
 }

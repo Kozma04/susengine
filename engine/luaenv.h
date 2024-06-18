@@ -11,17 +11,23 @@
 #include <raylib.h>
 #include <raymath.h>
 
+#include "../moonnuklear/internal.h"
 #include "./ecs.h"
 #include "./engine.h"
 #include "./logger.h"
 #include "./physcoll.h"
 
-void luaEnvSetEngine(Engine *eng);
-void luaEnvSetupBindings(lua_State *L);
-lua_State *luaEnvLoadRun(const char *scriptFile);
+typedef struct LuaEnvMessageData {
+    int registerValKey;
+} LuaEnvMessageData;
 
-EngineStatus engine_createScript(Engine *engine, ECSEntityID ent,
-                                 const char *scriptContent);
-EngineStatus engine_createScriptFromFile(Engine *engine, ECSEntityID ent,
+void luaEnvSetEngine(Engine *eng);
+lua_State *luaEnvCreate(struct nk_context *nk);
+uint8_t luaEnvLoad(lua_State *L, const char *scriptFile, char *scriptName);
+
+void luaEnvUpdate(lua_State *L);
+
+EngineStatus engine_createScriptFromFile(Engine *engine, lua_State *L,
+                                         ECSEntityID ent,
                                          const char *scriptFile);
 EngineCompScript *engine_getScript(Engine *engine, ECSEntityID ent);

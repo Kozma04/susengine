@@ -100,6 +100,7 @@ typedef struct EngineCompLightSrc {
 
 typedef struct EngineCompScript {
     lua_State *state;
+    char scriptName[64];
 } EngineCompScript;
 
 typedef struct EngineCallbackData {
@@ -130,10 +131,14 @@ typedef enum EngineECSCompTypeEnum {
     ENGINE_COMP_MESHRENDERER,
     ENGINE_COMP_LIGHTSOURCE,
     ENGINE_COMP_COLLIDER,
-    ENGINE_COMP_USER,
     ENGINE_COMP_SCRIPT,
+    ENGINE_COMP_USER,
     ENGINE_COMP_TYPE_CNT,
 } EngineECSCompType;
+
+static const char *EngineECSCompTypeStr[] = {
+    "info",        "rigidbody", "transform", "camera", "meshrenderer",
+    "lightsource", "collider",  "script",    "user",   "invalid"};
 
 typedef enum EngineECSCallbackTypeEnum {
     // Entity lifecycle
@@ -215,6 +220,8 @@ void engine_init(Engine *const engine);
 void engine_entityPostCreate(Engine *engine, ECSEntityID id);
 // Run destroy callback on the components and unregister their parent entity
 void engine_entityDestroy(Engine *engine, ECSEntityID id);
+// Dispatch all pending messages
+void engine_dispatchMessages(Engine *const engine);
 // Update scene
 void engine_stepUpdate(Engine *engine, float deltaTime);
 

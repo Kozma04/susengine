@@ -59,6 +59,7 @@ static inline uint8_t ecs_checkEntityExists(const ECS *const ecs,
 void ecs_init(ECS *const ecs) {
     ECSEntityID i;
     ecs->nActiveEnt = 0;
+    ecs->compTypeStr = NULL;
     fifo_init(&ecs->freeEntId, ecs->freeEntIdBuf, ECS_MAX_ENTITIES + 1,
               FIFO_MODE_NO_OVERRUN);
     fifo_init(&ecs->freeCompId, ecs->freeCompIdBuf, ECS_MAX_COMPONENTS + 1,
@@ -125,10 +126,18 @@ ECSStatus ecs_registerComp(ECS *const ecs, const ECSEntityID id,
         ecs->comp[compId].callback[i] = 0;
     desc->compIndex[compType] = compId;
 
-    logMsg(LOG_LVL_INFO,
-           "registered comp. %u/%u of type %u to entity id %u (\"%s\")", compId,
-           ECS_MAX_COMPONENTS - 1, compType, id,
-           ecs_getEntityNameCstrP(ecs, id));
+    if (ecs->compTypeStr == NULL) {
+        logMsg(LOG_LVL_INFO,
+               "registered comp. %u/%u of type %u to entity id %u (\"%s\")",
+               compId, ECS_MAX_COMPONENTS - 1, compType, id,
+               ecs_getEntityNameCstrP(ecs, id));
+    } else {
+        logMsg(LOG_LVL_INFO,
+               "registered comp. %u/%u of type %d(\"%s\") to entity id %u "
+               "(\"%s\")",
+               compId, ECS_MAX_COMPONENTS - 1, compType,
+               ecs->compTypeStr[compType], id, ecs_getEntityNameCstrP(ecs, id));
+    }
     return ECS_RES_OK;
 }
 

@@ -21,7 +21,7 @@ out vec3 fragPosition;
 out vec4 fragPositionShadow[SHADOW_CASCADES];
 out vec2 fragTexCoord;
 out vec4 fragColor;
-out vec3 fragNormal;
+out flat vec3 fragNormal;
 
 
 void main() {

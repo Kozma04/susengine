@@ -55,6 +55,7 @@ typedef struct RigidBody {
     float bounce;
     float staticFriction;
     float dynamicFriction;
+    Vector3 cog; // center of gravity
 
     uint32_t _idleAngularVelTicks;
     uint32_t _idleVelTicks;
@@ -98,6 +99,13 @@ typedef struct ColliderEntity {
     Matrix *transform;
     Matrix transformInverse;
 } ColliderEntity;
+
+typedef enum JointTypeEnum { JOINT_TYPE_RIGID, JOINT_TYPE_ELASTIC } JointType;
+
+typedef struct Joint {
+    uint8_t enabled;
+    JointType type;
+} Joint;
 
 typedef struct PhysicsSystem {
     // A body's Collider and PhysicsSystemEntity share the same index

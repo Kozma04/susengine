@@ -2,6 +2,7 @@
 #include "ecs.h"
 #include "engine.h"
 #include "logger.h"
+#include "physcoll.h"
 #include "render.h"
 #include <lua.h>
 
@@ -19,6 +20,8 @@ static void *luaAlloc(void *ud, void *ptr, size_t osize, size_t nsize) {
     } else
         return realloc(ptr, nsize);
 }
+
+static Quaternion luaGetQuaternion(lua_State *L, int tableIndex);
 
 static inline float getTableFloat(lua_State *L, int idx, const char *name) {
     lua_pushstring(L, name);
@@ -227,6 +230,18 @@ static int luaFuncVector3RotateByAxisAngle(lua_State *L) {
     return 1;
 }
 
+static int luaFuncVector3RotateByQuaternion(lua_State *L) {
+    if (lua_gettop(L) != 2)
+        return luaL_error(L, "2 parameters expected, got %d", lua_gettop(L));
+    if (!lua_istable(L, -2) || !lua_istable(L, -1))
+        return luaL_error(L, "expected table, table");
+
+    Vector3 vec = luaGetVector3(L, -2);
+    Quaternion quat = luaGetQuaternion(L, -1);
+    luaPushVector3Vals(L, Vector3RotateByQuaternion(vec, quat));
+    return 1;
+}
+
 static void luaOpenVector3(lua_State *L) {
     lua_pushcfunction(L, luaFuncVector3Create);
     lua_setglobal(L, "Vector3Create");
@@ -246,8 +261,12 @@ static void luaOpenVector3(lua_State *L) {
     lua_setglobal(L, "Vector3Normalize");
     lua_pushcfunction(L, luaFuncVector3Cross);
     lua_setglobal(L, "Vector3CrossProduct");
+    lua_pushcfunction(L, luaFuncVector3Dot);
+    lua_setglobal(L, "Vector3DotProduct");
     lua_pushcfunction(L, luaFuncVector3RotateByAxisAngle);
     lua_setglobal(L, "Vector3RotateByAxisAngle");
+    lua_pushcfunction(L, luaFuncVector3RotateByQuaternion);
+    lua_setglobal(L, "Vector3RotateByQuaternion");
 
     luaL_newmetatable(L, metatableVector3);
     lua_pushcfunction(L, luaFuncVector3ToString);
@@ -645,8 +664,8 @@ static int luaFuncQuaternionToMatrix(lua_State *L) {
 static int luaFuncQuaternionFromEuler(lua_State *L) {
     if (lua_gettop(L) != 3)
         return luaL_error(L, "3 parameters expected, got %d", lua_gettop(L));
-    if (!lua_istable(L, -1) || !lua_istable(L, -2) || !lua_istable(L, -3))
-        return luaL_error(L, "all inputs must be tables");
+    if (!lua_isnumber(L, -1) || !lua_isnumber(L, -2) || !lua_isnumber(L, -3))
+        return luaL_error(L, "all inputs must be numbers");
     Quaternion quat = QuaternionFromEuler(
         lua_tonumber(L, -3), lua_tonumber(L, -2), lua_tonumber(L, -1));
     luaPushQuaternionVals(L, quat);
@@ -822,6 +841,8 @@ static int luaEngineComponentIndex(lua_State *L) {
             lua_pushnumber(L, dat->rigidBody.staticFriction);
         else if (strcmp(key, "dynamicFriction") == 0)
             lua_pushnumber(L, dat->rigidBody.dynamicFriction);
+        else if (strcmp(key, "cog") == 0)
+            luaPushVector3Vals(L, dat->rigidBody.cog);
         else
             isTableEntry = 1;
         break;
@@ -1018,6 +1039,8 @@ static int luaEngineComponentNewIndex(lua_State *L) {
             dat->rigidBody.staticFriction = lua_tonumber(L, -1);
         else if (strcmp(key, "dynamicFriction") == 0)
             dat->rigidBody.dynamicFriction = lua_tonumber(L, -1);
+        else if (strcmp(key, "cog") == 0)
+            dat->rigidBody.cog = luaGetVector3(L, -1);
         else
             isTableEntry = 1;
         break;
@@ -1150,7 +1173,7 @@ static int luaFuncCreateInfo(lua_State *L) {
     if (!lua_istable(L, -2) || !lua_isinteger(L, -1))
         return luaL_error(L, "expected table, integer");
 
-    uint32_t entityId = (uint32_t)getTableInteger(L, -3, "id");
+    ECSEntityID entityId = (uint32_t)getTableInteger(L, -3, "id");
     logPushTag("lua");
     engine_createInfo(engine, entityId, lua_tointeger(L, -1));
     logPopTag();
@@ -1170,9 +1193,9 @@ static int luaFuncCreateScriptFromFile(lua_State *L) {
     if (!lua_istable(L, -2) || !lua_isstring(L, -1))
         return luaL_error(L, "expected table, string");
 
-    uint32_t entityId = (uint32_t)getTableInteger(L, -3, "id");
+    ECSEntityID entityId = (uint32_t)getTableInteger(L, -3, "id");
     logPushTag("lua");
-    engine_createScriptFromFile(engine, entityId, lua_tostring(L, -1));
+    engine_createScriptFromFile(engine, L, entityId, lua_tostring(L, -1));
     logPopTag();
     /*lua_pushvalue(L, 1);
     if (!luaCreateComponentTable(L, entityId, ENGINE_COMP_SCRIPT)) {
@@ -1184,13 +1207,75 @@ static int luaFuncCreateScriptFromFile(lua_State *L) {
     return 0;
 }
 
+static int luaFuncSendMessage(lua_State *L) {
+    // entity, target ID, message type, content
+
+    if (lua_gettop(L) != 4)
+        return luaL_error(L, "expected 4 parameters, got %d", lua_gettop(L));
+    if (!lua_istable(L, 1) || !lua_isinteger(L, 2) || !lua_isinteger(L, 3))
+        return luaL_error(L, "expected table, integer, integer, <any>");
+
+    ECSEntityID entityId = (uint32_t)getTableInteger(L, -5, "id");
+    ECSEntityID targetId = lua_tointeger(L, 2);
+    uint32_t msgType = lua_tointeger(L, 3);
+
+    lua_getfield(L, LUA_REGISTRYINDEX, "currMsgKey");
+    uint32_t msgKey = lua_tointeger(L, -1);
+    lua_pop(L, 1);
+    lua_pushinteger(L, msgKey + 1);
+    lua_setfield(L, LUA_REGISTRYINDEX, "currMsgKey");
+
+    lua_getfield(L, LUA_REGISTRYINDEX, "messages");
+    lua_pushinteger(L, msgKey);
+    lua_pushvalue(L, 4);
+    lua_settable(L, -3);
+    lua_pop(L, 1);
+
+    LuaEnvMessageData data = {msgKey};
+    engine_entitySendMsg(engine, entityId, targetId, msgType, &data,
+                         sizeof(data));
+
+    return 0;
+}
+
+static int luaFuncBroadcastMessage(lua_State *L) {
+    // entity, target mask, message type, content
+
+    if (lua_gettop(L) != 4)
+        return luaL_error(L, "expected 4 parameters, got %d", lua_gettop(L));
+    if (!lua_istable(L, 1) || !lua_isinteger(L, 2) || !lua_isinteger(L, 3))
+        return luaL_error(L, "expected table, integer, integer, <any>");
+
+    ECSEntityID entityId = (uint32_t)getTableInteger(L, -5, "id");
+    ECSEntityID filterMask = lua_tointeger(L, 2);
+    uint32_t msgType = lua_tointeger(L, 3);
+
+    lua_getfield(L, LUA_REGISTRYINDEX, "currMsgKey");
+    uint32_t msgKey = lua_tointeger(L, -1);
+    lua_pop(L, 1);
+    lua_pushinteger(L, msgKey + 1);
+    lua_setfield(L, LUA_REGISTRYINDEX, "currMsgKey");
+
+    lua_getfield(L, LUA_REGISTRYINDEX, "messages");
+    lua_pushinteger(L, msgKey);
+    lua_pushvalue(L, 4);
+    lua_settable(L, -3);
+    lua_pop(L, 1);
+
+    LuaEnvMessageData data = {msgKey};
+    engine_entityBroadcastMsg(engine, entityId, filterMask, msgType, &data,
+                              sizeof(data));
+
+    return 0;
+}
+
 static int luaFuncCreateRigidbody(lua_State *L) {
     if (lua_gettop(L) != 2)
         return luaL_error(L, "expected 2 parameters, got %d", lua_gettop(L));
     if (!lua_istable(L, -2) || !lua_isnumber(L, -1))
         return luaL_error(L, "expected table, number");
 
-    uint32_t entityId = (uint32_t)getTableInteger(L, -3, "id");
+    ECSEntityID entityId = (uint32_t)getTableInteger(L, -3, "id");
     logPushTag("lua");
     engine_createRigidBody(engine, entityId, lua_tonumber(L, -1));
     logPopTag();
@@ -1214,7 +1299,8 @@ static int luaFuncCreateTransform(lua_State *L) {
         anchor = lua_tointeger(L, -1);
     }
 
-    uint32_t entityId = (uint32_t)getTableInteger(L, -lua_gettop(L) - 1, "id");
+    ECSEntityID entityId =
+        (uint32_t)getTableInteger(L, -lua_gettop(L) - 1, "id");
     logPushTag("lua");
     engine_createTransform(engine, entityId, anchor);
     logPopTag();
@@ -1244,7 +1330,7 @@ static int luaFuncCreateCamera(lua_State *L) {
         projection = lua_tointeger(L, 3);
     }
 
-    uint32_t entityId = (uint32_t)getTableInteger(L, 1, "id");
+    ECSEntityID entityId = (uint32_t)getTableInteger(L, 1, "id");
     logPushTag("lua");
     engine_createCamera(engine, entityId, fov, projection);
     logPopTag();
@@ -1267,7 +1353,7 @@ static int luaFuncCreateMeshrenderer(lua_State *L) {
     ECSEntityID anchor = lua_tointeger(L, -2);
     ECSEntityID modelId = lua_tointeger(L, -1);
 
-    uint32_t entId = (uint32_t)getTableInteger(L, -4, "id");
+    ECSEntityID entId = (uint32_t)getTableInteger(L, -4, "id");
     logPushTag("lua");
     engine_createMeshRenderer(engine, entId, anchor, modelId);
     logPopTag();
@@ -1288,7 +1374,7 @@ static int luaFuncCreateAmbientLight(lua_State *L) {
     if (!lua_istable(L, -2) || !lua_istable(L, -1))
         return luaL_error(L, "expected table, table");
 
-    uint32_t entityId = (uint32_t)getTableInteger(L, -3, "id");
+    ECSEntityID entityId = (uint32_t)getTableInteger(L, -3, "id");
     logPushTag("lua");
     engine_createAmbientLight(engine, entityId, luaGetVector3(L, -1));
     logPopTag();
@@ -1308,7 +1394,7 @@ static int luaFuncCreateDirLight(lua_State *L) {
     if (!lua_istable(L, -2) || !lua_istable(L, -1))
         return luaL_error(L, "expected table, table, table");
 
-    uint32_t entityId = (uint32_t)getTableInteger(L, -4, "id");
+    ECSEntityID entityId = (uint32_t)getTableInteger(L, -4, "id");
     logPushTag("lua");
     engine_createDirLight(engine, entityId, luaGetVector3(L, -2),
                           luaGetVector3(L, -1));
@@ -1327,7 +1413,7 @@ static int luaFuncCreatePointLight(lua_State *L) {
     if (lua_gettop(L) != 5)
         return luaL_error(L, "expected 5 parameters, got %d", lua_gettop(L));
 
-    uint32_t entityId = (uint32_t)getTableInteger(L, 1, "id");
+    ECSEntityID entityId = (uint32_t)getTableInteger(L, 1, "id");
     logPushTag("lua");
     engine_createPointLight(engine, entityId, lua_tointeger(L, 2),
                             luaGetVector3(L, 3), luaGetVector3(L, 4),
@@ -1349,7 +1435,7 @@ static int luaFuncCreateSphereCollider(lua_State *L) {
     if (!lua_istable(L, -2) || !lua_isnumber(L, -1))
         return luaL_error(L, "expected table, number");
 
-    uint32_t entityId = (uint32_t)getTableInteger(L, 1, "id");
+    ECSEntityID entityId = (uint32_t)getTableInteger(L, 1, "id");
     logPushTag("lua");
     engine_createSphereCollider(engine, entityId, lua_tonumber(L, 2));
     logPopTag();
@@ -1369,7 +1455,7 @@ static int luaFuncCreateMeshCollider(lua_State *L) {
     if (!lua_istable(L, -2) || !lua_isinteger(L, -1))
         return luaL_error(L, "expected table, integer");
 
-    uint32_t entityId = (uint32_t)getTableInteger(L, 1, "id");
+    ECSEntityID entityId = (uint32_t)getTableInteger(L, 1, "id");
     logPushTag("lua");
     engine_createConvexHullColliderModel(engine, entityId, lua_tointeger(L, 2));
     logPopTag();
@@ -1454,6 +1540,10 @@ static int luaCreateEntityTable(lua_State *L, ECSEntityID id) {
     lua_setfield(L, -2, "createMeshCollider");
     lua_pushcfunction(L, luaFuncCreateScriptFromFile);
     lua_setfield(L, -2, "createScriptFromFile");
+    lua_pushcfunction(L, luaFuncSendMessage);
+    lua_setfield(L, -2, "sendMessage");
+    lua_pushcfunction(L, luaFuncBroadcastMessage);
+    lua_setfield(L, -2, "broadcastMessage");
 
     return 1;
 }
@@ -1535,6 +1625,43 @@ static int luaFuncSetCamera(lua_State *L) {
     return 0;
 }
 
+static int luaFuncRaycast(lua_State *L) {
+    // position, direction, max distance, max contacts, collision mask
+    if (lua_gettop(L) != 5)
+        return luaL_error(L, "expected 5 parameters, got %d", lua_gettop(L));
+    if (!lua_istable(L, 1) || !lua_istable(L, 2) || !lua_isnumber(L, 3) ||
+        !lua_isinteger(L, 4) || !lua_isinteger(L, 5))
+        return luaL_error(L, "expected table, table, number, integer, integer");
+    Ray ray;
+    float maxDist;
+    uint32_t maxContacts, collMask;
+    size_t numContacts;
+    ray.position = luaGetVector3(L, -5);
+    ray.direction = luaGetVector3(L, -4);
+    maxDist = lua_tonumber(L, -3);
+    maxContacts = lua_tointeger(L, -2);
+    collMask = lua_tointeger(L, -1);
+
+    ColliderRayContact *crc = alloca(sizeof(*crc) * maxContacts);
+    physics_raycast(&engine->phys, ray, maxDist, crc, &numContacts, maxContacts,
+                    collMask);
+
+    lua_createtable(L, numContacts, 0);
+    for (int i = 0; i < numContacts; i++) {
+        lua_pushinteger(L, i + 1);
+        lua_createtable(L, 0, 3);
+        lua_pushnumber(L, crc[i].dist);
+        lua_setfield(L, -2, "distance");
+        lua_pushinteger(L, crc[i].id);
+        lua_setfield(L, -2, "id");
+        luaPushVector3Vals(L, crc[i].normal);
+        lua_setfield(L, -2, "normal");
+        lua_settable(L, -3);
+    }
+
+    return 1;
+}
+
 static void luaOpenEngine(lua_State *L) {
     lua_newtable(L);
     lua_pushcfunction(L, luaFuncGetEntity);
@@ -1547,6 +1674,8 @@ static void luaOpenEngine(lua_State *L) {
     lua_setfield(L, -2, "postCreateEntity");
     lua_pushcfunction(L, luaFuncSetCamera);
     lua_setfield(L, -2, "setCamera");
+    lua_pushcfunction(L, luaFuncRaycast);
+    lua_setfield(L, -2, "raycast");
     lua_setglobal(L, "engine");
 
     luaL_newmetatable(L, metatableEngineComponent);
@@ -1617,7 +1746,6 @@ static int luaFuncIsMouseButtonDown(lua_State *L) {
         return luaL_error(L, "expected 1 parameter, got %d", lua_gettop(L));
     if (!lua_isinteger(L, -1))
         return luaL_error(L, "expected integer");
-
     lua_pushboolean(L, IsMouseButtonDown(lua_tointeger(L, -1)));
     return 1;
 }
@@ -1671,17 +1799,35 @@ static void luaOpenRaylib(lua_State *L) {
 
 void luaEnvSetEngine(Engine *eng) { engine = eng; }
 
-void luaEnvSetupBindings(lua_State *L) {
+static void luaEnvSetupBindings(lua_State *L, struct nk_context *nkCtx) {
     if (engine == NULL)
         logMsg(LOG_LVL_FATAL, "engine is NULL");
 
     luaL_openlibs(L);
+    luaopen_moonnuklear(L);
     luaOpenVector3(L);
     luaOpenMatrix(L);
     luaOpenQuaternion(L);
     luaOpenMisc(L);
     luaOpenEngine(L);
     luaOpenRaylib(L);
+
+    // set global Nuklear context
+    lua_getglobal(L, "nk");
+    lua_getfield(L, -1, "init_from_ptr");
+    lua_remove(L, -2);
+    lua_pushlightuserdata(L, nkCtx);
+    if (lua_pcall(L, 1, 1, NULL) != LUA_OK) {
+        logMsg(LOG_LVL_FATAL, "can't initialize global Nuklear context: %s",
+               lua_tostring(L, -1));
+        lua_pop(L, 1);
+    }
+    lua_setglobal(L, "NKCTX");
+
+    lua_pushinteger(L, 0);
+    lua_setfield(L, LUA_REGISTRYINDEX, "currMsgKey");
+    lua_newtable(L);
+    lua_setfield(L, LUA_REGISTRYINDEX, "messages");
 
     luaL_loadstring(
         L,
@@ -1725,9 +1871,16 @@ static char *loadFileStr(const char *fname) {
     return buf;
 }
 
-lua_State *luaEnvLoadRun(const char *scriptFile) {
+lua_State *luaEnvCreate(struct nk_context *nk) {
+    lua_State *L = lua_newstate(luaAlloc, NULL);
+    luaL_openlibs(L);
+    luaEnvSetupBindings(L, nk);
+    return L;
+}
+
+uint8_t luaEnvLoad(lua_State *L, const char *scriptFile, char *scriptName) {
+    static uint32_t scriptNum = 0;
     char *buf;
-    lua_State *L;
 
     if (engine == NULL)
         logMsg(LOG_LVL_FATAL, "engine is NULL");
@@ -1737,17 +1890,47 @@ lua_State *luaEnvLoadRun(const char *scriptFile) {
     logPopTag();
 
     if (buf == NULL)
-        return NULL;
+        return 0;
 
-    L = lua_newstate(luaAlloc, NULL);
-    luaEnvSetupBindings(L);
-    logMsg(LOG_LVL_INFO, "running script from %s", scriptFile);
-    if (luaL_dostring(L, buf) != LUA_OK) {
+    logMsg(LOG_LVL_INFO, "loading script from %s", scriptFile);
+    if (luaL_loadstring(L, buf) != LUA_OK) {
         logMsg(LOG_LVL_WARN, "Lua error: %s", lua_tostring(L, -1));
         lua_pop(L, 1);
+        return 0;
     }
     free(buf);
-    return L;
+
+    sprintf(scriptName, "script%u", scriptNum++);
+
+    lua_newtable(L); // _ENV
+    lua_newtable(L); // metatable
+    lua_getglobal(L, "_G");
+    lua_setfield(L, -2, "__index");
+    lua_setmetatable(L, -2);
+    lua_setfield(L, LUA_REGISTRYINDEX, scriptName);
+    lua_getfield(L, LUA_REGISTRYINDEX, scriptName);
+    lua_setupvalue(L, -2, 1);
+
+    return 1;
+}
+
+void luaEnvUpdate(lua_State *L) {
+    size_t msgCnt = 0;
+    lua_getfield(L, LUA_REGISTRYINDEX, "messages");
+    lua_pushnil(L);
+    while (lua_next(L, -2) != 0) {
+        msgCnt++;
+        lua_pop(L, 1); // pop value
+        lua_pushinteger(L, lua_tointeger(L, -1));
+        lua_pushnil(L);
+        lua_settable(L, -4);
+    }
+    lua_pop(L, 1);
+    /*if (msgCnt) {
+        logPushTag("lua");
+        logMsg(LOG_LVL_WARN, "deleted %u unhandled messages", msgCnt);
+        logPopTag();
+    }*/
 }
 
 static void engineCbScriptOnCreate(uint32_t cbType, ECSEntityID entId,
@@ -1765,7 +1948,9 @@ static void engineCbScriptOnCreate(uint32_t cbType, ECSEntityID entId,
         logMsg(LOG_LVL_ERR, "lua script is null");
         return;
     }
-    lua_getglobal(L, "script");
+
+    lua_getfield(L, LUA_REGISTRYINDEX, script->scriptName);
+    lua_getfield(L, -1, "script");
     if (!lua_istable(L, -1)) {
         logMsg(LOG_LVL_FATAL, "'script' is not a table");
         return;
@@ -1785,6 +1970,7 @@ static void engineCbScriptOnCreate(uint32_t cbType, ECSEntityID entId,
         lua_pop(L, 1);
     } else
         lua_pop(L, 2);
+    lua_pop(L, 1);
 }
 
 static void engineCbScriptOnDestroy(uint32_t cbType, ECSEntityID entId,
@@ -1797,7 +1983,9 @@ static void engineCbScriptOnDestroy(uint32_t cbType, ECSEntityID entId,
     EngineCallbackData *cbData = cbUserData;
     EngineCompScript *script = engine_getScript(cbData->engine, entId);
     lua_State *L = script->state;
-    lua_getglobal(L, "script");
+
+    lua_getfield(L, LUA_REGISTRYINDEX, script->scriptName);
+    lua_getfield(L, -1, "script");
     if (!lua_istable(L, -1)) {
         logMsg(LOG_LVL_FATAL, "'script' is not a table");
         return;
@@ -1814,6 +2002,7 @@ static void engineCbScriptOnDestroy(uint32_t cbType, ECSEntityID entId,
         }
     } else
         lua_pop(L, 2);
+    lua_pop(L, 1);
 }
 
 static void engineCbScriptOnUpdate(uint32_t cbType, ECSEntityID entId,
@@ -1826,7 +2015,9 @@ static void engineCbScriptOnUpdate(uint32_t cbType, ECSEntityID entId,
     EngineCallbackData *cbData = cbUserData;
     EngineCompScript *script = engine_getScript(cbData->engine, entId);
     lua_State *L = script->state;
-    lua_getglobal(L, "script");
+
+    lua_getfield(L, LUA_REGISTRYINDEX, script->scriptName);
+    lua_getfield(L, -1, "script");
     if (!lua_istable(L, -1)) {
         logMsg(LOG_LVL_FATAL, "'script' is not a table");
         return;
@@ -1845,10 +2036,55 @@ static void engineCbScriptOnUpdate(uint32_t cbType, ECSEntityID entId,
         lua_pop(L, 1);
     } else
         lua_pop(L, 2);
+    lua_pop(L, 1);
 }
 
-EngineStatus engine_createScript(Engine *engine, ECSEntityID ent,
-                                 const char *scriptContent) {
+static void engineCbScriptOnMessage(uint32_t cbType, ECSEntityID entId,
+                                    ECSComponentID compId, uint32_t compType,
+                                    struct ECSComponent *comp,
+                                    void *cbUserData) {
+    if (engine == NULL)
+        logMsg(LOG_LVL_FATAL, "engine is NULL");
+
+    EngineCallbackData *cbData = cbUserData;
+    EngineMsg *msg = cbData->msgRecv.msg;
+    int contentKey = ((LuaEnvMessageData *)msg->msgData)->registerValKey;
+    EngineCompScript *script = engine_getScript(cbData->engine, entId);
+    lua_State *L = script->state;
+
+    // logPushTag("lua");
+    // logMsg(LOG_LVL_DEBUG, "got message from %u", msg->srcId);
+    // logPopTag();
+
+    lua_getfield(L, LUA_REGISTRYINDEX, "messages");
+    lua_getfield(L, LUA_REGISTRYINDEX, script->scriptName);
+    lua_getfield(L, -1, "script");
+    if (!lua_istable(L, -1)) {
+        logMsg(LOG_LVL_FATAL, "'script' is not a table");
+        return;
+    }
+    lua_getfield(L, -1, "onMessage");
+    if (!lua_isnil(L, -1) && !lua_isfunction(L, -1)) {
+        logMsg(LOG_LVL_FATAL, "onMessage is neither nil or function");
+        return;
+    }
+    if (lua_isfunction(L, -1)) {
+        lua_pushinteger(L, msg->srcId);
+        lua_pushinteger(L, msg->msgType);
+        lua_pushinteger(L, contentKey);
+        lua_gettable(L, -7);
+        if (lua_pcall(L, 3, 0, 0) != LUA_OK) {
+            logMsg(LOG_LVL_ERR, "onMessage error: %s", lua_tostring(L, -1));
+            lua_pop(L, 4);
+        } else
+            lua_pop(L, 3);
+    } else
+        lua_pop(L, 4);
+}
+
+EngineStatus engine_createScriptFromFile(Engine *engine, lua_State *L,
+                                         ECSEntityID ent,
+                                         const char *scriptFile) {
     if (engine == NULL)
         logMsg(LOG_LVL_FATAL, "engine is NULL");
 
@@ -1857,11 +2093,13 @@ EngineStatus engine_createScript(Engine *engine, ECSEntityID ent,
     EngineCompScript *const comp =
         &(((EngineECSCompData *)&compRaw.data)->script);
 
-    lua_State *L = lua_newstate(luaAlloc, NULL);
-    comp->state = L;
-    luaL_openlibs(L);
-    luaEnvSetupBindings(L);
+    if (!luaEnvLoad(L, scriptFile, comp->scriptName))
+        return ENGINE_STATUS_SCRIPT_ERROR;
 
+    comp->state = L;
+    // script chunk is now at top
+
+    lua_getfield(L, LUA_REGISTRYINDEX, comp->scriptName);
     lua_newtable(L);
     lua_pushnil(L);
     lua_setfield(L, -2, "onCreate");
@@ -1869,14 +2107,16 @@ EngineStatus engine_createScript(Engine *engine, ECSEntityID ent,
     lua_setfield(L, -2, "onDestroy");
     lua_pushnil(L);
     lua_setfield(L, -2, "onUpdate");
-    lua_setglobal(L, "script");
+    lua_setfield(L, -2, "script");
+    lua_pop(L, 1);
 
-    if (luaL_dostring(L, scriptContent) != LUA_OK) {
-        logMsg(LOG_LVL_WARN, "Lua error: %s", lua_tostring(L, -1));
-        lua_pop(L, 1);
-        lua_close(L);
+    if (lua_pcall(L, 0, LUA_MULTRET, 0) != LUA_OK) {
+        logMsg(LOG_LVL_FATAL, "script load error: %s", lua_tostring(L, -1));
+        lua_pop(L, 2);
         return ENGINE_STATUS_SCRIPT_ERROR;
     }
+
+    lua_pop(L, 1);
 
     if (ecs_registerComp(&engine->ecs, ent, type, compRaw) != ECS_RES_OK) {
         lua_close(L);
@@ -1889,21 +2129,10 @@ EngineStatus engine_createScript(Engine *engine, ECSEntityID ent,
                     engineCbScriptOnDestroy);
     ecs_setCallback(&engine->ecs, ent, type, ENGINE_CB_UPDATE,
                     engineCbScriptOnUpdate);
+    ecs_setCallback(&engine->ecs, ent, type, ENGINE_CB_MSGRECV,
+                    engineCbScriptOnMessage);
 
     return ENGINE_STATUS_OK;
-}
-
-EngineStatus engine_createScriptFromFile(Engine *engine, ECSEntityID ent,
-                                         const char *scriptFile) {
-    logPushTag(__FUNCTION__);
-    char *buf = loadFileStr(scriptFile);
-    logPopTag();
-    if (buf == NULL)
-        return ENGINE_STATUS_SCRIPT_ERROR;
-
-    EngineStatus res = engine_createScript(engine, ent, buf);
-    free(buf);
-    return res;
 }
 
 EngineCompScript *engine_getScript(Engine *const engine,
